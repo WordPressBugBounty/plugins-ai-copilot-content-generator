@@ -1,0 +1,429 @@
+@import url("//fonts.googleapis.com/css?family=Inter");
+@import url("//fonts.googleapis.com/css?family=Poppins");
+.waic-chatbot-widget-wrapper {
+	padding: 0;
+}
+.waic-chatbot-buttons {
+	-webkit-touch-callout: none;
+	-webkit-user-select: none; 
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+}
+.waic-mobile {
+	display: none;
+}
+/*.waic-chatbot-widget {
+	padding: 16px;
+}*/
+.waic-chatbot-panel, .waic-welcome-popup {
+	width: 400px;
+	max-width: 100%;
+	height: 600px;
+	max-height: 90%;
+	font-size: 16px;
+	line-height: 24px;
+	background: #FFFFFF;
+	font-family: Poppins, Arial, sans-serif;
+	color: #4C647E;
+	overflow: hidden;
+	font-weight: 400;
+	padding: 0;
+	border: 0;
+	border-radius: 15px;
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 16px;
+	position: relative;
+	/*transition: 0.25s ease-in-out;*/
+}
+.waic-welcome-popup {
+	height: auto;
+	padding: 20px;
+	display: flex;
+	gap: 10px;
+	border: 2px solid #4c647e;
+	border-radius: 20px;
+}
+.waic-chatbot-show {
+	display: block;
+}
+.waic-chatbot-float {
+	position: fixed;
+	z-index: 10000;
+	max-width: 100%;
+	/*overflow: hidden;*/
+	bottom: 20px;
+}
+.waic-chatbot-panel>div {
+	width: 100%;
+}
+.waic-chatbot-hidden, .waic-chatbot-tmp, .waic-welcome-hidden {
+	display: none !important;
+}
+.waic-chatbot-header {
+	background: #2D3E50;
+	color: #FFFFFF;
+	display: flex;
+	padding: 10px 16px;
+	align-items: center;
+	gap: 16px;
+	height: 70px;
+	overflow: hidden;
+}
+.waic-chatbot-name {
+	font-size: 20px;
+	white-space: nowrap;
+    overflow: hidden;
+}
+.waic-chatbot-avatar {
+	border-radius: 50%;
+	height: 50px;
+	width: 50px;
+	flex: 0 0 50px;
+	overflow: hidden;
+}
+.waic-chatbot-avatar img {
+	width: 100%;
+}
+.waic-chatbot-main-avatar {
+	position: relative;
+	margin: 0;
+	padding: 0;
+}
+.waic-chatbot-main-avatar::after {
+	content: "";
+	background-color: #00BDA5;
+	position: absolute;
+    right: 0px;
+    bottom: 1px;
+    border-radius: 50%;
+    border: 2px solid #FFFFFF;
+    height: 11px;
+    width: 11px;
+}
+.waic-chatbot-message .waic-chatbot-avatar {
+	flex: 0 0 40px;
+	height: 40px;
+	margin-top: 5px;
+}
+.waic-chatbot-close, .waic-chatbot-open, .waic-header-close, .waic-close-popup {
+	cursor: pointer;
+}
+.waic-chatbot-close, .waic-header-close, .waic-welcome-close {
+	margin: 0 0 0 auto; 
+}
+.waic-welcome-close {
+	display: flex;
+}
+.waic-close-popup {
+	border-radius: 50%;
+	width: 30px;
+	height: 30px;
+	display: flex;
+	padding: 0;
+	border: 0;
+	background-color: #cde1ec;
+    margin: 5px 10px;
+	box-shadow: none;
+	align-items: center;
+	justify-content: center;
+}
+.waic-chatbot-body {
+	padding: 16px;
+	display: flex;
+	height: calc(100% - 140px);
+	/*overflow-y: auto;
+	overflow-x: hidden;*/
+	overflow: auto;
+}
+@-moz-document url-prefix() {
+  .waic-chatbot-body {
+    scrollbar-width: thin;
+	scrollbar-color: #8C8C8C trasparent;
+  }
+}
+.waic-chatbot-body::-webkit-scrollbar-track {
+	border: 0;
+	padding: 2px 0;
+	background-color: trasparent;
+}
+.waic-chatbot-body::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+.waic-chatbot-body::-webkit-scrollbar-thumb {
+	border-radius: 10px;
+	box-shadow: inset 0 0 6px rgba(0,0,0,.3);
+	background-color: #8C8C8C;
+	border: 0;
+}
+.waic-chatbot-messages {
+	flex: 1 1 0%;
+	display: flex;
+    flex-direction: column;
+    align-self: stretch;
+}
+.waic-chatbot-message {
+	padding: 0;
+	padding-bottom: 10px;
+	display: flex;
+	font-family: Inter, Arial, sans-serif;
+	font-size: 15px;
+	gap: 5px;
+}
+.waic-chatbot-message p {
+	font-size: inherit;
+	margin: 0;
+}
+.waic-message-name {
+	font-weight: 600;
+}
+.waic-message-text {
+	background-color: #EAF0F6;
+	padding: 8px 16px;
+}
+.waic-message-text img {
+	max-width: 100%;
+}
+.waic-message-ai .waic-message-text {
+	border-radius: 0 5px 5px 5px;
+}
+.waic-message-user {
+	justify-content: flex-end;
+}
+.waic-message-user .waic-message-text {
+	border-radius: 5px 5px 0 5px;
+	background-color: #33475b;
+	color: #FFFFFF;
+}
+.waic-message-user .waic-message-wrap {
+	max-width: 70%;
+}
+.waic-message-time {
+	color: #D9D9D9;
+	font-size: 12px;
+	font-family: Poppins, Arial, sans-serif;
+}
+.waic-message-user .waic-message-time {
+	text-align: right;
+}
+.waic-message-buttons a.waic-message-button {
+	min-width: 170px;
+	min-height: 40px;
+	border-radius: 5px;
+	border: 1px solid #2E475D;
+	background-color: #FFFFFF;
+	color: #4C647E;
+	font-family: Inter, Arial, sans-serif;
+	font-size: 15px;
+	text-align: left;
+	padding: 2px 10px;
+	margin-top: 7px;
+	display: inline-flex;
+    align-items: center;
+	gap: 5px;
+	overflow: hidden;
+    white-space: nowrap;
+}
+a.waic-message-button:hover {
+	background-color: #eaf0f6;
+}
+.waic-chatbot-footer {
+	display: flex;
+	justify-content: space-between;
+	padding: 10px 16px;
+	align-items: center;
+	gap: 16px;
+	border-top: 1px solid #D9D9D9;
+	align-items: center;
+	height: 70px;
+}
+.waic-chatbot-footer textarea.waic-chatbot-input {
+	height: 35px;
+	width: 80%;
+	font-size: 18px;
+	font-family: Poppins, Arial, sans-serif;
+	color: #33475b;
+	border: 0;
+	box-shadow: none;
+	padding: 0;
+	background-color: transparent;
+	resize: none;
+    padding-top: 3px;
+}
+.waic-chatbot-footer textarea.waic-chatbot-input::placeholder {
+	color: #D9D9D9;
+}
+.waic-chatbot-footer textarea.waic-chatbot-input:focus {
+	outline: none;
+	border: none;
+	box-shadow: none;
+}
+.waic-message-actions {
+	display: flex;
+}
+.waic-message-action {
+	width: 50px;
+	height: 50px;
+	border-radius: 50%;
+	display: flex;
+	padding: 10px;
+	justify-content: center;
+	align-items: center;
+	font-size: 24px;
+	margin: 0 -5px;
+	cursor: pointer;
+}
+.waic-message-action:hover {
+	background-color: #2e475d1a;
+}
+.waic-message-action.waic-disabled {
+	color: #d9d9d9 !important;
+}
+.waic-message-action.waic-disabled:hover{
+	background-color: transparent !important;
+	cursor: not-allowed !important;
+}
+
+.waic-chatbot-buttons {
+	display: flex;
+	justify-content: flex-end;
+	position: relative;
+	z-index: 2;
+}
+.waic-chatbot-button {
+	border-radius: 50%;
+	width: 60px;
+	height: 60px;
+	display: flex;
+	padding: 0;
+	border: 0;
+	background-color: #4C647E;
+	margin: 0;
+	margin-top: 10px;
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 1px 4px, rgba(0, 0, 0, 0.2) 0px 2px 12px;
+	transition: transform 100ms ease-in-out;
+	align-items: center;
+    justify-content: center;
+}
+.waic-chatbot-button img {
+	width: 40px;
+}
+.waic-chatbot-button img.waic-icon-svg {
+	filter: invert(1);
+}
+.waic-chatbot-button:hover, 
+.waic-chatbot-button:focus {
+	box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 6px, rgba(0, 0, 0, 0.2) 0px 4px 16px;
+	transform: scale(1.1);
+}
+.waic-message-loader {
+	display: flex;
+	align-items: baseline;
+}
+.waic-typing {
+	display: flex;
+	align-items: center;
+}
+.waic-typing .dot {
+	width: 4px;
+	height: 4px;
+	background-color: #4C647E;
+	border-radius: 50%;
+	margin: 0 3px;
+	animation: typing 1.5s infinite;
+}
+.waic-typing .dot:nth-child(2) {
+	animation-delay: 0.3s;
+}
+.waic-typing .dot:nth-child(3) {
+	animation-delay: 0.6s;
+}
+@keyframes typing {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+.waic-chatbot-card {
+	border-radius: 8px;
+	background-color: #ffffff;
+	padding: 16px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	margin-top: 10px;
+	cursor: pointer;
+}
+.waic-card-hor {
+	display: flex;
+	gap: 10px;
+}
+.waic-card-hor .waic-card-image {
+	flex: 0 0 30%;
+}
+.waic-card-hor .waic-card-body {
+	flex: 1;
+}
+.waic-card-image img {
+	width: 100%;
+	height: auto;
+}
+.waic-card-name {
+	font-weight: 600;
+}
+.waic-card-price>.amount, .waic-card-price>ins>.amount {
+	color: #3085ca;
+	font-weight: 600;
+}
+.waic-card-price ins {
+	text-decoration-line: none;
+}
+.waic-card-cart {
+	margin-top: 10px;
+}
+.waic-card-desc {
+	margin: 5px 0;
+	font-size: 14px;
+}
+.waic-card-ver .waic-card-image {
+	position: relative;
+}
+.waic-card-ver .waic-card-cart {
+	display: flex;
+	justify-content: center;
+}
+.waic-card-cat {
+	display: flex;
+	background-color: #ebf5f8;
+	padding: 0 9px;
+	border-radius: 5px;
+	color: #3085ca;
+	font-weight: 600;
+	font-size: 12px;
+	width: fit-content;
+	margin-bottom: 10px;
+}
+.waic-card-ver .waic-card-featured {
+	display: flex;
+	background-color: #FF9800;
+	padding: 0 9px;
+	border-radius: 5px;
+	color: #ffffff;
+	font-weight: 600;
+	font-size: 10px;
+	width: fit-content;
+	margin-bottom: 10px;
+}
+.waic-card-image .waic-card-featured {
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+.waic-card-footer {
+	display: flex;
+	gap: 10px;
+	justify-content: space-between;
+	color: #92a5ba;
+}

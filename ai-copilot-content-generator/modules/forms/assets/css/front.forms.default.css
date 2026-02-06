@@ -1,0 +1,118 @@
+.aiwu-hidden, .aiwu-hide {
+	display: none !important;
+}
+.aiwu-form-wrapper {
+	background: #ffffff;
+	border: 1px solid #e6e6e9;
+	border-radius: 12px;
+	padding: 24px;
+	max-width: 720px;
+	margin: 0 auto;
+	font-family: inherit;
+	font-size: 14px;
+}
+.aiwu-form-wrapper form {
+	margin: 0;
+	padding: 0;
+}
+.aiwu-form-title {
+	margin: 0 0 6px;
+	line-height: 1.2;
+	display: block;
+	font-size: 19px;
+	font-weight: bold;
+}
+.aiwu-form-desc {
+	margin: 0 0 20px;
+	color: #6b7280;
+	font-size: 16px;
+}
+.aiwu-field-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	margin-bottom: 16px;
+}
+.aiwu-field-title, .aiwu-output-title {
+	font-weight: 600;
+	font-size: 16px;
+}
+.aiwu-field-wrapper input {
+	display: block;
+	width: 100%;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	padding: 8px 10px;
+	outline: none;
+	background: #fff;
+	box-shadow: none;
+}
+.aiwu-field-wrapper textarea {
+	display: block;
+	width: 100%;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	padding: 8px 10px;
+	outline: none;
+	background: #fff;
+	box-shadow: none;
+}
+.aiwu-field-wrapper select {
+	display: block;
+	width: 100%;
+	border: 1px solid #ccc;
+	border-radius: 8px;
+	padding: 8px 10px;
+	outline: none;
+}
+.aiwu-field-check, .aiwu-field-radio {
+	display: flex;
+	margin: 0 10px;
+}
+.aiwu-field-check input, .aiwu-field-radio input {
+	width: auto;
+}
+.aiwu-form-buttons {
+	display: flex;
+	gap: 10px;
+	justify-content: end;
+}
+.aiwu-form-button {
+	border: 1px solid #FD5A2B;
+	background-color: #FD5A2B;
+	color: #fff;
+	border-radius: 8px;
+	padding: 8px 14px;
+	font-weight: 600;
+	cursor: pointer;
+	outline: none !important;
+}
+.aiwu-form-button.aiwu-button-reset {
+	background-color: #fff;
+	color: #FD5A2B;
+}
+button.aiwu-form-button:hover, button.aiwu-form-button:focus {
+	opacity: 0.9;
+	border: 1px solid #FD5A2B;
+	background-color: #FD5A2B;
+	color: #fff;
+}
+button.aiwu-button-reset:hover, button.aiwu-button-reset:focus {
+	opacity: 0.9;
+	border: 1px solid #FD5A2B;
+	background-color: #fff;
+	color: #FD5A2B;
+}
+.aiwu-form-output {
+	margin-top: 16px;
+	padding: 0;
+}
+.aiwu-output-text {
+	border: 1px solid #e6e6e9;
+	border-radius: 8px;
+	padding: 12px;
+	min-height: 80px;
+	background: #fafafa;
+	box-shadow: none;
+}
+

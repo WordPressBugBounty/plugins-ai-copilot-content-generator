@@ -1,0 +1,70 @@
+.waic-content-ad {
+	max-width: 900px;
+    margin: 20px auto;
+}
+.waic-ad-header-block {
+	display: flex;
+	-ms-flex-wrap: wrap;
+	flex-wrap: wrap;
+}
+.waic-ad-header, .waic-ad-header-image {
+	width: 50%;
+	padding: 20px;
+}
+.waic-ad-header>div {
+	margin-bottom: 16px;
+	line-height: normal;
+}
+.waic-ad-sub-title {
+	color: #F25C19;
+	font-size: 16px;
+	font-weight: 600;
+}
+.waic-ad-header-title {
+	font-size: 30px;
+	font-weight: 600;
+}
+.waic-ad-header-text {
+	font-size: 16px;
+	font-weight: 400;
+}
+.waic-ad-header a.wbw-button-pro {
+	margin-left: 0;
+	border-radius: 5px;
+}
+.waic-ad-header-image img {
+	width: 100%;
+}
+ul.waic-ad-body {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+.waic-ad-body li {
+	max-width: 360px;
+	min-height: 170px;
+	padding: 30px 16px 24px 0;
+	line-height: normal;
+}
+.waic-ad-body img {
+	margin-left: -3px;
+}
+.waic-ad-body-title {
+	font-size: 20px;
+	font-weight: 900;
+	margin: 10px 0
+}
+@media screen and (max-width: 760px) {
+	.waic-ad-header-block {
+		flex-direction: column-reverse;
+	}
+	.waic-ad-header, .waic-ad-header-image {
+		width: 100%;
+	}
+	ul.waic-ad-body {
+		flex-wrap: wrap;
+	}
+	.waic-ad-body li {
+		max-width: 100%;
+	}
+}

@@ -1,0 +1,130 @@
+.mce-menu-item.mce-waic-icon-grammar .mce-ico,
+.mce-menu-item .mce-waic-icon-grammar .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-grammar .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-grammar .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/grammar.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-enhance .mce-ico,
+.mce-menu-item .mce-waic-icon-enhance .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-enhance .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-enhance .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/enhance.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-longer .mce-ico,
+.mce-menu-item .mce-waic-icon-longer .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-longer .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-longer .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/longer.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-shorter .mce-ico,
+.mce-menu-item .mce-waic-icon-shorter .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-shorter .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-shorter .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/shorter.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-translate .mce-ico,
+.mce-menu-item .mce-waic-icon-translate .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-translate .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-translate .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/translate.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-synonyms .mce-ico,
+.mce-menu-item .mce-waic-icon-synonyms .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-synonyms .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-synonyms .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/synonyms.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.mce-menu-item.mce-waic-icon-cust .mce-ico,
+.mce-menu-item .mce-waic-icon-cust .mce-ico {
+    display: none !important;
+}
+
+.mce-menu-item.mce-waic-icon-cust .mce-text::before,
+.tox .tox-collection__item.mce-waic-icon-cust .tox-collection__item-label::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background-image: url('../img/cust.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+#waic-mt-dialog {
+    display: none;
+    text-align: center;
+}

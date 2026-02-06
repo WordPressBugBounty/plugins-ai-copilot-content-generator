@@ -1,0 +1,312 @@
+//const { __ } = wp.i18n;
+import { registerPlugin } from '@wordpress/plugins';
+import { select } from '@wordpress/data';
+import { BlockControls } from '@wordpress/block-editor';
+import { DropdownMenu, ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import { Fragment } from '@wordpress/element';
+import { createHigherOrderComponent } from '@wordpress/compose';
+import { more } from '@wordpress/icons';
+import { create, slice, getTextContent } from '@wordpress/rich-text';
+
+const grammarIcon = () => (
+	<svg version="1.0" width="20px" height="20px" viewBox="0 0 45 45.75" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+		<g transform="translate(0,45.75)scale(.075,.075)">
+			<path id="path1" d="M 40 -603 c -38 13 -40 30 -40 299 0 225 2 265 16 278 23 24 545 24 568 0 14 -13 16 -53 16 -280 0 -251 -1 -265 -20 -284 -19 -19 -33 -20 -273 -19 -138 0 -259 3 -267 6 z m 408 165 c 21 21 14 38 -36 93 -27 29 -62 79 -79 112 -40 79 -57 80 -133 7 -66 -63 -76 -97 -30 -102 18 -2 35 7 59 32 l 34 35 37 -57 c 35 -54 111 -132 128 -132 4 0 13 5 20 12 z " />
+		</g>
+	</svg>
+);
+
+const enhanceIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect y="0.5" width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M46.25 25.7089L35.8853 24.1253L31.2499 14.25L26.6146 24.1253L16.25 25.7089L23.7498 33.3959L21.9794 44.25L31.2499 39.1252L40.5204 44.25L38.75 33.3959L46.25 25.7089ZM29.7256 32.677L30.1603 35.3422L27.8838 34.0839L25.6073 35.3422L26.0421 32.677L24.2004 30.7894L26.7456 30.4005L27.8838 27.9756L29.0221 30.4005L31.5672 30.7894L29.7256 32.677Z" fill="white"/>
+	</svg>
+);
+
+const longerIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect y="0.75" width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M35.5456 15.75L33.7615 17.5341L37.8522 21.6247L32.5 26.9769L35.0231 29.5L40.3752 24.1478L44.4659 28.2385L46.25 26.4544V15.75H35.5456Z" fill="white"/>
+		<path d="M16.25 45.75H26.9544L28.7385 43.8037L24.6478 39.3412L30 33.5024L27.4769 30.75L22.1247 36.5888L18.0341 32.1262L16.25 34.0725V45.75Z" fill="white"/>
+	</svg>
+);
+
+const shorterIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect y="0.75" width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M19.2956 28.25L17.5115 30.3584L21.6022 35.1929L16.25 41.5182L18.7731 44.5L24.1252 38.1747L28.2159 43.0091L30 40.9007V28.25H19.2956Z" fill="white"/>
+		<path d="M32.5 28.25H43.2044L44.9885 26.4659L40.8978 22.3752L46.25 17.0231L43.7269 14.5L38.3747 19.8522L34.2841 15.7615L32.5 17.5456V28.25Z" fill="white"/>
+	</svg>
+);
+
+const translateIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect y="0.5" width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M22.5 28L26.25 18" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M30 28L26.25 18" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M27.5 26.75H23.75" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M37.9863 29.6562H43.4485" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M40.4652 29.6562C40.4652 33.1839 36.1654 39.0118 31.8574 39.9059" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M34.165 35.6797C35.8963 37.6305 38.725 39.5325 41.3341 39.9064" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M33.299 14.25H19.201C17.5712 14.25 16.25 15.406 16.25 16.8321V29.1679C16.25 30.594 17.5712 31.75 19.201 31.75H33.299C34.9288 31.75 36.25 30.594 36.25 29.1679V16.8321C36.25 15.406 34.9288 14.25 33.299 14.25Z" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+		<path d="M26.25 34.2541V41.299C26.25 42.9205 27.5801 44.25 29.2021 44.25H43.2978C44.9199 44.25 46.25 42.9205 46.25 41.299V27.201C46.25 25.5795 44.9199 24.25 43.2978 24.25H36.25" stroke="white" stroke-linecap="round" stroke-linejoin="round"/>
+	</svg>
+);
+
+const synonymsIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 61" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect y="0.25" width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M21.9745 32.0937C21.0135 31.323 20.226 30.3591 19.6634 29.2649C19.1008 28.1707 18.7756 26.9707 18.7091 25.7429C18.6426 24.5151 18.8361 23.2871 19.2772 22.1389C19.7183 20.9906 20.397 19.9478 21.2692 19.0784C22.1414 18.2089 23.1874 17.5324 24.3393 17.0926C25.4911 16.6529 26.7229 16.4599 27.9546 16.5263C29.1862 16.5926 30.39 16.9167 31.4876 17.4776C32.5852 18.0385 33.5521 18.8235 34.3252 19.7815L35.0009 19.6692C35.8129 19.6773 36.6228 19.7524 37.4223 19.8938C36.5887 18.3546 35.406 17.0308 33.9683 16.028C32.5306 15.0252 30.8777 14.3712 29.1415 14.1181C27.4053 13.8651 25.6338 14.0199 23.9683 14.5703C22.3028 15.1207 20.7893 16.0514 19.5486 17.2883C18.3078 18.5251 17.3742 20.0339 16.8221 21.6942C16.2699 23.3546 16.1146 25.1205 16.3685 26.8513C16.6224 28.5821 17.2784 30.2298 18.2843 31.663C19.2902 33.0962 20.6182 34.2753 22.1622 35.1062C21.9992 34.3359 21.8988 33.5537 21.8619 32.7673C21.8619 32.5428 21.9557 32.3182 21.9745 32.0937ZM38.2669 22.0269C37.3542 21.7408 36.4074 21.5772 35.4514 21.5404H35.0009C32.0141 21.5404 29.1495 22.7232 27.0375 24.8287C24.9254 26.9341 23.7389 29.7897 23.7389 32.7673C23.7389 32.917 23.7389 33.0667 23.7389 33.2164C23.7698 34.1686 23.9276 35.1124 24.2082 36.0231C24.7716 37.8804 25.8084 39.5604 27.2172 40.8993C28.6261 42.2381 30.359 43.1901 32.247 43.6624C34.1349 44.1347 36.1134 44.1111 37.9894 43.5939C39.8655 43.0768 41.5751 42.0838 42.9514 40.7117C44.3278 39.3397 45.3239 37.6354 45.8427 35.7652C46.3614 33.895 46.3851 31.9227 45.9113 30.0406C45.4376 28.1586 44.4826 26.4311 43.1396 25.0266C41.7965 23.6221 40.1113 22.5886 38.2481 22.0269H38.2669ZM35.0009 41.5617C33.3307 41.557 31.6961 41.0797 30.2872 40.1854C28.8784 39.291 27.7532 38.0164 27.0424 36.5096H27.4929C30.4798 36.5096 33.3443 35.3268 35.4564 33.2213C37.5684 31.1159 38.7549 28.2603 38.7549 25.2827C38.7549 25.133 38.7549 24.9833 38.7549 24.8336C40.5729 25.6793 42.0466 27.1187 42.9319 28.9133C43.8173 30.708 44.0611 32.7503 43.6231 34.702C43.1852 36.6536 42.0916 38.3976 40.5236 39.6452C38.9555 40.8927 37.0071 41.5688 35.0009 41.5617Z" fill="white"/>
+	</svg>
+);
+
+const custIcon = () => (
+	<svg width="20px" height="20px" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<rect width="60" height="60" rx="5" fill="#2D3E50"/>
+		<path d="M45.8754 20.125C45.7505 19.75 45.3135 19.6875 45.0013 19.9375L39.9441 25C39.5695 25.375 38.9451 25.375 38.5705 25L35.0117 21.4375C34.6371 21.0625 34.6371 20.4375 35.0117 20.0625L40.1314 15C40.3811 14.75 40.2562 14.3125 39.9441 14.125C39.07 13.875 38.1335 13.75 37.2594 13.75C31.9524 13.75 27.7068 18.3125 28.3312 23.75C28.456 24.625 28.6433 25.375 28.9555 26.125L17.2802 37.75C15.9066 39.125 15.9066 41.375 17.2802 42.6875C17.967 43.375 18.9035 43.75 19.7776 43.75C20.6517 43.75 21.5882 43.375 22.275 42.6875L33.8879 31.0625C34.6371 31.375 35.4488 31.5625 36.2604 31.6875C41.6922 32.3125 46.25 28.0625 46.25 22.75C46.25 21.8125 46.1251 20.9375 45.8754 20.125Z" fill="white"/>
+	</svg>
+);
+
+const askAiIcon = () => (
+	<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<path d="M44.4706 39.2321L42.7112 41.7125C42.4696 42.0526 42.381 42.6621 42.5248 43.061L43.3517 45.4495C43.8843 46.9773 43.0445 47.8321 41.4893 47.3548L38.85 46.5369C38.4082 46.4009 37.7564 46.5295 37.4133 46.8296L35.5648 48.4241C34.1045 49.6812 32.9732 49.1336 33.0431 47.2009L33.1411 44.5009C33.1597 44.0088 32.8222 43.4003 32.4031 43.1438L30.0689 41.7183C28.3994 40.6972 28.5632 39.4691 30.4397 38.981L32.8169 38.3681C33.2612 38.2534 33.7375 37.8014 33.8666 37.3651L34.6431 34.7586C35.1026 33.2273 36.2934 33.0194 37.2907 34.3008L38.8463 36.3025C39.112 36.6389 39.6686 36.9113 40.0925 36.8993L43.1771 36.846C44.8411 36.815 45.4237 37.8915 44.4706 39.2321Z" fill="#FFBF8F"/>
+		<path d="M44.9749 15.9933L42.8547 18.1732C42.5635 18.4721 42.3821 19.0606 42.4628 19.477L42.9122 21.9643C43.2032 23.5559 42.2418 24.2712 40.7786 23.5602L38.2967 22.3456C37.8811 22.1433 37.2173 22.17 36.8321 22.4138L34.7601 23.7046C33.1237 24.7219 32.0902 24.0067 32.4568 22.1078L32.9693 19.4551C33.0634 18.9717 32.8237 18.3185 32.4491 18.0006L30.3622 16.2327C28.8697 14.9667 29.2206 13.7785 31.1499 13.5851L33.5932 13.3455C34.0498 13.3006 34.59 12.9272 34.7847 12.516L35.9532 10.0602C36.643 8.61785 37.8516 8.59573 38.6397 10.0155L39.8687 12.2328C40.0794 12.606 40.5874 12.9609 41.0081 13.0142L44.0641 13.4365C45.7131 13.662 46.123 14.8154 44.9749 15.9933Z" fill="#BF2434"/>
+		<path d="M28.1179 24.4542L26.9077 27.244C26.7414 27.6267 26.7803 28.2413 27.0033 28.602L28.3049 30.7687C29.141 32.1539 28.4955 33.1635 26.8753 33.0171L24.1241 32.7609C23.6638 32.7189 23.0525 32.9791 22.7787 33.3435L21.2986 35.2849C20.1288 36.816 18.909 36.5135 18.5789 34.6079L18.1181 31.9457C18.0348 31.4604 17.5791 30.9345 17.1162 30.7699L14.5382 29.8563C12.694 29.2013 12.6011 27.9659 14.3367 27.1014L16.5365 26.0115C16.9476 25.8077 17.3204 25.2671 17.3568 24.8136L17.5792 22.103C17.7131 20.5099 18.8354 20.0609 20.0755 21.1092L22.0105 22.7472C22.3398 23.0215 22.9406 23.1734 23.3529 23.0741L26.3602 22.3861C27.9821 22.0126 28.7741 22.9459 28.1179 24.4542Z" fill="#FF5C35"/>
+	</svg>
+);
+
+const waicMTIconMap = {
+	grammar: grammarIcon,
+	enhance: enhanceIcon,
+	longer: longerIcon,
+	shorter: shorterIcon,
+	translate: translateIcon,
+	synonyms: synonymsIcon,
+	cust: custIcon
+};
+
+const withParagraphToolbarDropdown = createHigherOrderComponent((BlockEdit) => {
+	return (props) => {
+		const { name, isSelected } = props;
+
+		if (name !== 'core/paragraph' || !isSelected) {
+			return <BlockEdit {...props} />;
+		}
+
+		let dataItems = [];
+
+		for (const [key, item] of Object.entries(WaicMagicTextData.items)) {
+			const Icon = waicMTIconMap[key];
+
+			dataItems.push({
+				title: item.name,
+				icon: Icon ? <Icon /> : undefined,
+				onClick: () => {
+					const selectedText = waicMTGetSelectedText();
+					waicMTClickItem(key, selectedText);
+				},
+			});
+		}
+
+		return (
+			<Fragment>
+				<BlockEdit {...props} />
+				<BlockControls>
+					<ToolbarGroup>
+						<DropdownMenu
+							icon={askAiIcon()}
+							text={WaicMagicTextData.lang.ask_ai}
+							label={WaicMagicTextData.lang.ask_ai_title}
+							controls={dataItems}
+						/>
+					</ToolbarGroup>
+				</BlockControls>
+			</Fragment>
+		);
+	};
+}, 'withParagraphToolbarDropdown');
+
+wp.hooks.addFilter(
+	'editor.BlockEdit',
+	'minimal-gutenberg-toolbar-dropdown/with-paragraph-toolbar-dropdown',
+	withParagraphToolbarDropdown
+);
+
+registerPlugin('minimal-gutenberg-toolbar-dropdown', {
+	render: () => null,
+});
+
+const waicMTGetSelectedText = () => {
+	const { getSelectedBlock, getSelectionStart, getSelectionEnd } = select('core/block-editor');
+	const block = getSelectedBlock();
+
+	if (!block || block.name !== 'core/paragraph') return '';
+
+	const start = getSelectionStart();
+	const end = getSelectionEnd();
+
+	if (!start || !end) return '';
+
+	const value = create({ html: block.attributes.content });
+	const sliced = slice(value, start.offset, end.offset);
+	return getTextContent(sliced);
+};
+
+window.waicMTTranslateCustom = {
+	doTranslate: function(params) {
+		const lang = jQuery('select[name="language"]').val();
+		waicMTSendRequest(params.item, params.selectedText, lang);
+	},
+	doCustom: function (params) {
+		//console.log(jQuery('textarea[name="custom_prompt"]').val());
+		const prompt = jQuery('textarea[name="custom_prompt"]').val();
+		waicMTSendRequest(params.item, params.selectedText, false, prompt);
+	}
+};
+
+function waicMTClickItem(item, selectedText) {
+	if ('translate' === item) {
+		waicShowConfirm('<div><span>' + WaicMagicTextData.lang.translate_to + ': </span>' + waicMTGetLangSelect() + '</div>', 'waicMTTranslateCustom', 'doTranslate', {
+			item: item,
+			selectedText: selectedText,
+		});
+	} else if ('cust' === item) {
+		waicShowConfirm('<div><span>' + WaicMagicTextData.lang.custom_prompt + ': </span>' + waicMTGetCustomTextarea(), 'waicMTTranslateCustom', 'doCustom', {
+			item: item,
+			selectedText: selectedText,
+		});
+	} else {
+		waicMTSendRequest(item, selectedText);
+	}
+
+}
+
+function waicMTSendRequest(item, selectedText, lang, prompt) {
+	waicShowMTDialog();
+
+	let params = {
+		item: item,
+		selected: selectedText,
+	};
+
+	if (typeof lang !== 'undefined' && lang) {
+		params.lang = lang;
+	}
+
+	if (typeof prompt !== 'undefined') {
+		params.prompt = prompt;
+	}
+
+	jQuery.post(WAIC_DATA.ajaxurl, {
+		pl: 'waic',
+		reqType: 'ajax',
+		waicNonce: WAIC_DATA.waicNonce,
+		mod: 'magictext',
+		action: 'getText',
+		params: params,
+	}, function (data){
+		waicHideMTDialog();
+		let parsed;
+		try {
+			parsed = (typeof data === 'string') ? JSON.parse(data) : data;
+		} catch (e) {
+			return;
+		}
+
+		if (parsed.error) {
+			wp.data.dispatch('core/notices').createErrorNotice(
+				parsed.errors[0],
+				{
+					isDismissible: true,
+				}
+			);
+		} else {
+			const replacementText = parsed.messages[0];
+			waicMTReplaceSelectedText(replacementText);
+		}
+	});
+}
+
+function waicMTReplaceSelectedText(replacementText) {
+	const { getSelectedBlock, getSelectionStart, getSelectionEnd } = wp.data.select('core/block-editor');
+	const { updateBlockAttributes } = wp.data.dispatch('core/block-editor');
+
+	const block = getSelectedBlock();
+	if (!block || block.name !== 'core/paragraph') return;
+
+	const content = block.attributes.content || '';
+	const start = getSelectionStart()?.offset || 0;
+	const end = getSelectionEnd()?.offset || content.length;
+
+	const newContent = content.slice(0, start) + replacementText + content.slice(end);
+
+	updateBlockAttributes(block.clientId, {
+		content: newContent
+	});
+
+	wp.data.dispatch('core/block-editor').clearSelectedBlock();
+}
+
+function waicMTGetLangSelect() {
+	jQuery('select[name="language"]').first().remove();
+
+	let s = '<select name="language" class="waicMagicTextLangSelect">';
+	for (const [key, item] of Object.entries(WaicMagicTextData.language)) {
+		s += '<option value="' + item + '">' + item + '</option>';
+	}
+
+	s += '</select>';
+	return s;
+}
+
+function waicMTGetCustomTextarea() {
+	jQuery('textarea[name="custom_prompt"]').first().remove();
+
+	return '<div><textarea name="custom_prompt" class="wbw-fullwidth" rows="4"></textarea></div>'
+}
+
+jQuery(document).ready(function ($) {
+	$('body').append(`
+		<div id="waic-mt-dialog">
+			<div class="wbw-plugin-loader">
+				<div class="waic-loader">
+					<div class="waic-loader-bar bar1"></div>
+					<div class="waic-loader-bar bar2"></div>
+				</div>
+			</div>
+			<p>AI is working...</p>
+		</div>
+	`);
+
+	$("#waic-mt-dialog").dialog({
+		autoOpen: false,
+		modal: true,
+		resizable: false,
+		draggable: false,
+		closeOnEscape: false,
+		dialogClass: "no-close",
+		width: 300,
+		create: function () {
+			const $dlg = $(this).closest('.ui-dialog');
+			$dlg.appendTo('body');
+
+			$dlg.css({
+				'z-index': 99999999,
+				'position': 'fixed',
+				'top': '50%',
+				'left': '50%',
+				'transform': 'translate(-50%, -50%)'
+			});
+
+			$dlg.find('.ui-dialog-titlebar').hide();
+		}
+	});
+
+	window.waicShowMTDialog = function () {
+		$("#waic-mt-dialog").dialog("open");
+	};
+
+	window.waicHideMTDialog = function () {
+		$("#waic-mt-dialog").dialog("close");
+	};
+});
