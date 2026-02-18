@@ -799,7 +799,7 @@ a.waic-get-social {
 .waic-paragraf-preview a {
 	color: red;
 }
-.waic-group-hidden, .waic-hidden {
+.waic-group-hidden, .waic-hidden, .waic-hidden2 {
 	display: none !important;
 }
 .waic-grbtn {
@@ -906,4 +906,10 @@ a.waic-get-social {
 .waic-popup-field input, .waic-popup-field textarea {
 	width: 100% !important;
 }
-
+.wbw-body-history .dt-buttons {
+	display: flex;
+    flex-wrap: wrap;
+}
+.wbw-body-history .waic-delete-button {
+	margin: 0 15px 0 auto !important;
+}

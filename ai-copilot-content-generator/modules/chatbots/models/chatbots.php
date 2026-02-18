@@ -40,7 +40,7 @@ class WaicChatbotsModel extends WaicModel {
 		}
 		return true;
 	}
-	public function setChatbotParams( $taskId ) {
+	public function setChatbotParams( $taskId, $oldTask ) {
 		$task = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTask($taskId);
 		if (!$task || empty($task)) {
 			return ;
@@ -84,6 +84,8 @@ class WaicChatbotsModel extends WaicModel {
 			$rules[$taskId] = $rule;
 		}
 		$this->setChatbotShowRules($rules);
+		
+		return WaicDispatcher::applyFilters('setChatbotParams', false, $oldTask, $task);
 	}
 	public function isActiveChat( $taskId = 0, $userId = 0, $ip = '', $mode = 0, $lifetime = 0 ) {
 		$query = 'SELECT 1 FROM @__history' .
@@ -107,6 +109,7 @@ class WaicChatbotsModel extends WaicModel {
 			( false !== $status ? ' AND h.status= ' . ( (int) $status ) : '' ) .
 			' AND h.mode=' . ( (int) $mode ) .
 			' AND h.user_id=' . ( (int) $userId ) .
+			' AND l.status=0' .
 			( empty($userId) || $forDate ? " AND ip='" . $ip . "'" : '' ) .
 			( $forDate ? " AND h.created BETWEEN '" . $dd . " 00:00:00' AND '" . $dd . " 23:59:59'" : '' ) .
 			' ORDER BY h.id' .
@@ -127,6 +130,16 @@ class WaicChatbotsModel extends WaicModel {
 			' WHERE h.status=0 AND h.task_id=' . ( (int) $taskId ) .
 			' AND h.mode=' . ( (int) $mode ) .
 			' AND ' . ( empty($userId) ? "ip='" . $ip . "'" : 'h.user_id=' . ( (int) $userId ) ); 
+		WaicDb::query($query);
+		return true;
+	}
+	public function resetUserChatLog( $taskId = 0, $userId = 0, $ip = '', $mode = 0 ) {
+		$query = 'UPDATE @__chatlogs l' .
+			' INNER JOIN @__history h ON (l.his_id=h.id)' .
+			' SET l.status=9' .
+			' WHERE h.status=0 AND h.task_id=' . ( (int) $taskId ) .
+			' AND h.mode=' . ( (int) $mode ) .
+			' AND ' . ( empty($userId) ? "h.ip='" . $ip . "'" : 'h.user_id=' . ( (int) $userId ) ); 
 		WaicDb::query($query);
 		return true;
 	}
@@ -479,7 +492,8 @@ class WaicChatbotsModel extends WaicModel {
 				'- Do not include any document-level tags such as <html>, <head>, or <body>. ' . PHP_EOL .
 				'- Return HTML only — no explanations, no extra text.';
 				
-			$embedId = WaicUtils::getArrayValue($apiOptions, 'embedding', 0, 1);
+			$knowledge = WaicUtils::getArrayValue($params, 'knowledge', array(), 2);
+			$embedId = WaicUtils::getArrayValue($knowledge, 'embeddings', 0, 1);
 			if (!empty($embedId)) {
 				$instructions .= WaicDispatcher::applyFilters('addEmbeddingText', '', $embedId, $message);
 			}

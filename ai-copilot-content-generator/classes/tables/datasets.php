@@ -13,8 +13,11 @@ class WaicTableDatasets extends WaicTable {
 			 ->_addField('source', 'text', 'int')
 			 ->_addField('format', 'text', 'int')
 			 ->_addField('status', 'text', 'int')
+			 ->_addField('recalc', 'text', 'int')
 			 ->_addField('tokens', 'text', 'int')
 			 ->_addField('params', 'text', 'varchar')
+			 ->_addField('fixed', 'text', 'int')
+			 ->_addField('auto', 'text', 'int')
 			 ->_addField('created', 'text', 'text')
 			 ->_addField('updated', 'text', 'text');
 	}

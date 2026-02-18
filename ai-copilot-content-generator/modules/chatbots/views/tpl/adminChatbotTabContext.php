@@ -92,6 +92,19 @@ $hidden = $eHumanRequest ? '' : ' wbw-hidden';
 			</div>
 		</div>
 	</div>
+<?php if (!empty($props['is_pro'])) { ?>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Hide branding', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('You can disable the display of the Powered by AIWU link here.', 'ai-copilot-content-generator'); ?>">
+			<?php
+				WaicHtml::checkbox('context[hide_branding]', array(
+					'checked' => WaicUtils::getArrayValue($context, 'hide_branding', 0, 1),
+				));
+				?>
+		</div>
+	</div>
+<?php } ?>
 	<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="context[e_human_request]">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Admin Email', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
@@ -189,6 +202,39 @@ $isCustom = strpos($aiAvatar, 'ai_avatar') !== 0;
 			</div>
 		</div>
 	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Above message', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Select what to display next to the AI ​​bot\'s message. Please note that the selected elements must be specified above.', 'ai-copilot-content-generator'); ?>">
+			<div class="wbw-settings-field">
+				<?php 
+					WaicHtml::selectbox('context[show_ai_data]', array(
+						'options' => array(
+							'' => __('Avatar & name', 'ai-copilot-content-generator'),
+							'avatar' => __('Avatar only', 'ai-copilot-content-generator'),
+							'name' => __('Name only', 'ai-copilot-content-generator'),
+							'none' => __('None', 'ai-copilot-content-generator'),
+						),
+						'value' => WaicUtils::getArrayValue($context, 'show_ai_data', $defForChecks ? 'none' : ''),
+						'attrs' => 'class="wbw-small-field"',
+					));
+					?>
+			</div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row wbw-settings-top">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Status', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Specify the text that will be displayed under the bot name in the chatbot header', 'ai-copilot-content-generator'); ?>">
+			<div class="wbw-settings-field">
+			<?php 
+				WaicHtml::text('context[ai_status]', array(
+					'value' => WaicUtils::getArrayValue($context, 'ai_status', __('Online', 'ai-copilot-content-generator')),
+				));
+				?>
+			</div>
+		</div>
+	</div>
 	<div class="wbw-settings-form row wbw-settings-top">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Welcome message', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
@@ -271,7 +317,7 @@ $n = 0;
 		<?php esc_html_e('User Identity', 'ai-copilot-content-generator'); ?>
 	</div>
 <?php 
-$eUserName = WaicUtils::getArrayValue($context, 'e_user_name', $defForChecks, 1, false, true);
+$eUserName = WaicUtils::getArrayValue($context, 'e_user_name', 0, 1, false, true);
 $hidden = $eUserName ? '' : ' wbw-hidden';
 $options = array(
 	'user' => __('Use username if known', 'ai-copilot-content-generator'),
@@ -311,7 +357,7 @@ $options = array(
 		</div>
 	</div>
 <?php 
-$eUserAvatar = WaicUtils::getArrayValue($context, 'e_user_avatar', $defForChecks, 1, false, true);
+$eUserAvatar = WaicUtils::getArrayValue($context, 'e_user_avatar', 0, 1, false, true);
 $hidden = $eUserAvatar ? '' : ' wbw-hidden';
 $options = array(
 	'user' => __('Use user photo, or gravatar if known', 'ai-copilot-content-generator'),

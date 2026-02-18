@@ -146,16 +146,19 @@ class WaicWorkspaceModel extends WaicModel {
 			$task['start'] = 0;
 			$task['end'] = 0;*/
 			$params = array(
-				'step' => 0,
+				'step' => empty($steps['step']) ? 0 : $steps['step'],
 				'start' => null,
 				'end' => null,
-				'status' => 1,
+				'status' => empty($steps['status']) ? 1 : $steps['status'],
 				'cnt' => $steps['cnt'],
 				'steps' => $steps['steps'],
 			);
 			//return true;
 			if (!$tasksModel->updateTask($id, $params)) {
 				return false;
+			}
+			if (!empty($steps['status']) && $steps['status'] == 4) {
+				return true;
 			}
 			$run = true;
 		} else {
@@ -182,8 +185,10 @@ class WaicWorkspaceModel extends WaicModel {
 		
 		return true;
 	}
-	public function stopGeneration( $id = 0 ) {
-		$this->setStoppingTaskGeneration();
+	public function stopGeneration( $id ) {
+		if ($this->getRunningTask() == $id) {
+			$this->updateById(array('value' => 0), $this->runningTaskId);
+		}
 		return $this->getModule()->getModel('tasks')->stopTask($id);
 	}
 	public function cancelGeneration( $id ) {
@@ -275,15 +280,27 @@ class WaicWorkspaceModel extends WaicModel {
 
 			$aiProvider->init($taskId);
 		}
-
-		if (!$this->doGenerationTask($taskId, $aiProvider)) {
+		$result = $this->doGenerationTask($taskId, $aiProvider);
+		$this->setStoppingTaskGeneration();
+		
+		$this->resetRunningFlag();
+		
+		$task = $tasksModel->getTask($taskId);
+		if ($task && $task['recalc'] == 1) {
+			$tasksModel->updateTask($taskId, array('status' => 0, 'recalc' => 0));
+			$this->startGeneration($taskId);
+		}
+		return $result;
+		
+		/*if (!$result) {
 			$this->resetRunningFlag();
 			return false;
 		}
+		
 		$this->setStoppingTaskGeneration();
 
 		$this->resetRunningFlag();
-		return true;
+		return true;*/
 	}
 
 	public function doGenerationTask( $id, $aiProvider ) {
@@ -311,9 +328,11 @@ class WaicWorkspaceModel extends WaicModel {
 		//}
 		$results = $module->getModel()->doGeneration($task, $aiProvider);
 		$task = $this->controlSteps($task, $model);
+		
 		if (is_array($results)) {
 			return $tasksModel->updateTask($id, $results);
 		}
+				
 		//$task = $this->controlSteps($task, $model);
 		return false;
 	}

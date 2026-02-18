@@ -11,6 +11,8 @@ class WaicTableDs_Data extends WaicTable {
 			 ->_addField('ds_id', 'text', 'int')
 			 ->_addField('prompt', 'text', 'varchar')
 			 ->_addField('completion', 'text', 'varchar')
-			 ->_addField('obj_id', 'text', 'int');
+			 ->_addField('tokens', 'text', 'int')
+			 ->_addField('obj_id', 'text', 'int')
+			 ->_addField('added', 'text', 'text');
 	}
 }

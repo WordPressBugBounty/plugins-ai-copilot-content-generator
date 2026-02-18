@@ -73,6 +73,7 @@ class WaicInstaller {
 				`params` MEDIUMTEXT NOT NULL,
 				`cnt` INT NOT NULL DEFAULT 0,
 				`status` TINYINT(1) NOT NULL DEFAULT 0,
+				`recalc` TINYINT(1) NOT NULL DEFAULT 0,
 				`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 				`updated` TIMESTAMP NULL,
 				`start` TIMESTAMP NULL,
@@ -219,6 +220,7 @@ class WaicInstaller {
 				`question` MEDIUMTEXT NOT NULL,
 				`answer` MEDIUMTEXT NOT NULL,
 				`file` MEDIUMTEXT NOT NULL,
+				`status` TINYINT(1) NOT NULL DEFAULT 0,
 				PRIMARY KEY (`id`),
 				INDEX `task_id` (`his_id`)
 			) DEFAULT CHARSET=utf8mb4;"));

@@ -11,6 +11,7 @@ class WaicTableChatlogs extends WaicTable {
 			 ->_addField('his_id', 'text', 'int')
 			 ->_addField('question', 'text', 'text')
 			 ->_addField('answer', 'text', 'text')
-			 ->_addField('file', 'text', 'text');
+			 ->_addField('file', 'text', 'text')
+			 ->_addField('status', 'text', 'int');
 	}
 }

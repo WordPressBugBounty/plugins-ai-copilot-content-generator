@@ -13,6 +13,7 @@ class WaicTableDs_posts extends WaicTable {
 			 ->_addField('format', 'text', 'int')
 			 ->_addField('prompt', 'text', 'text')
 			 ->_addField('status', 'text', 'int')
+			 ->_addField('mark', 'text', 'int')
 			 ->_addField('start', 'text', 'text')
 			 ->_addField('end', 'text', 'text')
 			 ->_addField('updated', 'text', 'text')

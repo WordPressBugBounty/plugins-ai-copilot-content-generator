@@ -89,6 +89,13 @@
 				$block.removeClass('waic-welcome-hidden');
 			}
 		}
+		$('.waic-chatbot-welcome .waic-welcome-popup').off('click').on('click', function(e) {
+			e.preventDefault();
+			var $openBtn = $(this).closest('.waic-chatbot-wrapper').find('.waic-chatbot-open');
+			if ($openBtn && $openBtn.length) {
+				$openBtn.trigger('click');
+			}
+		});
 	});
 	ChatbotFrontPage.prototype.moveFloatingElements = (function () {
 		var _this = this.$obj;
@@ -118,7 +125,9 @@
 			var viewId = $(this).closest('.waic-chatbot-buttons').attr('data-viewid'),
 				$buttons = $('.waic-chatbot-buttons.waic-' + viewId),
 				$panel = $('.waic-chatbot-panel.waic-' + viewId),
+				$wrapper = $panel.closest('.waic-chatbot-wrapper'),
 				$wrapperFull = $panel.closest('.waic-chatbot-float.waic-full-mobile'),
+				$btnExpand = $panel.find('.waic-action-expand'),
 				$duration = parseFloat($panel.css('transition-duration')) * 1000;
 			$panel.removeClass('waic-chatbot-show');
 			setTimeout(function () {
@@ -126,6 +135,8 @@
 					$panel.addClass('waic-chatbot-hidden');
 				}
 				$wrapperFull.removeClass('waic-full-show');
+				$wrapper.removeClass('waic-full-mode');
+				$btnExpand.removeClass($btnExpand.attr('data-compress')).addClass($btnExpand.attr('data-expand'));
 			}, $duration);
 			$buttons.find('.waic-chatbot-close').addClass('waic-chatbot-hidden');
 			$buttons.find('.waic-chatbot-open').removeClass('waic-chatbot-hidden');
@@ -252,6 +263,9 @@
 				}
 			}
 		});
+		_this.chatbots.find('.waic-chatbot-input').off('input').on('input', function(e) {
+			_this.adoptInput($(this));
+		});
 		
 		_this.chatbots.find('.waic-chatbot-messages').on('click', '.waic-chatbot-card', function(e) {
 			if (!$(e.target).is('a, button')) {
@@ -259,6 +273,65 @@
 				if (href) window.open(href, '_blank');
 			}
 		});
+		_this.chatbots.find('.waic-action-reset').off('click').on('click', function(e) {
+			e.preventDefault();
+			var $btn = $(this),
+				$widget = $btn.closest('.waic-chatbot-widget');
+			if ($widget.attr('data-preview') == 1 && app.waicChatbotAdminPage) {
+				waicShowAlert(waicCheckSettings(app.waicChatbotAdminPage.langSettings, 'not-supported'));
+			} else {
+				if (confirm($btn.attr('data-confirm'))) {
+					$.sendFormWaic({
+						data: {
+							mod: 'chatbots',
+							action: 'resetChatbotFront',
+							task_id: parseInt($widget.attr('data-task-id')),
+						},
+						onSuccess: function(res) {
+							if (!res.error) {
+								//window.location.reload();
+								$widget.find('.waic-chatbot-body .waic-chatbot-message:not(.waic-chatbot-tmp)').remove();
+							}
+						}
+					});
+				}
+			}
+			return false;
+		});
+		_this.chatbots.find('.waic-action-expand').off('click').on('click', function(e) {
+			e.preventDefault();
+			var $btn = $(this),
+				$widget = $btn.closest('.waic-chatbot-widget');
+			if ($widget.attr('data-preview') == 1 && app.waicChatbotAdminPage) {
+				waicShowAlert(waicCheckSettings(app.waicChatbotAdminPage.langSettings, 'not-supported'));
+			} else {
+				var $wrapper = $widget.find('.waic-chatbot-wrapper');
+				if ($btn.hasClass($btn.attr('data-expand'))) {
+					$wrapper.addClass('waic-full-mode');
+					$btn.removeClass($btn.attr('data-expand')).addClass($btn.attr('data-compress'));
+				} else {
+					$wrapper.removeClass('waic-full-mode');
+					$btn.removeClass($btn.attr('data-compress')).addClass($btn.attr('data-expand'));
+				}
+			}
+			return false;
+		});
+		
+	}
+	ChatbotFrontPage.prototype.adoptInput = function ($input) {
+		var $panel = $input.closest('.waic-chatbot-panel'),
+			maxHeight = 150,
+			height = $input.get(0).scrollHeight,
+			$footer = $panel.find('.waic-chatbot-footer'),
+			header = $panel.find('.waic-chatbot-header').outerHeight();
+		if ($input.val().length == 0) height = 35;
+		if (height > maxHeight) height = maxHeight;
+		else if (height < 35) height = 35; 
+		$input.css('height', 'auto');
+		$input.css('height', height + 'px');
+		$input.css('overflow-y', height >= maxHeight ? 'auto' : 'hidden');
+		$footer.css('height', 'auto');
+		$panel.find('.waic-chatbot-body').css('height', 'calc(100% - ' + ( header + $footer.outerHeight()) + 'px)');
 	}
 	ChatbotFrontPage.prototype.scrollBody = function ($widget, dur) {
 		var $chatBody = $widget.find('.waic-chatbot-body'),
@@ -284,6 +357,7 @@
 		if (message.length || isHumanReq) {
 			var mesId = _this.addMessage($widget, message.replace(/\n/g,'<br>'), request);
 			$input.val('');
+			_this.adoptInput($input);
 			
 			$.sendFormWaic({
 				data: {
@@ -320,7 +394,6 @@
 			aware = '';
 		if (selectors.length) {
 			selectors = waicParseJSON(selectors);
-			console.log(selectors);
 			selectors.forEach((selector) => {
 				var $elem = $(selector);
 				if ($elem.length) aware += $elem.clone().find('script,style,.waic-chatbot-widget,.waic-chatbot-widget-wrapper').remove().end().text();

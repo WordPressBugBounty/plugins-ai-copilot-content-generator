@@ -17,6 +17,7 @@ $userName = $this->props['user_name'];
 $data = $this->props['data'];
 $desktop = WaicUtils::getArrayValue($data, 'desktop', array(), 2);
 $mobile = WaicUtils::getArrayValue($data, 'mobile', array(), 2);
+$aiStatus = WaicUtils::getArrayValue($data, 'ai_status');
 
 $addSelector = '#waic-' . $props['view_id'];
 $viewMode = $this->props['view_mode'];
@@ -37,7 +38,7 @@ if (!empty($viewMode)) {
 	}
 }
 $customCss = $this->getCustomCssString($modes, $addSelector);
-
+$mobileFull = false;
 if (empty($viewMode)) {
 	if (isset($classes['wrapper']) && in_array('waic-full-mobile', $classes['wrapper'])) {
 		$this->setCustomCss('.waic-full-show', 'left', '0', 'mobile');
@@ -49,6 +50,8 @@ if (empty($viewMode)) {
 		$this->setCustomCss('.waic-full-show .waic-chatbot-panel', 'width', '100%', 'mobile');
 		$this->setCustomCss('.waic-full-show .waic-chatbot-panel', 'height', '10000px', 'mobile');
 		$this->setCustomCss('.waic-full-show .waic-chatbot-panel', 'max-height', '100%', 'mobile');
+		$this->setCustomCss('.waic-full-show .waic-chatbot-panel', 'border-radius', '0', 'mobile');
+		$mobileFull = true;
 	}
 	if ($this->existCustomCss('desktop')) {
 		$customCss .= '@media screen and (min-width: ' . $this->props['breakpoint'] . 'px) {' . $this->getCustomCssString(array('desktop'), $addSelector) . '}';
@@ -87,11 +90,25 @@ if (!empty($customCss)) { ?>
 					<img src="<?php echo esc_url($aiAvatar); ?>">
 				</div>
 			</div>
-			<div class="waic-chatbot-name waic-desktop"><?php echo esc_html(WaicUtils::getArrayValue($desktop, 'header_name', $aiName)); ?></div>
-			<div class="waic-chatbot-name waic-mobile"><?php echo esc_html(WaicUtils::getArrayValue($mobile, 'header_name', $aiName)); ?></div>
-			<div class="waic-header-close">
-				<i class="fa fa-<?php echo esc_attr(WaicUtils::getArrayValue($desktop, 'header_close', 'minus')); ?> waic-desktop"></i>
-				<i class="fa fa-<?php echo esc_attr(WaicUtils::getArrayValue($mobile, 'header_close', 'minus')); ?> waic-mobile"></i>
+			<div class="waic-chatbot-name waic-desktop">
+				<?php echo esc_html(WaicUtils::getArrayValue($desktop, 'header_name', $aiName)); ?>
+				<?php if (!empty($aiStatus)) { ?>
+					<div class="waic-ai-status"><?php echo esc_html($aiStatus); ?></div>
+				<?php } ?>
+			</div>
+			<div class="waic-chatbot-name waic-mobile">
+				<?php echo esc_html(WaicUtils::getArrayValue($mobile, 'header_name', $aiName)); ?>
+				<?php if (!empty($aiStatus)) { ?>
+					<div class="waic-ai-status"><?php echo esc_html($aiStatus); ?></div>
+				<?php } ?>
+			</div>
+			<div class="waic-header-actions">
+				<i class="fa fa-refresh waic-icon-action waic-action-reset" data-confirm="<?php esc_html_e('Start a new chat?', 'ai-copilot-content-generator'); ?>"></i>
+				<i class="fa fa-expand waic-icon-action waic-action-expand<?php echo $mobileFull ? ' waic-desktop' : ''; ?>" data-compress="fa-compress" data-expand="fa-expand"></i>
+				<div class="waic-header-close">
+					<i class="fa fa-<?php echo esc_attr(WaicUtils::getArrayValue($desktop, 'header_close', 'minus')); ?> waic-desktop"></i>
+					<i class="fa fa-<?php echo esc_attr(WaicUtils::getArrayValue($mobile, 'header_close', 'minus')); ?> waic-mobile"></i>
+				</div>
 			</div>
 		</div>
 		<div class="waic-chatbot-body">
@@ -194,6 +211,11 @@ if (!empty($customCss)) { ?>
 				</div>
 			</div>
 		</div>
+		<?php if (!empty($data['show_branding'])) { ?>
+			<div class="waic-chatbot-brand">
+				<a href="https://aiwuplugin.com/" target="_blank">Powered by AIWU</a>
+			</div>
+		<?php } ?>
 	</div>
 	<?php if (!empty($desktop['need_welcome'])) { ?>
 		<div class="waic-chatbot-welcome waic-desktop <?php echo esc_attr(implode(' ' , $classes['welcome'])); ?>"<?php echo ( '' === $desktop['popup_show'] ? '' : ' data-autoshow="' . esc_attr($desktop['popup_show']) . '"' ); ?>>

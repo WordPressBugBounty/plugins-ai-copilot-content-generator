@@ -1,10 +1,10 @@
-=== AIWU – Workflow Automation, AI Chatbot & Content Generator ===
+=== AI Chatbot & Workflow Automation by AIWU ===
 Contributors: wupsales
 Donate link: https://aiwuplugin.com/
-Tags: AI, ChatBot, Automation, SEO, WooCommerce
+Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
 Tested up to: 6.9
-Stable tag: 1.4.6
+Stable tag: 1.4.7
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -48,7 +48,9 @@ AI ChatBot that captures leads 24/7, handles 95% of support questions, and conve
 * **Knows your business.** AI ChatBot scans your website, posts and products to understand context automatically.
 * **Real-time recommendations.** AI ChatBot suggests products and posts with beautiful cards while chatting.
 * **Fully customizable.** Match your brand with custom colors, fonts, layout, logic and tone.
+* **Smart Knowledge Base.** Sync or delete specific content from your vector database with incremental updates (no full rebuild required).
 * **Advanced AI training.** Use Fine-Tuning and Embeddings (RAG) for higher accuracy.
+
 * **Built-in analytics.** Track AI ChatBot conversations, engagement and performance.
 
 👉 [Learn more about AI ChatBot](https://aiwuplugin.com/wordpress-ai-chatbot-plugin/)

@@ -11,7 +11,7 @@ class WaicPromo extends WaicModule {
 		WaicDispatcher::addFilter('mainAdminTabs', array($this, 'addAdminTab'));
 	}
 	public function addAdminTab( $tabs ) {
-		$tabs['training'] = array('label' => esc_html__('AI Training', 'ai-copilot-content-generator'), 'hidden' => true, 'callback' => array($this, 'showTraining'), 'fa_icon' => 'fa-list', 'sort_order' => 30, 'add_bread' => $this->getCode());
+		$tabs['training'] = array('label' => esc_html__('AI Training', 'ai-copilot-content-generator'), 'hidden' => false, 'callback' => array($this, 'showTraining'), 'fa_icon' => 'fa-list', 'sort_order' => 30, 'add_bread' => $this->getCode());
 		if (!WaicFrame::_()->getModule('postsrss')) {
 			$tabs['postsrss'] = array('label' => esc_html__('Autoblogging', 'ai-copilot-content-generator'), 'hidden' => true, 'callback' => array($this, 'showPostsrss'), 'fa_icon' => 'fa-list', 'sort_order' => 0, 'add_bread' => $this->getCode());
 		}

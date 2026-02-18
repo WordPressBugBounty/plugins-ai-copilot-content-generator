@@ -11,7 +11,8 @@ $readOnly = WaicUtils::getArrayValue($props, 'read_only') == 1;
 $tokens = WaicUtils::getArrayValue($variations, 'tokens', array(), 2);
 $curModels = array();
 foreach ($variations['engines'] as $m => $v) {
-	$var = ( 'open-ai' == $m ? 'model' : ( 'deep-seek' == $m ? 'deep_seek_model' : $m . '_model' ) );
+	$var = $variations['model-fields'][$m];
+	//( 'open-ai' == $m ? 'model' : ( 'deep-seek' == $m ? 'deep_seek_model' : $m . '_model' ) );
 	$curModels[$m] = WaicUtils::getArrayValue($options, $var, $defaults[$var]);
 	
 }
@@ -195,24 +196,27 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 		</div>
 	</div>
 <?php 
-$embeddings = WaicDispatcher::applyFilters('getEmbeddingsList', array());
-if (!empty($embeddings)) {
-	$embeddings = array(0 => __('Select', 'ai-copilot-content-generator')) + $embeddings;
-?>
-	<div class="wbw-settings-form row wbw-mb-ver10">
-		<div class="wbw-settings-label col-2"><?php esc_html_e('Embedding', 'ai-copilot-content-generator'); ?></div>
-		<div class="wbw-settings-fields col-10">
-			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Select Embedding', 'ai-copilot-content-generator')); ?>">
-			<?php
-				WaicHtml::selectbox('api[embedding]', array(
-					'options' => $embeddings,
-					'value' => WaicUtils::getArrayValue($options, 'embedding'),
-				));
-			?>
+if (empty($notShow['language'])) {
+	$embeddings = WaicDispatcher::applyFilters('getEmbeddingsList', array());
+	if (!empty($embeddings)) {
+		$embeddings = array(0 => __('Select', 'ai-copilot-content-generator')) + $embeddings;
+	?>
+		<div class="wbw-settings-form row wbw-mb-ver10">
+			<div class="wbw-settings-label col-2"><?php esc_html_e('Embedding', 'ai-copilot-content-generator'); ?></div>
+			<div class="wbw-settings-fields col-10">
+				<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Select Embedding', 'ai-copilot-content-generator')); ?>">
+				<?php
+					WaicHtml::selectbox('api[embedding]', array(
+						'options' => $embeddings,
+						'value' => WaicUtils::getArrayValue($options, 'embedding'),
+					));
+				?>
+			</div>
 		</div>
-	</div>
-<?php } ?>
-<?php if (empty($notShow['language'])) { ?>
+<?php
+	}
+}
+if (empty($notShow['language'])) { ?>
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Language', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">

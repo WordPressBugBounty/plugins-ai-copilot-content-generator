@@ -21,7 +21,6 @@ class WaicAdminmenuView extends WaicView {
 		
 		$this->assign('tabs', $tabs);
 		$this->assign('activeTab', $activeTab);
-		
 		//$this->assign('tabData', $tabData);
 		//$this->assign('hideMenu', !empty($tabData['hide_menu']));
 		$this->assign('bread', empty($tabData['bread']) ? false : $tabData['bread']);

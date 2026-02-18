@@ -172,6 +172,11 @@ function waicInitSettingsParents( selector ) {
 			subOptions2.addClass('waic-hidden');
 			subOptions2.filter('[data-select-value2*="'+value+'"]').removeClass('waic-hidden');
 		}
+		var subOptions3 = block.find('.wbw-settings-form[data-parent-select3="' + name + '"]');
+		if(subOptions3.length) {
+			subOptions3.addClass('waic-hidden2');
+			subOptions3.filter('[data-select-value3*="'+value+'"]').removeClass('waic-hidden2');
+		}
 	});
 }
 function waicInitMultySelects( parent ) {

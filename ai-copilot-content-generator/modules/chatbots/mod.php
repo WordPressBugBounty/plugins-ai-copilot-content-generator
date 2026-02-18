@@ -49,6 +49,11 @@ class WaicChatbots extends WaicModule {
 				'pro' => false,
 				'label' => __('Context', 'ai-copilot-content-generator'),
 			),
+			'knowledge' => array(
+				'class' => '',
+				'pro' => true,
+				'label' => __('Knowledge', 'ai-copilot-content-generator'),
+			),
 			'tools' => array(
 				'class' => '',
 				'pro' => false,

@@ -356,7 +356,6 @@ abstract class WaicBuilderBlock extends WaicBaseObject {
 		return $list;
 	}
 	public function calcExpression( $e ) {
-		error_log('calcExpression='.$e);
 		if (preg_match('/^[0-9\.\+\-\*\/\(\) ]+$/', $e)) {
 			$result = eval("return $e;");
 			return $result;

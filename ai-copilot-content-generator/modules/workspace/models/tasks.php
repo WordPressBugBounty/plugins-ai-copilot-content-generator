@@ -204,7 +204,8 @@ class WaicTasksModel extends WaicModel {
 			'updated' => WaicUtils::getTimestampDB(),
 			'status' => 9,
 			'step' => 0, 
-			'steps' => 0, 
+			'steps' => 0,
+			'recalc' => 0,
 		);
 		return $this->updateById($data, (int) $id);
 	}
@@ -215,6 +216,25 @@ class WaicTasksModel extends WaicModel {
 		);
 		return $this->updateById($data, (int) $id);
 	}
+	public function recalcTask( $id, $update = array() ) {
+		$id = (int) $id;
+		$workspace = $this->getModule()->getModel();
+		$needStop = $workspace->getRunningTask() == $id;
+		if ($needStop) {
+			$update['recalc'] = 1;
+		} else {
+			$update['status'] = 0;
+			$update['updated'] = WaicUtils::getTimestampDB();
+		}
+		$this->updateById($update, $id);
+		if ($needStop) {
+			$workspace->stopGeneration($id);
+			return true;
+		} else {
+			return $workspace->startGeneration($id);
+		}
+	}
+	
 	public function getTasksList( $where = array() ) {
 		$list = array();
 		$tasks = $this->setSelectFields('id, title')->setWhere($where)->getFromTbl();

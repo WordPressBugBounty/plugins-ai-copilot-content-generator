@@ -53,6 +53,8 @@
 	max-width: 100%;
 	/*overflow: hidden;*/
 	bottom: 20px;
+	max-height: 100%;
+	z-index: 100000;
 }
 .waic-chatbot-panel>div {
 	width: 100%;
@@ -67,7 +69,7 @@
 	padding: 10px 16px;
 	align-items: center;
 	gap: 16px;
-	height: 70px;
+	height: 80px;
 	overflow: hidden;
 }
 .waic-chatbot-name {
@@ -76,7 +78,7 @@
     overflow: hidden;
 }
 .waic-chatbot-avatar {
-	border-radius: 50%;
+	border-radius: 12px;
 	height: 50px;
 	width: 50px;
 	flex: 0 0 50px;
@@ -96,7 +98,7 @@
 	position: absolute;
     right: 0px;
     bottom: 1px;
-    border-radius: 50%;
+    border-radius: 12px;
     border: 2px solid #FFFFFF;
     height: 11px;
     width: 11px;
@@ -106,10 +108,14 @@
 	height: 40px;
 	margin-top: 5px;
 }
-.waic-chatbot-close, .waic-chatbot-open, .waic-header-close, .waic-close-popup {
+.waic-chatbot-close, .waic-chatbot-open, .waic-header-close, .waic-icon-action, .waic-close-popup {
 	cursor: pointer;
 }
-.waic-chatbot-close, .waic-header-close, .waic-welcome-close {
+.waic-header-close {
+	min-width: 20px;
+	text-align: right;
+}
+.waic-chatbot-close, .waic-welcome-close, .waic-header-actions {
 	margin: 0 0 0 auto; 
 }
 .waic-welcome-close {
@@ -131,7 +137,7 @@
 .waic-chatbot-body {
 	padding: 16px;
 	display: flex;
-	height: calc(100% - 140px);
+	height: calc(100% - 160px);
 	/*overflow-y: auto;
 	overflow-x: hidden;*/
 	overflow: auto;
@@ -181,18 +187,19 @@
 .waic-message-text {
 	background-color: #EAF0F6;
 	padding: 8px 16px;
+	box-shadow: rgba(0, 0, 0, 0.2) 0px 1px 2px;
 }
 .waic-message-text img {
 	max-width: 100%;
 }
 .waic-message-ai .waic-message-text {
-	border-radius: 0 5px 5px 5px;
+	border-radius: 0 9px 9px 9px;
 }
 .waic-message-user {
 	justify-content: flex-end;
 }
 .waic-message-user .waic-message-text {
-	border-radius: 5px 5px 0 5px;
+	border-radius: 9px 9px 0 9px;
 	background-color: #33475b;
 	color: #FFFFFF;
 }
@@ -231,12 +238,12 @@ a.waic-message-button:hover {
 .waic-chatbot-footer {
 	display: flex;
 	justify-content: space-between;
-	padding: 10px 16px;
+	padding: 15px 16px;
 	align-items: center;
-	gap: 16px;
+	gap: 10px;
 	border-top: 1px solid #D9D9D9;
 	align-items: center;
-	height: 70px;
+	height: 80px;
 }
 .waic-chatbot-footer textarea.waic-chatbot-input {
 	height: 35px;
@@ -250,6 +257,10 @@ a.waic-message-button:hover {
 	background-color: transparent;
 	resize: none;
     padding-top: 3px;
+	flex: 1;
+	overflow-y: auto;
+	max-height: 150px;
+	min-height: 35px;
 }
 .waic-chatbot-footer textarea.waic-chatbot-input::placeholder {
 	color: #D9D9D9;
@@ -265,7 +276,7 @@ a.waic-message-button:hover {
 .waic-message-action {
 	width: 50px;
 	height: 50px;
-	border-radius: 50%;
+	border-radius: 12px;
 	display: flex;
 	padding: 10px;
 	justify-content: center;
@@ -274,17 +285,16 @@ a.waic-message-button:hover {
 	margin: 0 -5px;
 	cursor: pointer;
 }
-.waic-message-action:hover {
+.waic-message-action:hover, .waic-icon-action:hover {
 	background-color: #2e475d1a;
 }
 .waic-message-action.waic-disabled {
 	color: #d9d9d9 !important;
 }
-.waic-message-action.waic-disabled:hover{
+.waic-message-action.waic-disabled:hover {
 	background-color: transparent !important;
 	cursor: not-allowed !important;
 }
-
 .waic-chatbot-buttons {
 	display: flex;
 	justify-content: flex-end;
@@ -426,4 +436,51 @@ a.waic-message-button:hover {
 	gap: 10px;
 	justify-content: space-between;
 	color: #92a5ba;
+}
+.waic-ai-status {
+	font-size: 12px;
+	padding: 0 1px;
+}
+.waic-header-actions {
+	margin: 0 0 0 auto;
+	display: flex;
+	gap: 5px;
+	align-items: center;
+}
+.waic-icon-action {
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	display: flex;
+	padding: 15px;
+	justify-content: center;
+	align-items: center;
+	font-size: 12px;
+	background-color: #f9f9f945;
+} 
+.waic-chatbot-brand {
+	position: absolute;
+	bottom: -4px;
+	font-size: 10px;
+	text-align: center;
+}
+.waic-chatbot-brand a {
+	color: #afb0b3;
+}
+.waic-chatbot-brand a:hover {
+	color: #FF5C35;
+}
+.waic-full-mode {
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 10000px;
+	max-height: 100%;
+	z-index: 100000;
+}
+.waic-full-mode .waic-chatbot-panel {
+	width: 100%;
+	height: 10000px;
+	max-height: 100%;
+	border-radius: 0;
 }

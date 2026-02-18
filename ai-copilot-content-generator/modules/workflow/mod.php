@@ -52,11 +52,10 @@ class WaicWorkflow extends WaicModule {
 		$screen = get_current_screen();
 		if ($screen->id === 'toplevel_page_waic-workspace') {
 			wp_deregister_script('svg-painter');
-			wp_deregister_script('heartbeat');
+			//wp_deregister_script('heartbeat');
 			wp_deregister_script('customize-controls');
-			//wp_deregister_script('media-editor');
 			wp_deregister_script('block-editor');
-			wp_deregister_script('updates');
+			//wp_deregister_script('updates');
 		}
 	}
 	

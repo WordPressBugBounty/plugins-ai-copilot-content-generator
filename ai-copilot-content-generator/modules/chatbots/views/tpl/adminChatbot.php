@@ -25,6 +25,9 @@ $props = $this->props;
 				WaicHtml::hidden('task_title', array('value' => $props['task_title'], 'attrs' => 'id="waicTaskTitle"'));
 			?>
 			</form>
+			<form id="waicUploadForm" class="waic-hidden waic-dataset-upload" method="POST" enctype="multipart/form-data">  
+				<input type="file" accept=".txt, .csv, .json" name="trainingfile">  
+			</form>
 			<?php 
 				WaicHtml::hidden('', array('value' => WaicUtils::jsonEncode($props['lang']), 'attrs' => 'id="waicLangSettingsJson" class="wbw-nosave"'));
 				WaicHtml::hidden('task_id', array('value' => $props['task_id'], 'attrs' => 'id="waicPCId"'));

@@ -586,7 +586,7 @@ class WaicWorkflowModel extends WaicModel {
 			}
 		}
 		foreach ($loopNodes as $loopId => $children) {
-			foreach ($children as $nodeId => $child) {
+			foreach ($children as $i => $child) {
 				if (isset($loopNodes[$child])) {
 					$error = __('Nested loops [' . $child . '] are not permitted.', 'ai-copilot-content-generator');
 					return false;
@@ -598,17 +598,25 @@ class WaicWorkflowModel extends WaicModel {
 					}
 				}
 				foreach ($endNodes as $lpId => $chs) {
-					if (in_array($child, $chs)) {
+					if ($lpId == $loopId && in_array($child, $chs)) {
 						$error = __('The Loop branch must be isolated and nodes inside the loop should not be able to reach the END output. Problem node [' . $child . ']', 'ai-copilot-content-generator');
 						return false;
 					}
+				}
+				foreach ($edges as $edge) {
+					if ($edge['target'] === $child) { 
+						$source = $edge['source']; 
+						if ($source != $loopId && !in_array($source, $children)) {
+							$error = __('Loop node [' . $child . '] cannot be entered directly from outside the loop. Entry must be through LOOP-output.', 'ai-copilot-content-generator');
+							return false;
+						}
+					} 
 				}
 			}
 		}
 
 		return empty($error);
 	}
-	
 	public function convertTaskParameters( $params, $toDB = true ) {
 		if (!$toDB) {
 			$nodes = WaicUtils::getArrayValue($params, 'nodes', array(), 2);

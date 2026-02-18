@@ -19,6 +19,7 @@ const savedViewport = window.WAIC_WORKFLOW.flow?.viewport || false;
 let nodeCounter = Math.max(0,...initialNodes.map(n => parseInt(n.id.replace(/\D/g, '')) || 0)) + 1;
 let edgeCounter = Math.max(0,...initialEdges.map(n => parseInt(n.id.replace(/\D/g, '')) || 0)) + 1;
 window.WAIC_WORKFLOW.editor = wp.editor || {};
+window.WAIC_WORKFLOW.isDirty = false;
 if (typeof _.isArray !== 'function') {
   _.isArray = Array.isArray;
 }
@@ -154,11 +155,18 @@ export default function BuilderWrapper() {
 	}, []);
 
 	const onNodesChange = useCallback(
-		(changes) => setNodes((ns) => applyNodeChanges(changes, ns)),
+		(changes) => { 
+			const meaningful = changes.some(c => !['dimensions','select','position'].includes(c.type));
+			if (meaningful) waicWorkflow.isDirty = true;
+			setNodes((ns) => applyNodeChanges(changes, ns)); 
+		}, 
 		[]
 	);
 	const onEdgesChange = useCallback(
-		(changes) => setEdges((es) => applyEdgeChanges(changes, es)),
+		(changes) => { 
+			waicWorkflow.isDirty = true;
+			setEdges((es) => applyEdgeChanges(changes, es)); 
+		}, 
 		[]
 	);
 	
@@ -183,6 +191,7 @@ export default function BuilderWrapper() {
 		};
 
 		setEdges((es) => [...es, newEdge]);
+		waicWorkflow.isDirty = true;
 	}, [edges]);
 	
 	const onReconnect = useCallback((oldEdge, newConnection) => {
@@ -200,6 +209,7 @@ export default function BuilderWrapper() {
 		if (!isValid) return;
 
 		setEdges((els) => reconnectEdge(oldEdge, newConnection, els));
+		waicWorkflow.isDirty = true;
 	}, [edges, nodes]);
 
 	const onNodeClick = useCallback((event, node) => {
@@ -220,8 +230,8 @@ export default function BuilderWrapper() {
 
 	const updateNode = (updatedNode) => {
 		if (!updatedNode) {
-		setSelectedNode(null);
-		return;
+			setSelectedNode(null);
+			return;
 		}
 		
 		setNodes((prevNodes) => {
@@ -244,10 +254,13 @@ export default function BuilderWrapper() {
 					})
 				);
 			}
+			
+			const oldData = JSON.stringify(oldNode.data); 
+			const newData = JSON.stringify(updatedNode.data); 
+			if (oldData !== newData) window.WAIC_WORKFLOW.isDirty = true;
 
 			return prevNodes.map((n) => (n.id === updatedNode.id ? updatedNode : n));
 		});
-		
 		setSelectedNode(updatedNode);
 	};
 	const [selectedEdges, setSelectedEdges] = useState([]);
@@ -293,6 +306,7 @@ export default function BuilderWrapper() {
 			onSuccess: function(res) {
 				if (!res.error && res.data && res.data.taskUrl) {
 					if (taskId == 0) jQuery(location).attr('href', res.data.taskUrl);
+					else waicWorkflow.isDirty = false;
 				}
 				if (res.error && res.data && res.data.err_nodes) {
 					//WAIC_WORKFLOW.errors=[res.data.err_nodes];
@@ -312,6 +326,20 @@ export default function BuilderWrapper() {
 			}
 		});
 	};
+	useEffect(() => {
+		const handleBeforeUnload = (e) => {
+			if (waicWorkflow.isDirty) {
+				e.preventDefault();
+				e.returnValue = window.WAIC_WORKFLOW?.lang?.unload_dialog || 'Are you sure you want to leave without saving?';
+				return e.returnValue;
+			}
+		};
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => {
+			window.removeEventListener('beforeunload', handleBeforeUnload);
+		};
+	}, []);
+
 
 	useEffect(() => {
 		const handleKeyDown = (e) => {

@@ -16,6 +16,7 @@ class WaicTableTraining extends WaicTable {
 			 ->_addField('model', 'text', 'varchar')
 			 ->_addField('cnt', 'text', 'int')
 			 ->_addField('status', 'text', 'int')
+			 ->_addField('recalc', 'text', 'int')
 			 ->_addField('params', 'text', 'varchar')
 			 ->_addField('file_id', 'text', 'varchar')
 			 ->_addField('job_id', 'text', 'varchar')

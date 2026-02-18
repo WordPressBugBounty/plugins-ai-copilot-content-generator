@@ -6,7 +6,7 @@ $props = $this->props;
 ?>
 <div class="wbw-wrap">
 	<div class="wbw-plugin wbw-main">
-		<section class="wbw-content">
+		<section class="wbw-content wbw-active-tab-<?php echo esc_attr($props['activeTab']); ?>">
 			<div class="wbw-header wbw-sticky">
 				<div class="wbw-head">
 					<div class="wbw-logo"><a href="https://aiwuplugin.com/" target="_blank"><img src="<?php echo esc_url( WAIC_IMG_PATH . '/logo_aiwu.png'); ?>" alt="WBW" height="44"></a>
@@ -42,7 +42,7 @@ $props = $this->props;
 						<a href="https://aiwuplugin.com/#pricing" target="_blank" class="wbw-button wbw-button-pro"><?php echo esc_html__('Get a PRO', 'ai-copilot-content-generator'); ?></a>
 					<?php } ?>
 				</div>
-				<?php if (!empty($props['bread'])) { ?>
+				<?php if (!empty($props['tabs'][$props['activeTab']]['bread'])) { ?>
 				<nav class="wbw-bread-crumbs">
 					<ul>
 						<li><?php echo esc_html($props['tabs'][$props['activeTab']]['label']); ?></li>

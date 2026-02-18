@@ -6,23 +6,38 @@ $props = $this->props;
 $appearance = WaicUtils::getArrayValue($props['settings'], 'appearance', array(), 2);
 $presets = $props['presets'];
 $preset = WaicUtils::getArrayValue($appearance, 'preset', 'default', 0, array_keys($presets));
+$scheme = WaicUtils::getArrayValue($appearance, 'scheme');
 $borderStyles = array();
+$schemes = array('#2D3E70', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4');
 ?>
 <section class="wbw-body-options">
-	<div class="wbw-settings-form row">
-		<div class="wbw-settings-label col-2"><?php esc_html_e('Preset', 'ai-copilot-content-generator'); ?></div>
+	<div class="wbw-settings-form wbw-settings-top row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Сolor scheme', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
-			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Choose a preconfigured design template for your chatbot`s appearance. Customize further if needed.', 'ai-copilot-content-generator'); ?>">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Choose a color scheme for your chatbot.', 'ai-copilot-content-generator'); ?>">
+			<div class="wbw-settings-field">
+				<div class="waic-sheme-wrapper">
+				<?php foreach ($schemes as $color) { ?>
+					<button type="button" class="wbw-button wbw-button-small <?php echo $scheme == $color ? ' active' : ''; ?> waic-btn-scheme" data-value="<?php echo esc_attr($color); ?>" style="background-color: <?php echo esc_attr($color); ?>;"></button>
+				<?php } ?>
+				</div>
+			</div>
+			<button type="button" class="wbw-button wbw-button-small waic-reset-appearance"><?php esc_html_e('Reset', 'ai-copilot-content-generator'); ?></button>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Here you can specify your custom color as the main color for the chatbot\'s color scheme.', 'ai-copilot-content-generator'); ?>">
 			<div class="wbw-settings-field">
 			<?php 
-				WaicHtml::selectbox('appearance[preset]', array(
-					'options' => $presets,
-					'value' => $preset,
-					'attrs' => 'class="wbw-small-field"',
+				WaicHtml::colorpicker('appearance[scheme]', array(
+					'value' => $scheme,
+					'attrs' => 'id="waicSchemeColor"'
 				));
+				WaicHtml::hidden('appearance[preset]', array('value' => $preset));
 				?>
 			</div>
-			<button type="button" data-value="mobile" class="wbw-button wbw-button-small waic-reset-appearance"><?php esc_html_e('Reset', 'ai-copilot-content-generator'); ?></button>
 		</div>
 	</div>
 	<div class="wbw-settings-form row">
@@ -213,18 +228,26 @@ $options = array(
 		</div>
 	</div>
 	<div class="wbw-group-title">
+		<div class="waic-accordion-link collapsed" data-content=".waic-appearence-advanced">
+			<?php esc_html_e('Advanced Settings', 'ai-copilot-content-generator'); ?>
+			<div class="waic-accordion-icon">▼</div>
+		</div>
+	</div>
+	<div class="waic-appearence-advanced wbw-hidden">
+	<div class="wbw-group-title">
 		<?php esc_html_e('Icon', 'ai-copilot-content-generator'); ?>
 		<div class="waic-grbtn" data-name="icons">
 			<button type="button" data-value="desktop" class="wbw-button current"><i class="fa fa-desktop"></i></button>
 			<button type="button" data-value="mobile" class="wbw-button"><i class="fa fa-mobile"></i></button>
 		</div>
 	</div>
+	
 <?php 
 $icons = $props['open_icons'];
 $icon = WaicUtils::getArrayValue($desktop, 'icon_open', 'open0.svg');
 $isCustom = strpos($icon, 'open') !== 0;
 ?>
-	<div class="wbw-settings-form row">
+	<div class="wbw-settings-form wbw-settings-top row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Icon to open', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
 			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php esc_html_e('Customize the appearance of the chat open icon, including its size, color, background, and animation effects. This icon is used to launch the chat window when clicked.', 'ai-copilot-content-generator'); ?>">
@@ -1574,5 +1597,6 @@ $options = array(
 				<label class="wbw-settings-after">px</label>
 			</div>
 		</div>
+	</div>
 	</div>
 </section>

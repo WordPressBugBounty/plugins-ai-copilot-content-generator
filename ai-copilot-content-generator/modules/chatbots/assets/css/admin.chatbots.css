@@ -2,7 +2,7 @@
 	flex-wrap: wrap;
 	gap: 16px;
 }
-.wbw-tabs-content {
+.wbw-active-tab-chatbots .wbw-tabs-content {
 	max-width: 100%;
 }
 .wbw-body-options {
@@ -197,4 +197,37 @@ button.wbw-button-upload:hover, button.wbw-button-upload:focus {
 }
 .waic-tool-content.active {
 	display: block;
+}
+.waic-sheme-wrapper {
+	max-width: 450px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 15px;
+}
+.waic-btn-scheme {
+	height: 40px;
+	border: 2px solid transparent;
+}
+.waic-btn-scheme.active {
+	border-color: #2D3E50;
+}
+.waic-btn-scheme:hover, .waic-btn-scheme:focus {
+	transform: scale(1.05);
+}
+.waic-reset-appearance {
+	align-self: baseline;
+}
+.waic-accordion-link {
+	display: flex;
+	gap: 15px;
+	cursor: pointer;
+}
+.waic-accordion-link:hover, .waic-accordion-link:focus {
+	color: #FF5C35;
+}
+.waic-accordion-link.collapsed {
+	margin-bottom: 40px;
+}
+.waic-accordion-link.collapsed .waic-accordion-icon {
+	transform: rotate(-90deg);
 }

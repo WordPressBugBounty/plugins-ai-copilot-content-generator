@@ -31,6 +31,12 @@
 	align-items: center;
 	flex-wrap: wrap;
 }
+.waic-control-save {
+	background-color: #80e584;
+}
+.waic-control-save img {
+	filter: brightness(0.7);
+}
 .waic-flow-title {
 	font-size: 16px;
 	font-weight: 600;

@@ -7,7 +7,7 @@ class WaicChatbotsController extends WaicController {
 	protected $_code = 'chatbots';
 
 	public function getNoncedMethods() {
-		return array('saveChatbot', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData');
+		return array('saveChatbot', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront');
 	}
 	
 	public function getHistoryPage() {
@@ -45,13 +45,15 @@ class WaicChatbotsController extends WaicController {
 		$error = '';
 		
 		$workspace = WaicFrame::_()->getModule('workspace');
+		$taskId = WaicReq::getVar('task_id', 'post');
+		$old = empty($taskId) ? array() : $workspace->getModel('tasks')->getById($taskId);
 
-		$id = $workspace->getModel('tasks')->saveTask($this->_code, WaicReq::getVar('task_id', 'post'), $params);
+		$id = $workspace->getModel('tasks')->saveTask($this->_code, $taskId, $params);
 		if (empty($id)) {
 			$res->pushError(WaicFrame::_()->getErrors());
 		} else {
-			$this->getModel()->setChatbotParams($id);
-			if (empty($taskId)) {
+			$result = $this->getModel()->setChatbotParams($id, $old);
+			if (empty($taskId) || $result) {
 				$res->addData('taskUrl', $workspace->getTaskUrl($id, $this->_code));
 			} else {
 				$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
@@ -125,6 +127,17 @@ class WaicChatbotsController extends WaicController {
 			$log['mes_id'] = WaicReq::getVar('mes_id', 'post');
 			$res->addData('log', $log);
 		} 
+
+		return $res->ajaxExec();
+	}
+	public function resetChatbotFront() {
+		$res = new WaicResponse();
+		//$params = WaicReq::getVar('params', 'post');
+		$user = wp_get_current_user();
+		$userId = $user ? $user->ID : 0;
+		$ip = WaicUtils::getRealUserIp();
+		
+		$this->getModel()->resetUserChatLog(WaicReq::getVar('task_id', 'post'), $userId, $ip, 0);
 
 		return $res->ajaxExec();
 	}

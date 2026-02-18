@@ -23,6 +23,8 @@
 		_this.taskNameWrapper = $('#waicTaskNameWrapper');
 		_this.taskId = _this.content.find('#waicPCId').val();
 		
+		_this.schemeColor = _this.content.find('#waicSchemeColor');
+		
 		_this.historyTable = _this.content.find('#waicHistoryTable');
 		//_this.historyTableLoaded = false;
 		
@@ -45,9 +47,10 @@
 				_this.preview.addClass('wbw-hidden');
 				_this.mainButtons.addClass('wbw-hidden');
 				if (!_this.historyTableObj) _this.initHistoryTable();
-			} /*else if (tabId == 'content-tab-tools') {
+			} else if (tabId == 'content-tab-knowledge') {
 				_this.preview.addClass('wbw-hidden');
-			}*/ else {
+				//_this.mainButtons.addClass('wbw-hidden');
+			} else {
 				_this.preview.removeClass('wbw-hidden');
 				_this.mainButtons.removeClass('wbw-hidden');
 			}
@@ -138,6 +141,7 @@
 			$wrap.find('.waic-gallery-element:not(.waic-gallery-media)').eq(0).trigger('click');
 			return false;
 		});
+		
 		_this.content.find('button.wbw-button-upload').off('click').on('click', function (e) {
 			e.preventDefault();
 			var $button = $(this),
@@ -244,6 +248,37 @@
 			});
 		});
 		waicInitColorPicker();
+	
+		_this.content.find('.waic-btn-scheme').on('click', function(e){
+			e.preventDefault();
+			_this.schemeColor.val($(this).attr('data-value')).trigger('change');
+			return false;
+		});
+		_this.schemeColor.on('change', function(e){
+			e.preventDefault();
+			var $this = $(this),
+				color = $this.val();
+			_this.content.find('.waic-sheme-wrapper .waic-btn-scheme').each(function() {
+				var $btn = $(this);
+				if ($btn.attr('data-value') == color) $btn.addClass('active');
+				else $btn.removeClass('active');
+			});
+		});
+		_this.content.find('.waic-accordion-link').on('click', function(e){
+			e.preventDefault();
+			var $this = $(this),
+				$content = _this.content.find($this.attr('data-content'));
+			if ($content && $content.length) {
+				if ($this.hasClass('collapsed')) {
+					$this.removeClass('collapsed');
+					$content.removeClass('wbw-hidden');
+				} else {
+					$this.addClass('collapsed');
+					$content.addClass('wbw-hidden');
+				}
+			}
+			return false;
+		});
 	}
 	ChatbotAdminPage.prototype.showLogDialog = function() {
 		var _this = this.$obj;
@@ -421,7 +456,7 @@
 				dialogClass: "wbw-plugin",
 				buttons: [
 					{
-						text: waicCheckSettings(_this.langSettings, 'add-btn'),
+						text: waicCheckSettings(_this.langSettings, 'save-btn'),
 						class: 'wbw-button wbw-button-form wbw-button-main',
 						click: function(e) {
 							var newName = _this.postEditNameDialog.find('#waicNewTaskName').val();

@@ -9,8 +9,11 @@ class WaicTableEm_Chunks extends WaicTable {
 		$this->_alias = 'waic_em_chunks';
 		$this->_addField('id', 'text', 'int')
 			 ->_addField('em_id', 'text', 'int')
+			 ->_addField('ds_id', 'text', 'int')
+			 ->_addField('post_id', 'text', 'int')
 			 ->_addField('chunk', 'text', 'varchar')
 			 ->_addField('status', 'text', 'int')
+			 ->_addField('mark', 'text', 'int')
 			 ->_addField('start', 'text', 'text')
 			 ->_addField('end', 'text', 'text')
 			 ->_addField('step', 'text', 'int')

@@ -14,6 +14,7 @@ class WaicTableTasks extends WaicTable {
 			 ->_addField('params', 'text', 'varchar')
 			 ->_addField('cnt', 'text', 'int')
 			 ->_addField('status', 'text', 'int')
+			 ->_addField('recalc', 'text', 'int')
 			 ->_addField('created', 'text', 'text')
 			 ->_addField('updated', 'text', 'text')
 			 ->_addField('start', 'text', 'text')

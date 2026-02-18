@@ -106,6 +106,7 @@ class WaicWorkflowView extends WaicView {
 				'search' => __('Search', 'ai-copilot-content-generator'),
 				'variables' => __('Variables', 'ai-copilot-content-generator'),
 				'copy' => __('Copy', 'ai-copilot-content-generator'),
+				'unload_dialog' => __('Are you sure you want to leave without saving?', 'ai-copilot-content-generator'),
 				'var_dialog' => __('Select Variables', 'ai-copilot-content-generator'),
 				'var_none' => __('No variables. Perhaps the node is not connected to parent nodes with the required variables.', 'ai-copilot-content-generator'),
 				'var_plh_user_meta' => __('Enter Meta Key', 'ai-copilot-content-generator'),

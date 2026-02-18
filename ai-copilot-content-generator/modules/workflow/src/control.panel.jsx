@@ -72,6 +72,7 @@ export default function ControlPanel({ onAddNode, onSaveFlow }) {
 		const t = tempTitle.trim() || '';
 		setTitle(t);
 		window.WAIC_WORKFLOW.title = t;
+		waicWorkflow.isDirty = true;
 		setShowDialog(false);
 	};
 
@@ -88,6 +89,7 @@ export default function ControlPanel({ onAddNode, onSaveFlow }) {
 	};
 	const onConfirmSettings = () => {
 		window.WAIC_WORKFLOW.flow.settings = tempSettings || {};
+		waicWorkflow.isDirty = true;
 		setShowSettings(false);
 	};
 	const onShowLog = () => {

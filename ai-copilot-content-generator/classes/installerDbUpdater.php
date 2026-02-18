@@ -51,6 +51,9 @@ class WaicInstallerDbUpdater {
 			WaicDb::query( "ALTER TABLE `@__tasks` ADD COLUMN `mode` VARCHAR(24) DEFAULT '' AFTER `tokens`" );
 			WaicDb::query( "ALTER TABLE `@__tasks` ADD COLUMN `obj_id` BIGINT NOT NULL DEFAULT 0 AFTER `mode`" );
 		}
+		if ( ! WaicDb::existsTableColumn( '@__tasks', 'recalc' ) ) {
+			WaicDb::query( "ALTER TABLE `@__tasks` ADD COLUMN `recalc` TINYINT(1) NOT NULL DEFAULT 0 AFTER `status`" );
+		}
 		
 		if ( ! WaicDb::existsTableColumn( '@__posts_create', 'added' ) ) {
 			WaicDb::query( 'ALTER TABLE `@__posts_create` ADD COLUMN `added` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `post_id`' );
@@ -64,6 +67,9 @@ class WaicInstallerDbUpdater {
 		}
 		if ( WaicDb::get( "SELECT 1 FROM `@__tasks` WHERE feature='magictext'", 'one' ) != 1 ) {
 			WaicDb::query( "INSERT INTO `@__tasks` (id, feature, title, author, status) VALUES (NULL, 'magictext', 'Magic Text', 0, 4);");
+		}
+		if ( ! WaicDb::existsTableColumn( '@__chatlogs', 'status' ) ) {
+			WaicDb::query( "ALTER TABLE `@__chatlogs` ADD COLUMN `status` TINYINT(1) NOT NULL DEFAULT 0 AFTER `file`" );
 		}
 		
 		if ( WaicDb::get( "SELECT 1 FROM `@__tasks` WHERE feature='template'", 'one' ) != 1 ) {

@@ -85,26 +85,13 @@ class WaicMcp extends WaicModule {
 		$isAdmin = current_user_can('manage_options');
 		return WaicDispatcher::applyFilters('allow_mcp', $isAdmin, $request);
 	}
-	public function handleCallback( $result, string $tool, $args, $id ) {
+	public function handleCallback( $result, string $tool, array $args, int $id ) {
 		if (!empty($result)) {
 			return $result;
 		}
-		
-		// Ensure $args is array
-		if (!is_array($args)) {
-			$args = array();
-		}
-		
-		// Strip namespace prefix if present (e.g., "wupsales:wp_get_posts" -> "wp_get_posts")
-		$originalTool = $tool;
-		if (strpos($tool, ':') !== false) {
-			$parts = explode(':', $tool, 2);
-			$tool = $parts[1];
-		}
-		
 		$tools = $this->getModel()->getTools();
 		if (!isset($tools[$tool])) {
-			WaicFrame::_()->saveDebugLogging('Tool not found: ' . $originalTool . ' (parsed as: ' . $tool . ')', false, 'MCP');
+			WaicFrame::_()->saveDebugLogging('Tool not found ' . $tool, false, 'MCP');
 			return $result;
 		}
 		return $this->getModel()->dispatchTool($tool, $args, $id);
@@ -266,9 +253,7 @@ class WaicMcp extends WaicModule {
 		}
 		echo 'event: ' . $event . "\n";
 		if ('json' === $enc) {
-    // Determine if we need to force an object (only if data is exactly an empty array and intended as an object)
-    // However, since your mcp.php already casts properties to (object), standard encoding is safer.
-    		$data = null === $data ? '{}' : wp_json_encode($data, JSON_UNESCAPED_UNICODE);	
+			$data = null === $data ? '{}' : str_replace('[]', '{}', wp_json_encode($data, JSON_UNESCAPED_UNICODE));
 		}
 		echo 'data: ' . $data . "\n\n";
 
@@ -347,12 +332,6 @@ class WaicMcp extends WaicModule {
 	//- Normal flow: GET /sse → establish SSE stream → POST /messages for JSON-RPC
 	//- Claude's flow: POST /sse with JSON-RPC body → expect immediate JSON response
 	private function handleDirectJsonRPC( WP_REST_Request $request, $data ) {
-		
-		if ($this->logging) {
-			$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : 'unknown';
-			WaicFrame::_()->saveDebugLogging('handleDirectJsonRPC from: ' . $userAgent, false, 'MCP');
-			WaicFrame::_()->saveDebugLogging('Request data: ' . wp_json_encode($data), false, 'MCP');
-		}
 
 		$id = isset($data['id']) ? $data['id'] : null;
 		$method = isset($data['method']) ? $data['method'] : null;
@@ -604,22 +583,13 @@ class WaicMcp extends WaicModule {
 
 	private function executeTool( $tool, $args, $id ) {
 		try {
-			// Ensure $args is array
-			if (!is_array($args)) {
-				$args = array();
-			}
-			
 			if ($this->logging) {
-				WaicFrame::_()->saveDebugLogging('executeTool called: ' . $tool . ' (id: ' . (is_scalar($id) ? $id : gettype($id)) . ')', false, 'MCP');
+				WaicFrame::_()->saveDebugLogging('Tool: ' . $tool, false, 'MCP');
 				if (!empty($args)) {
 					WaicFrame::_()->saveDebugLogging($args, false, 'MCP');
 				}
 			}
 			$filtered = WaicDispatcher::applyFilters('mcp_callback', null, $tool, $args, $id, $this);
-			
-			if ($this->logging) {
-				WaicFrame::_()->saveDebugLogging('mcp_callback result: ' . (is_null($filtered) ? 'NULL' : 'has value'), false, 'MCP');
-			}
 
 			if (!is_null($filtered)) {
 				if (is_array($filtered) && isset($filtered['jsonrpc']) && isset($filtered['id'])) {

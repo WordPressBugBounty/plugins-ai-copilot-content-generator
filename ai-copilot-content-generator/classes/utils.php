@@ -1212,4 +1212,11 @@ class WaicUtils {
 		}
 		return $vars;
 	}
+	public static function getProductStockStatusesList() {
+		$list = array();
+		if (function_exists('wc_get_product_stock_status_options')) {
+			$list = wc_get_product_stock_status_options();
+		}
+		return $list;
+	}
 }

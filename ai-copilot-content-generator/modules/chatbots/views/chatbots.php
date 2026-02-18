@@ -86,6 +86,8 @@ class WaicChatbotsView extends WaicView {
 		$frame->addScript('waic-chatbots-front', $path . 'js/front.chatbots.js');
 		$frame->addStyle('waic-chatbots-admin', $path . 'css/admin.chatbots.css');
 		$assets->loadDataTables(array('responsive'));
+		
+		WaicDispatcher::doAction('addChatbotsAssets');
 
 		$options = $frame->getModule('options')->getModel();
 		$model = $module->getModel();
@@ -105,13 +107,15 @@ class WaicChatbotsView extends WaicView {
 		}
 		$lang = array(
 			'add-btn' => esc_html__('Add', 'ai-copilot-content-generator'),
+			'save-btn' => esc_html__('Save', 'ai-copilot-content-generator'),
 			'cancel-btn' => esc_html__('Cancel', 'ai-copilot-content-generator'),
 			'close-btn' => esc_html__('Close', 'ai-copilot-content-generator'),
 			'need-save' => esc_html__('First save the current chat bot and then you can try how the messaging works.', 'ai-copilot-content-generator'),
 			'reset-appearance' => esc_html__('Reset appearance settings to default values?', 'ai-copilot-content-generator'),
+			'not-supported' =>  esc_html__('Action is not supported in preview mode.', 'ai-copilot-content-generator'),
 		);
 
-		$this->assign('lang', $lang);
+		$this->assign('lang', WaicDispatcher::applyFilters('addLangChatbots', $lang));
 		$this->assign('tabs', $module->getChatbotsTabsList());
 		$this->assign('tool_groups', $module->getChatbotsToolGroups());
 		$this->assign('options', array('api' => $apiOptions));
@@ -121,6 +125,7 @@ class WaicChatbotsView extends WaicView {
 		
 		$this->assign('presets', $module->getChatbotsPresetsList());
 		$this->assign('task_id', $id);
+		$this->assign('task', $task);
 		$this->assign('settings', $settings);
 		$this->assign('tpl_path', WAIC_MODULES_DIR . 'workspace/views/tpl/');
 		$this->assign('img_url', $path . 'img/');
@@ -128,6 +133,7 @@ class WaicChatbotsView extends WaicView {
 		$this->assign('user_avatars', $module->getAiChatbotImages('user_avatars'));
 		$this->assign('open_icons', $module->getAiChatbotImages('opens'));
 		$this->assign('close_icons', $module->getAiChatbotImages('closes'));
+		$this->assign('is_pro', $frame->isPro() && $frame->moduleExists('chatbotspro'));
 		
 		$this->assign('task_title', WaicUtils::getArrayValue($task, 'title'));
 
@@ -213,6 +219,20 @@ class WaicChatbotsView extends WaicView {
 			$this->setCustomCss('.waic-chatbot-panel', 'display', 'block!important');
 			$this->setCustomCss('.waic-chatbot-panel:not(.waic-chatbot-show)', 'visibility', 'hidden');
 		}
+		
+		$schemeColor = WaicUtils::getArrayValue($appearance, 'scheme');
+		
+		if (!empty($schemeColor)) {
+			$this->setCustomCss('.waic-chatbot-header', 'background-color', $schemeColor);
+			$btnColor = WaicUtils::colourBrightness($schemeColor, 0.8);
+			$this->setCustomCss('.waic-chatbot-button', 'background-color', $btnColor);
+			$this->setCustomCss('.waic-message-action', 'color', $btnColor);
+			$this->setCustomCss('.waic-welcome-popup', 'border-color', $btnColor);
+			$this->setCustomCss('.waic-close-popup', 'background-color', WaicUtils::colourBrightness($schemeColor, 0.2));
+			$this->setCustomCss('.waic-text-user', 'background-color', WaicUtils::colourBrightness($schemeColor, 0.9));
+			$this->setCustomCss('.waic-text-ai', 'background-color', WaicUtils::colourBrightness($schemeColor, 0.05));
+		}
+		
 		$aiAvatar = false;
 		if (WaicUtils::getArrayValue($context, 'e_ai_avatar', 0, 1)) {
 			$aiAvatar = WaicUtils::getArrayValue($context, 'ai_avatar', 'ai_avatar0.png');
@@ -220,9 +240,17 @@ class WaicChatbotsView extends WaicView {
 				$aiAvatar = $imgPath . 'ai_avatars/' . $aiAvatar; 
 			}
 		}
+		$aiData = WaicUtils::getArrayValue($context, 'show_ai_data');
 		if (empty($aiAvatar)) {
 			$this->setCustomCss('.waic-chatbot-main-avatar', 'display', 'none');
 			$this->setCustomCss('.waic-avatar-ai', 'display', 'none');
+		} else {
+			if (!empty($aiData) && 'avatar' != $aiData) {
+				$this->setCustomCss('.waic-avatar-ai', 'display', 'none');
+			}
+		}
+		if (!empty($aiData) && 'name' != $aiData) {
+			$this->setCustomCss('.waic-name-ai', 'display', 'none');
 		}
 		
 		$userAvatar = false;
@@ -296,7 +324,11 @@ class WaicChatbotsView extends WaicView {
 			$classes['panel'][] = 'waic-chatbot-hidden';
 		}
 		
-		$data = array();
+		$data = array(
+			'ai_status' => WaicUtils::getArrayValue($context, 'ai_status'),
+			'show_branding' => WaicUtils::getArrayValue($context, 'hide_branding', 0, 1) != 1,
+		);
+		
 		$modes = array('desktop', 'mobile');
 		foreach ($modes as $mode) {
 			if (!empty($viewMode) && $viewMode != $mode) {
@@ -428,9 +460,9 @@ class WaicChatbotsView extends WaicView {
 			$this->setBorderCss($selector, 'buttons_hover', $options, $mode);
 			$this->setTextCss($selector, 'buttons_hover', $options, $mode);
 			
-			//chat footor
+			//chat footer
 			$selector = '.waic-chatbot-footer';
-			$this->setBGColorSizeCss($selector, 'footer', $options, $mode);
+			$this->setBGColorSizeCss($selector, 'footer', $options, $mode, true);
 			$selector = '.waic-chatbot-input';
 			$this->setTextCss($selector, 'input_text', $options, $mode);
 			$this->setTextCss($selector . '::placeholder', 'input_placeholder', $options, $mode);
@@ -634,7 +666,7 @@ class WaicChatbotsView extends WaicView {
 			}
 			$footer = WaicUtils::getArrayValue($options, 'footer_height', '', 1, false, true, true);
 			if ('' != $header || '' != $footer) {
-				$this->setCustomCss($selector, 'height', 'calc(100% - ' . ( ( ( '' === $header ) ? 70 : $header ) + ( empty($footer) ? 70 : $footer ) ) . 'px)', $mode);
+				$this->setCustomCss($selector, 'height', 'calc(100% - ' . ( ( ( '' === $header ) ? 80 : $header ) + ( empty($footer) ? 80 : $footer ) ) . 'px)', $mode);
 			}
 		}
 	}

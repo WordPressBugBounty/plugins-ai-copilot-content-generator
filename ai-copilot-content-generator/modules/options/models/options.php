@@ -302,6 +302,14 @@ class WaicOptionsModel extends WaicModel {
 					'perplexity' => 'Perplexity',
 					'openrouter' => 'OpenRouter',
 				),
+				'model-fields' => array(
+					'open-ai' => 'model',
+					'gemini' => 'gemini_model',
+					'deep-seek' => 'deep_seek_model',
+					'claude' => 'claude_model',
+					'perplexity' => 'perplexity_model',
+					'openrouter' => 'openrouter_model',
+				),
 				'model' => array(
 					'open-ai' => array(
 						'gpt-5' => 'GPT-5',
