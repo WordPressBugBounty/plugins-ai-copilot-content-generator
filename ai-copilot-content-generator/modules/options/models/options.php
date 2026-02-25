@@ -55,7 +55,7 @@ class WaicOptionsModel extends WaicModel {
 			}
 		}
 		if ('mcp' == $gr && !empty($options[$gr]) && is_array($options[$gr])) {
-			$checkOptions = array('e_mcp', 'mcp_logging');
+			$checkOptions = array('e_mcp', 'mcp_logging', 'mcp_oauth');
 			foreach ($checkOptions as $opt) {
 				if (empty($options[$gr][$opt])) {
 					$options[$gr][$opt] = 0;
@@ -166,6 +166,7 @@ class WaicOptionsModel extends WaicModel {
 			'mcp' => array(
 				'e_mcp' => 0,
 				'mcp_logging' => 0,
+				'mcp_oauth' => 0,
 			),
 			'plugin' => array(
 				'user_statistics' => 1,

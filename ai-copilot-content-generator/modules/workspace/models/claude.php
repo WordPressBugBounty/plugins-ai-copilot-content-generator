@@ -21,6 +21,9 @@ class WaicClaudeModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return WaicUtils::getArrayValue($this->apiOptions, 'claude_model');
+	}
 	
 	public function getApiCompletionsUrl() {
 		return $this->apiUrl . '/' . $this->apiVersion . '/messages';

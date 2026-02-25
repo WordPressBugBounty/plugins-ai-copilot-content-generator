@@ -22,6 +22,9 @@ class WaicPerplexityModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return WaicUtils::getArrayValue($this->apiOptions, 'perplexity_model');
+	}
 	
 	public function getApiSearchUrl() {
 		return $this->apiUrl . '/search';

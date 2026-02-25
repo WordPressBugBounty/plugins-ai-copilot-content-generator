@@ -995,6 +995,9 @@ class WaicUtils {
 	public static function mbstrpos( $h, $n, $o = 0 ) {
 		return function_exists('mb_strpos') ? mb_strpos($h, $n, $o) : strpos($h, $n, $o);
 	}
+	public static function mbstripos( $h, $n, $o = 0 ) {
+		return function_exists('mb_stripos') ? mb_stripos($h, $n, $o) : stripos($h, $n, $o);
+	}
 	public static function getRealUserIp() {
 		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
 			$ip = $_SERVER['HTTP_CLIENT_IP'];

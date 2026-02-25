@@ -609,10 +609,11 @@ a.wbw-feature-link:hover, a.wbw-feature-link:focus {
     padding-right: 18px;
 	box-shadow: none !important;
 }
-div.dt-container .waic-table-pages .dt-paging {
+.wbw-container div.waic-table-pages .dt-paging {
 	margin: auto 10px;
 }
-div.dt-container .waic-table-pages .dt-paging button.dt-paging-button {
+.wbw-container div.waic-table-pages .dt-paging button.dt-paging-button,
+.wbw-container div.waic-table-pages .dt-paging .ellipsis {
 	border: none !important;
     background: transparent;
 	color: #0091AE !important;
@@ -912,4 +913,7 @@ a.waic-get-social {
 }
 .wbw-body-history .waic-delete-button {
 	margin: 0 15px 0 auto !important;
+}
+.waic-img-ad img {
+	max-width: 100%;
 }

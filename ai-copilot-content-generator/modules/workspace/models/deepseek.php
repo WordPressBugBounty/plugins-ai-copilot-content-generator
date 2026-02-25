@@ -16,6 +16,9 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return WaicUtils::getArrayValue($this->apiOptions, 'deep_seek_model');
+	}
 	
 	private function getApiChatCompletionsUrl() {
 		return $this->apiUrl . '/chat/completions';

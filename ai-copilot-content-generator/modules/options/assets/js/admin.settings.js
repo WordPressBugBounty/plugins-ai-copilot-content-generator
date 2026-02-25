@@ -78,7 +78,7 @@
 			}
 			return false;
 		});
-		
+
 		var $instraction = _this.content.find('#waicMCPInstructions'),
 			$tabsButtons = $instraction.find('.wbw-submenu-tabs button.wbw-button'),
 			$tabsContents = jQuery('.wbw-subtabs-content .wbw-subtab-content'),

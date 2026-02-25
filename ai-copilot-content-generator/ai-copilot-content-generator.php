@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI Copilot - Content Generator
  * Description: AI Copilot for WordPress saves time and boosts your website's performance with human-like content with GPT, Internal AI and more.
- * Version: 1.4.7
+ * Version: 1.4.9
  * Author: AIWU
  * Author URI: https://aiwuplugin.com/
  * Text Domain: ai-copilot-content-generator

@@ -22,6 +22,9 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return WaicUtils::getArrayValue($this->apiOptions, 'image' == $type ? 'img_model' : 'model');
+	}
 	
 	public function getApiCompletionsUrl() {
 		return $this->apiUrl . '/' . $this->apiVersion . '/completions';

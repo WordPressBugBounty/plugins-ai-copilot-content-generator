@@ -56,12 +56,42 @@ $defaults = WaicUtils::getArrayValue($props['defaults'], 'mcp', array(), 2);
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Url for connectors', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
-			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Url for connectors', 'ai-copilot-content-generator')); ?>">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Token-in-URL method. Paste this URL directly when adding a connector (e.g. in ChatGPT Developer Mode). The token is passed as a query parameter.', 'ai-copilot-content-generator')); ?>">
 			<div class="wbw-settings-field">
 			<?php 
 				WaicHtml::text('', array(
 					'value' => home_url() . '/wp-json/mcp/v1/sse',
 					'attrs' => 'readonly id="waicMCPUrl" class="wbw-fullwidth-max"',
+				));
+				?>
+			</div>
+		</div>
+	</div>
+<?php 
+$mcpOAuth = WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1);
+?>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Enable OAuth 2.1', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Enable OAuth 2.1 authentication for MCP connectors. Required for Claude.ai integration. When enabled, the plugin acts as both an OAuth Authorization Server and Resource Server, providing /.well-known discovery endpoints, PKCE authorization flow, and Dynamic Client Registration.', 'ai-copilot-content-generator')); ?>">
+			<div class="wbw-settings-field">
+			<?php 
+				WaicHtml::checkbox('mcp[mcp_oauth]', array(
+					'checked' => $mcpOAuth,
+				));
+				?>
+			</div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row<?php echo empty($mcpOAuth) ? ' wbw-hidden' : ''; ?>" data-parent-check="mcp[mcp_oauth]">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('OAuth Url (for Claude.ai)', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Use this URL when adding a connector in Claude.ai → Settings → Connectors. Claude will discover the OAuth endpoints automatically via /.well-known metadata. No token parameter needed in the URL.', 'ai-copilot-content-generator')); ?>">
+			<div class="wbw-settings-field">
+			<?php 
+				WaicHtml::text('', array(
+					'value' => home_url() . '/wp-json/mcp/v1/sse',
+					'attrs' => 'readonly class="wbw-fullwidth-max"',
 				));
 				?>
 			</div>
@@ -83,30 +113,35 @@ $defaults = WaicUtils::getArrayValue($props['defaults'], 'mcp', array(), 2);
 			<div class="wbw-subtab-content" id="content-subtab-claude">
 				<div class="wbw-instrs-block wbw-info-block">
 					<div class="wbw-instrs-title"><div class="wbw-instrs-icon square">i</div><?php esc_html_e('Claude MCP Integration', 'ai-copilot-content-generator'); ?></div>
-					<div class="wbw-instrs-info"><?php esc_html_e('Connect Claude through official MCP support in Claude.ai web interface', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-info"><?php esc_html_e('Connect Claude through official MCP support in Claude.ai web interface. OAuth 2.1 method is recommended for Claude.ai.', 'ai-copilot-content-generator'); ?></div>
 				</div>
 				<div class="wbw-instrs-block">
-					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">1</div><?php esc_html_e('Open Claude Settings', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">1</div><?php esc_html_e('Enable OAuth 2.1 (Recommended)', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-info"><?php esc_html_e('In plugin settings above, check "Enable MCP", generate a token, and check "Enable OAuth 2.1". Save settings.', 'ai-copilot-content-generator'); ?></div>
+				</div>
+				<div class="wbw-instrs-block">
+					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">2</div><?php esc_html_e('Open Claude Settings', 'ai-copilot-content-generator'); ?></div>
 					<div class="wbw-instrs-info"><?php esc_html_e('Go to', 'ai-copilot-content-generator'); ?> <a href="https://claude.ai/" target="_blank">claude.ai</a> → <?php esc_html_e('Settings', 'ai-copilot-content-generator'); ?> → <?php esc_html_e('Connectors', 'ai-copilot-content-generator'); ?></div>
 				</div>
 				<div class="wbw-instrs-block">
-					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">2</div><?php esc_html_e('Add Custom Connector', 'ai-copilot-content-generator'); ?></div>
-					<div class="wbw-instrs-info"><?php esc_html_e('Click "Add custom connector" and enter your MCP endpoint URL', 'ai-copilot-content-generator'); ?>:
+					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">3</div><?php esc_html_e('Add Custom Connector', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-info"><?php esc_html_e('Click "Add custom connector" and enter your MCP endpoint URL (without token parameter):', 'ai-copilot-content-generator'); ?>
 					<?php 
 						WaicHtml::text('', array(
-						'value' => home_url() . '/wp-json/mcp/v1/sse?token=your-token',
+						'value' => home_url() . '/wp-json/mcp/v1/sse',
 						'attrs' => 'readonly',
 						));
 						?>
+					<br><small><?php esc_html_e('Claude will automatically discover OAuth endpoints and show an authorization page.', 'ai-copilot-content-generator'); ?></small>
 					</div>
 				</div>
 				<div class="wbw-instrs-block">
-					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">3</div><?php esc_html_e('Configure Permissions', 'ai-copilot-content-generator'); ?></div>
-					<div class="wbw-instrs-info"><?php esc_html_e('In Claude.ai, find your connected MCP server → Tools and settings → select the tools you need', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">4</div><?php esc_html_e('Authorize & Configure', 'ai-copilot-content-generator'); ?></div>
+					<div class="wbw-instrs-info"><?php esc_html_e('Click "Authorize" on the consent page. Then in Claude.ai, find your connected MCP server → Tools and settings → select the tools you need.', 'ai-copilot-content-generator'); ?></div>
 				</div>
 				<div class="wbw-alert-block">
 					<div class="wbw-alert-title"><span>!</span> <?php esc_html_e('Requirements', 'ai-copilot-content-generator'); ?></div>
-					<div class="wbw-alert-info"><?php esc_html_e('HTTPS certificate, public IP, disable caching for', 'ai-copilot-content-generator'); ?> /wp-json/mcp/v1/sse</div>
+					<div class="wbw-alert-info"><?php esc_html_e('HTTPS certificate, public IP, disable caching for', 'ai-copilot-content-generator'); ?> /wp-json/mcp/v1/* <?php esc_html_e('and', 'ai-copilot-content-generator'); ?> /.well-known/*</div>
 				</div>
 			</div>
 			<div class="wbw-subtab-content" id="content-subtab-chatgpt">

@@ -24,8 +24,10 @@
 		_this.taskId = _this.content.find('#waicPCId').val();
 		
 		_this.schemeColor = _this.content.find('#waicSchemeColor');
-		
-		_this.historyTable = _this.content.find('#waicHistoryTable');
+		_this.historyWrapper = _this.content.find('.wbw-body-history');
+		_this.historyTable = _this.historyWrapper.find('#waicHistoryTable');
+		_this.logViewer = _this.historyWrapper.find('.wbw-log-viewer');
+		_this.logTable = _this.historyWrapper.find('.wbw-table-list');
 		//_this.historyTableLoaded = false;
 		
 		_this.eventsChatbotAdminPage();
@@ -46,6 +48,8 @@
 			if (tabId == 'content-tab-history') {
 				_this.preview.addClass('wbw-hidden');
 				_this.mainButtons.addClass('wbw-hidden');
+				_this.logViewer.addClass('wbw-hidden');
+				_this.logTable.removeClass('wbw-hidden');
 				if (!_this.historyTableObj) _this.initHistoryTable();
 			} else if (tabId == 'content-tab-knowledge') {
 				_this.preview.addClass('wbw-hidden');
@@ -279,23 +283,58 @@
 			}
 			return false;
 		});
+		_this.content.find('#waicHistoryExport').on('click', function(e){
+			e.preventDefault();
+			_this.showExportDialog();
+			return false;
+		});
 	}
-	ChatbotAdminPage.prototype.showLogDialog = function() {
+	ChatbotAdminPage.prototype.showExportDialog = function () {
 		var _this = this.$obj;
-		
-		if (!_this.logDialog) {
-			_this.logDialogWrapper = $('#waicLogDialog');
-			_this.logDialog = _this.logDialogWrapper.removeClass('wbw-hidden').dialog({
+	
+		if (!_this.exportDialog) {
+			_this.exportDialog = $('#waicExportDialog').removeClass('wbw-hidden').dialog({
 				modal: true,
 				autoOpen: false,
 				position: {my: 'center', at: 'center', of: window},
-				width: '90%',
-				minHeight: 550,
-				maxHeight: 650,
+				width: '500px',
 				dialogClass: "wbw-plugin",
 				buttons: [
 					{
-						text: waicCheckSettings(_this.langSettings, 'close-btn'),
+						text: waicCheckSettings(_this.langSettings, 'save-btn'),
+						class: 'wbw-button wbw-button-form wbw-button-main',
+						click: function(e) {
+							var $inputs = _this.exportDialog.find('.wbw-nosave');
+							$inputs.removeClass('wbw-nosave');
+							$.sendFormWaic({
+								btn: this,
+								data: {
+									mod: 'chatbots',
+									action: 'exportLog',
+									params: jsonInputsWaic(_this.exportDialog, true),
+								},
+								onSuccess: function(res) {
+									if (!res.error) {
+										var blob = new Blob(
+											[ res.data.file ],
+											{ type: 'text/json' }
+										);
+										var fileName = 'aiwu_export.json',
+											link = document.createElement('a');
+											link.href = window.URL.createObjectURL(blob);
+											link.download = fileName;
+										link.click();
+										link.remove();
+									}
+								}
+							});
+							$inputs.addClass('wbw-nosave');
+			
+							$(this).dialog('close');
+						}
+					},
+					{
+						text: waicCheckSettings(_this.langSettings, 'cancel-btn'),
 						class: 'wbw-button wbw-button-form wbw-button-minor',
 						click: function() {
 							jQuery(this).dialog('close');
@@ -303,19 +342,11 @@
 					}
 				],
 				open: function() {
-					var $row = _this.currentLogRow;
-					_this.logDialogWrapper.find('#waicLogDate').html($row.find('.waic-log-dd').html());
-					_this.logDialogWrapper.find('#waicLogMode').html($row.find('.waic-log-mode').html());
-					_this.logDialogWrapper.find('#waicLogUser').html($row.find('.waic-log-user').html());
-					_this.logDialogWrapper.find('#waicLogIP').html($row.find('.waic-log-ip').html());
-					_this.logDialogWrapper.find('#waicLogTokens').html($row.find('.waic-log-tokens').html());
-					_this.logDialogWrapper.find('#waicLogMessages').html('<div class="waic-loader"><div class="waic-loader-bar bar1"></div><div class="waic-loader-bar bar2"></div></div>');
-					_this.logDialogWrapper.parent().find('.ui-dialog-buttonset button').removeClass('ui-button ui-corner-all ui-widget');
-					_this.getLogData();
-				}
+					_this.exportDialog.find('#waicExportTask').val(_this.content.find('#waicHistoryChatbots').val());
+				},
 			});
 		}
-		_this.logDialog.dialog('open');
+		_this.exportDialog.dialog('open');
 	}
 	ChatbotAdminPage.prototype.resetAppearance = function($btn) {
 		var _this = this.$obj;
@@ -342,7 +373,7 @@
 		_this.waicNeedPreview = true;
 		setTimeout(function() {_this.getPreviewAjax();}, 500);
 	}
-	ChatbotAdminPage.prototype.getLogData = function() {
+	ChatbotAdminPage.prototype.getLogData = function( data ) {
 		var _this = this.$obj,
 			$row = _this.currentLogRow;
 
@@ -350,17 +381,25 @@
 			data: {
 				mod: 'chatbots',
 				action: 'getLogData',
-				params: {
-					task_id: _this.taskId,
-					user_id: $row.find('.waic-log-user').attr('data-value'),
-					ip: $row.find('.waic-log-ip').attr('data-value'),
-					mode: $row.find('.waic-log-mode').attr('data-value'),
-					dd: $row.find('.waic-log-dd').attr('data-value')
-				}
+				params: data,
 			},
 			onSuccess: function(res) {
 				if(!res.error) {
-					_this.logDialogWrapper.find('#waicLogMessages').html(res.html);
+					_this.logViewer.find('.waic-right-panel .waic-loader').addClass('wbw-hidden');
+					var $container = _this.logViewer.find('.waic-right-panel .waic-panel-body'),
+						search = $('#waicHistorySearch').val();
+					$container.html(res.html);
+					if (search.length) {
+						search = search.toLowerCase();
+						var $target = $container.find('.waic-message-text').filter(function() { 
+								return $(this).text().toLowerCase().includes(search); 
+							}).first(); 
+						if ($target.length) {
+							var offsetTop = $target.position().top + $container.scrollTop();
+							$container.animate({ scrollTop: offsetTop }, 500); 
+						}
+						
+					}
 				}
 			}
 		});
@@ -370,6 +409,7 @@
 			url = typeof(ajaxurl) == 'undefined' || typeof(ajaxurl) !== 'string' ? WAIC_DATA.ajaxurl : ajaxurl,
 			strPerPage = ' ' + waicCheckSettings(_this.langSettings, 'lengthMenu');
 		$.fn.dataTable.ext.classes.sPageButton = 'button button-small wbw-paginate';
+		$.fn.DataTable.ext.pager.numbers_length = 5;
 		
 		_this.historyTableObj = _this.historyTable.DataTable({
 			serverSide: true,
@@ -378,14 +418,22 @@
 				'url': url + '?mod=chatbots&action=getHistoryPage&pl=waic&reqType=ajax&waicNonce=' + WAIC_DATA.waicNonce,
 				'type': 'POST',
 				data: function (d) {
-					d.task_id = _this.taskId;
+					d.task_id = $('#waicHistoryChatbots').val();
+					d.search = $('#waicHistorySearch').val();
 				},
+				 beforeSend: function (jqXHR, settings) {
+					if (!_this.logViewer.hasClass('wbw-hidden')) {
+						_this.logViewer.find('.waic-left-panel .waic-loader').removeClass('wbw-hidden');
+						_this.logViewer.find('.waic-right-panel').removeClass('view');
+					}
+				}
 			},
 			search: true,
 			lengthChange: true,
 			lengthMenu: [ [10, 100, -1], [10 + strPerPage, 100 + strPerPage, "All"] ],
 			paging: true,
-			dom: 'Br<"pull-right"f>t<"waic-table-pages"pl>',
+			//dom: 'Br<"pull-right"f>t<"waic-table-pages"pl>',
+			dom: 'Brt<"waic-table-pages"pl>',
 			responsive: {details: {display: $.fn.dataTable.Responsive.display.childRowImmediate, type: ''}},
 			autoWidth: false,
 			columnDefs: [
@@ -421,26 +469,127 @@
 				processing: '<div class="waic-loader"><div class="waic-loader-bar bar1"></div><div class="waic-loader-bar bar2"></div></div>',
 			},
 			preDrawCallback: function (settings, json) {
-				$('#waicHistoryTable_wrapper .dt-processing').css('top', '72px');
+				$('#waicHistoryTable_wrapper .dt-processing').css('top', '35px');
 				$('#waicHistoryTable_wrapper .dt-processing > div:not(.waic-loader)').css('display', 'none');
 			},
 			drawCallback: function() {
 				setTimeout(function () {
 					$('#waicHistoryTable_wrapper .dt-paging')[0].style.display = $('#waicHistoryTable_wrapper .dt-paging button').length > 5 ? 'block' : 'none';
+					if (!_this.logViewer.hasClass('wbw-hidden')) {
+						_this.setHistoryLog(0);
+						_this.logViewer.find('.waic-left-panel .waic-loader').addClass('wbw-hidden');
+					}
 				}, 50);
 			}
 		});
+		$('#waicHistoryChatbots').on('change', function(e) {
+			_this.historyTableObj.ajax.reload();
+		});
+		var timerSearch;
+		$('#waicHistorySearch').on('input', function(e) {
+			clearTimeout(timerSearch);
+			timerSearch = setTimeout(function() { 
+				_this.historyTableObj.ajax.reload();
+			}, 1000);
+		});
+		
 		_this.historyTable.on('click', '.waic-history-log', function(e) {
 			e.preventDefault();
-			var $row = $(this).closest('tr');
-			if ($row.hasClass('child')) {
-				$row = $(_this.historyTableObj.row($row.attr('data-dt-row')).node());
-			}
-			_this.currentLogRow = $row.clone();
-			_this.showLogDialog();
+			_this.logViewer.removeClass('wbw-hidden');
+			_this.logTable.addClass('wbw-hidden');
+			_this.setHistoryLog($(this).closest('.waic-history-log').attr('data-num'));
 			$(this).blur();
 			return false;
 		});
+	}
+	ChatbotAdminPage.prototype.setHistoryLog = function ( num ) {
+		var _this = this.$obj,
+			cntRows = waicChatbotAdminPage.historyTableObj.rows().count(),
+			$list = _this.logViewer.find('.waic-log-list').html(''),
+			allChatbots = $('#waicHistoryChatbots').val().length == 0,
+			strTokens = waicCheckSettings(_this.langSettings, 'tokens'),
+			strCount = waicCheckSettings(_this.langSettings, 'count');
+		if (allChatbots) {
+			var chatNames = {};
+			$('#waicHistoryChatbots option').each(function() {
+				var $this = $(this),
+					id = $this.val();
+				if (id.length) chatNames[id] = $this.html();
+			});
+		} 
+		for (var i = 0; i < cntRows; i++) {
+			var row = waicChatbotAdminPage.historyTableObj.row(i).data(),
+				$view = $(row[7]),
+				$elem = $('<div class="waic-log-elem"></div>'),
+				found = $view.attr('data-found'),
+				data = $view.attr('data-log'),
+				dataArr = JSON.parse(data);
+			
+			$elem.attr('data-log', data).attr('data-tokens', row[4]);
+			$elem.append($('<div class="waic-log-header"><div class="waic-log-user">' + row[1] + '</div><div class="waic-log-dd">' + row[0] + '</div></div>'));
+			if (found) {
+				found = found.replaceAll('{{', '<b>').replaceAll('}}', '</b>');
+				$elem.append($('<div class="waic-log-found">' + found + '</div>'));
+			} else {
+				$elem.append($('<div class="waic-log-body"><div class="waic-log-data"><div class="waic-log-name">' + strCount + '</div>: ' + row[6] + '</div><div class="waic-log-data"><div class="waic-log-name">' + strTokens + '</div>: ' + row[4] + '</div></div>'));
+			}
+			if (allChatbots && dataArr.task_id in chatNames) {
+				$elem.append($('<div class="waic-log-chatbot">' + chatNames[dataArr.task_id] + '</div>'));
+			}
+			if (i == num) {
+				$elem.addClass('current');
+			}
+			$list.append($elem);
+		}
+		var $mainPaging = $('#waicHistoryTable_wrapper .dt-paging');
+		_this.logViewer.find('.waic-table-pages').html($mainPaging.clone());
+		_this.logViewer.find('.waic-table-pages .dt-paging-button').on('click', function(e) {
+			e.preventDefault();
+			$mainPaging.find('.dt-paging-button[data-dt-idx="' + $(this).attr('data-dt-idx') + '"]').trigger('click');
+		});
+		
+		var $panelLeft = _this.logViewer.find('.waic-left-panel'),
+			$panelRight = _this.logViewer.find('.waic-right-panel');
+		$panelRight.removeClass('view');
+		
+		$list.find('.waic-log-elem').on('click', function(e) {
+			e.preventDefault();
+			var $this = $(this),
+				data = JSON.parse($this.attr('data-log'));
+			if (data) {
+				$list.find('.waic-log-elem').removeClass('current');
+				$this.addClass('current');
+				$panelRight.find('.waic-loader').removeClass('wbw-hidden');
+				if (_this.logViewer.hasClass('waic-full-panel')) {
+					$panelRight.addClass('view');
+				}
+				$panelRight.find('.waic-panel-body').html('');
+				var $header = $panelRight.find('.waic-panel-header');
+				$header.find('.waic-log-user').html($this.find('.waic-log-user').html());
+				$header.find('.waic-log-ip').html('(' + data.ip + ')');
+				$header.find('.waic-log-tokens').html(waicCheckSettings(_this.langSettings, 'tokens') + ': ' + $this.attr('data-tokens'));
+				_this.getLogData(data);
+			}
+		});
+		_this.logViewer.removeClass('waic-full-panel');
+		var windowWidth = $(window).width(),
+			panelWidth = $panelLeft.outerWidth() + $panelRight.outerWidth(); 
+		if (panelWidth < windowWidth) { 
+			_this.logViewer.removeClass('waic-full-panel');
+			var $target = $list.find('.waic-log-elem.current');
+			if ($target.length) {
+				var $container = $target.closest('.waic-panel-body'),
+					offsetTop = $target.position().top + $container.scrollTop();
+				$container.animate({ scrollTop: offsetTop }, 500); 
+				$target.trigger('click');
+			}
+		} else { 
+			_this.logViewer.addClass('waic-full-panel');
+			_this.logViewer.find('.waic-panel-hidden').on('click', function(e) {
+				e.preventDefault();
+				$panelRight.removeClass('view');
+			});
+		}
 	}
 
 	ChatbotAdminPage.prototype.showEditNameDialog = function () {

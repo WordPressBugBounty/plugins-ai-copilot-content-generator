@@ -91,10 +91,11 @@ class WaicChatbotsView extends WaicView {
 
 		$options = $frame->getModule('options')->getModel();
 		$model = $module->getModel();
+		$taskModel = $frame->getModule('workspace')->getModel('tasks');
 
 		$isNew = empty($id);
 		if (empty($task)) {
-			$task = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTask($id);
+			$task = $taskModel->getTask($id);
 		} 
 		$settings = empty($task) ? array() : $task['params'];
 		
@@ -113,6 +114,8 @@ class WaicChatbotsView extends WaicView {
 			'need-save' => esc_html__('First save the current chat bot and then you can try how the messaging works.', 'ai-copilot-content-generator'),
 			'reset-appearance' => esc_html__('Reset appearance settings to default values?', 'ai-copilot-content-generator'),
 			'not-supported' =>  esc_html__('Action is not supported in preview mode.', 'ai-copilot-content-generator'),
+			'count' => esc_html__('Count', 'ai-copilot-content-generator'),
+			'tokens' => esc_html__('Tokens', 'ai-copilot-content-generator'),
 		);
 
 		$this->assign('lang', WaicDispatcher::applyFilters('addLangChatbots', $lang));
@@ -133,6 +136,7 @@ class WaicChatbotsView extends WaicView {
 		$this->assign('user_avatars', $module->getAiChatbotImages('user_avatars'));
 		$this->assign('open_icons', $module->getAiChatbotImages('opens'));
 		$this->assign('close_icons', $module->getAiChatbotImages('closes'));
+		$this->assign('chatbots', $taskModel->getTasksList(array('feature' => 'chatbots')));
 		$this->assign('is_pro', $frame->isPro() && $frame->moduleExists('chatbotspro'));
 		
 		$this->assign('task_title', WaicUtils::getArrayValue($task, 'title'));
@@ -863,18 +867,40 @@ class WaicChatbotsView extends WaicView {
 		}
 		$log = $this->getModel()->getUserChatLog($taskId, $userId, $ip, $mode, 0, false, $dd);
 
+		$tools = array();
+		$today = WaicUtils::getFormatedDateTime(WaicUtils::getTimestamp(), 'Y-m-d');
+		$dtFormat = WaicUtils::getCurrentDateTimeFormat();
 		foreach ($log as $log) {
-			if (!empty($log['file'])) {
-				$html .= 'User (' . $log['created'] . '): File uploaded<br>';
-			}
-			if (!empty($log['question'])) {
-				$html .= 'User (' . $log['created'] . '): ' . ( 3 == $log['status'] ? 'EMAIL - ' : '' ) . strip_tags($log['question']) . '<br>';
+			$isAI = false;
+			$created = $log['created'];
+			$format = strpos($created, $today) === 0 ? 'H:i' : $dtFormat;
+			$status = $log['status'];
+			if (!empty($log['question']) || !empty($log['file'])) {
+				$html .= '<div class="waic-chatbot-message waic-message-user"><div class="waic-message-wrap"><div class="waic-message-text">';
+				$html .= ( 3 == $status ? 'EMAIL - ' : '' ) . wp_kses_post($log['question']);
+				if (!empty($log['file'])) {
+					$html .= '<img src="' . $log['file'] . '">';
+				}
+				$html .= '</div>';
+				$html .= '<div class="waic-message-time waic-time-user">' . WaicUtils::convertDateFormat($created, 'Y-m-d H:i:s', $format) . '</div>';
+				$html .= '</div></div>';
 			}
 			if (!empty($log['answer'])) {
-				$html .= 'Bot (' . $log['created'] . '): ' . ( empty($log['status']) ? '' : 'ERROR - ' ) . strip_tags($log['answer']) . '<br>';
+				$answer = $this->renderCards(array('msg' => $log['answer']), 'msg', $tools);
+				
+				$html .= '<div class="waic-chatbot-message waic-message-ai"><div class="waic-message-wrap"><div class="waic-message-text">';
+				$html .= ( empty($status) ? '' : 'ERROR - ' ) . $answer['msg'] . '</div>';
+				if (!empty($answer['cards']) && is_array($answer['cards'])) {
+					foreach ($answer['cards'] as $card) {
+						$html .= wp_kses_post($card);
+					}
+				}
+				$html .= '<div class="waic-message-time waic-time-ai">' . WaicUtils::convertDateFormat($created, 'Y-m-d H:i:s', $format) . '</div>';
+				$html .= '</div></div>';
 			}
 		}
-		return '<div class="waic-log-innner">' . $html . '</div>';
+		
+		return '<div class="waic-log-messages">' . $html . '</div>';
 	}
 	
 	public function renderCards( $log, $key, $tools ) {

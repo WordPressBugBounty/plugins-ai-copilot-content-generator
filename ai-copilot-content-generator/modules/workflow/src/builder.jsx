@@ -305,8 +305,8 @@ export default function BuilderWrapper() {
 			},
 			onSuccess: function(res) {
 				if (!res.error && res.data && res.data.taskUrl) {
+					waicWorkflow.isDirty = false;
 					if (taskId == 0) jQuery(location).attr('href', res.data.taskUrl);
-					else waicWorkflow.isDirty = false;
 				}
 				if (res.error && res.data && res.data.err_nodes) {
 					//WAIC_WORKFLOW.errors=[res.data.err_nodes];

@@ -88,6 +88,9 @@ class WaicGeminiModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return 'image' == $type ? $this->imageModel : $this->model;
+	}
 
 	public function getText( $params, $stream = null ) {
 		WaicFrame::_()->saveDebugLogging(array('Model' => array('model' => $this->model)));

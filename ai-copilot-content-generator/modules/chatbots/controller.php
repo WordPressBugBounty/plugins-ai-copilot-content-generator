@@ -7,7 +7,7 @@ class WaicChatbotsController extends WaicController {
 	protected $_code = 'chatbots';
 
 	public function getNoncedMethods() {
-		return array('saveChatbot', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront');
+		return array('saveChatbot', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
 	}
 	
 	public function getHistoryPage() {
@@ -37,6 +37,18 @@ class WaicChatbotsController extends WaicController {
 		$res->setHtml($html);
 
 		return $res->ajaxExec();
+	}
+	public function exportLog() {
+		$res  = new WaicResponse();
+		$params = WaicReq::getVar('params', 'post');
+		$data = $this->getModel()->exportLog($params);
+		if ($data) {
+			$res->addData('file', $data);
+			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
+		} else {
+			$res->pushError(WaicFrame::_()->getErrors());
+		}
+		$res->ajaxExec();
 	}
 	public function saveChatbot() {
 		$res = new WaicResponse();

@@ -22,6 +22,14 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 				return $this->provider->getEngine();
 		}
 	}
+	public function getEngineModel( $type = '' ) {
+		switch ( $type ) {
+			case 'image':
+				return $this->imageProvider->getEngineModel($type);
+			default:
+				return $this->provider->getEngineModel($type);
+		}
+	}
 
 	public function getInstance( $params ) {
 		$defaults = WaicFrame::_()->getModule('options')->getModel()->getDefaults('api');
@@ -174,7 +182,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	private function getHistory( $results, $params, $type = '', $typeProvider = '' ) {
 		$history = array(
 			'engine' => $this->getEngine($typeProvider),
-			'model' => empty($params['model']) ? $type : $params['model'],
+			'model' => empty($params['model']) ? $this->getEngineModel($typeProvider) : $params['model'],
 			'task_id' => $this->taskId,
 			'feature' => $this->feature,
 			'user_id' => $this->userId,

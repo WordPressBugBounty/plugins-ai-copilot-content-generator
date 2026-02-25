@@ -91,8 +91,8 @@ class WaicWorkspace extends WaicModule {
 				'hidden' => true,
 			),
 			'mcp' => array(
-				'title' => __('Claude MCP Integration', 'ai-copilot-content-generator'),
-				'desc' => __('Connect Claude AI directly to WordPress. Chat naturally to create pages, manage content, and control your entire site.', 'ai-copilot-content-generator'),
+				'title' => __('Claude and ChatGPT MCP Integration', 'ai-copilot-content-generator'),
+				'desc' => __('Connect Claude / ChatGPT AI directly to WordPress. Chat naturally to create pages, manage content, and control your entire site.', 'ai-copilot-content-generator'),
 				'link' => $this->getFeatureUrl('settings', 'mcp'),
 				'fake' => true,
 			),

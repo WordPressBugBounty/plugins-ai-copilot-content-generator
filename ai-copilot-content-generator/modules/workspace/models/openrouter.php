@@ -22,6 +22,9 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine() {
 		return $this->engine;
 	}
+	public function getEngineModel( $type = '' ) {
+		return WaicUtils::getArrayValue($this->apiOptions, 'image' == $type ? 'openrouter_img_model' : 'openrouter_model');
+	}
 	
 	public function getApiChatCompletionsUrl() {
 		return $this->apiUrl . '/' . $this->apiVersion . '/chat/completions';

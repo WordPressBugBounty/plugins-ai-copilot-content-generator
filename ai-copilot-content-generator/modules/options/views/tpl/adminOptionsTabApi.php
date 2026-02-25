@@ -342,7 +342,7 @@ if (empty($notShow['language'])) { ?>
 				WaicHtml::slider('api[pre_minute]', array(
 					'value' => WaicUtils::getArrayValue($options, 'pre_minute', $defaults['pre_minute']),
 					'min' => 1,
-					'max' => 20,
+					'max' => 80,
 					'step' => '1',
 					'hide-min-max' => 1,
 					'class' => ( $readOnly ? 'disabled' : '' ),

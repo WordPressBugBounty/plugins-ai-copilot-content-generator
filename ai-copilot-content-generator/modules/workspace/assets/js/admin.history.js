@@ -43,17 +43,6 @@
 			autoWidth: false,
 			buttons: [
 				{
-					text: waicCheckSettings(_this.langSettings, 'btn-delete'),
-					className: 'wbw-button wbw-button-small disabled waic-delete-button waic-group-button',
-					action: function (e, dt, node, config) {
-						_this.setActionTaskIds();
-						if (_this.actionTaskIds) {
-							_this.activeButton = node;
-							waicShowConfirm(waicCheckSettings(_this.langSettings, 'confirm-delete'), 'waicHistoryPage', 'doAction', 'deleteTasks');
-						}
-					}
-				},
-				{
 					text: waicCheckSettings(_this.langSettings, 'btn-publish'),
 					className: 'wbw-button wbw-button-small disabled waic-publish-button waic-group-button',
 					action: function (e, dt, node, config) {
@@ -72,6 +61,17 @@
 						if (_this.actionTaskIds) {
 							_this.activeButton = node;
 							waicShowConfirm(waicCheckSettings(_this.langSettings, 'confirm-unpublish'), 'waicHistoryPage', 'doAction', 'unpublishTasks');
+						}
+					}
+				},
+				{
+					text: waicCheckSettings(_this.langSettings, 'btn-delete'),
+					className: 'wbw-button wbw-button-small disabled waic-delete-button waic-group-button',
+					action: function (e, dt, node, config) {
+						_this.setActionTaskIds();
+						if (_this.actionTaskIds) {
+							_this.activeButton = node;
+							waicShowConfirm(waicCheckSettings(_this.langSettings, 'confirm-delete'), 'waicHistoryPage', 'doAction', 'deleteTasks');
 						}
 					}
 				},

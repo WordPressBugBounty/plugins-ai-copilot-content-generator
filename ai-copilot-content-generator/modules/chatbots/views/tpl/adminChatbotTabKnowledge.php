@@ -8,6 +8,10 @@ if ($props['is_pro']) {
 } else {
 ?>
 <section class="wbw-body-workspace">
-	place for ADS
+	<div class="waic-img-ad">
+		<a href="https://aiwuplugin.com/#pricing" target="_blank">
+			<img src="<?php echo esc_url($props['img_url'] . 'knowledge.png'); ?>">
+		</a>
+	</div>
 </section>
 <?php } ?>

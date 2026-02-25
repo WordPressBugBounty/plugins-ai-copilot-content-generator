@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WaicChatbotsModel extends WaicModel {
 	private $_optionChatbotShow = 'waic_chatbot_show';
 	private $_chatbotShowRules = null;
+
 	public function __construct() {
 		$this->_setTbl('chatlogs');
 	}
@@ -109,7 +110,7 @@ class WaicChatbotsModel extends WaicModel {
 			( false !== $status ? ' AND h.status= ' . ( (int) $status ) : '' ) .
 			' AND h.mode=' . ( (int) $mode ) .
 			' AND h.user_id=' . ( (int) $userId ) .
-			' AND l.status=0' .
+			( false !== $status ? ' AND l.status=0' : '' ) .
 			( empty($userId) || $forDate ? " AND ip='" . $ip . "'" : '' ) .
 			( $forDate ? " AND h.created BETWEEN '" . $dd . " 00:00:00' AND '" . $dd . " 23:59:59'" : '' ) .
 			' ORDER BY h.id' .
@@ -776,7 +777,8 @@ class WaicChatbotsModel extends WaicModel {
 	public function getHistory( $params ) {
 		$length = WaicUtils::getArrayValue($params, 'length', 10, 1);
 		$start = WaicUtils::getArrayValue($params, 'start', 0, 1);
-		$search = esc_sql(WaicUtils::getArrayValue(WaicUtils::getArrayValue($params, 'search', array(), 2), 'value'));
+		//$search = esc_sql(WaicUtils::getArrayValue(WaicUtils::getArrayValue($params, 'search', array(), 2), 'value'));
+		$search = esc_sql(WaicUtils::getArrayValue($params, 'search'));
 
 		$taskId = WaicUtils::getArrayValue($params, 'task_id', 0, 1);
 		$where = array();
@@ -796,12 +798,13 @@ class WaicChatbotsModel extends WaicModel {
 			$args = array($like, $like, $like, $like, $like);
 		}
 		
-		$query = 'SELECT DATE(h.created) as dd, h.user_id, u.user_login, h.ip, h.mode, sum(tokens) as sum_tokens, TIMEDIFF(MAX(h.created),MIN(h.created)) as duration, count(*) as cnt_mes' .
+		$query = 'SELECT DATE(h.created) as dd, h.task_id, h.user_id, u.user_login, h.ip, h.mode, sum(tokens) as sum_tokens, TIMEDIFF(MAX(h.created),MIN(h.created)) as duration, count(*) as cnt_mes' .
 			' FROM @__history as h' .
 			' LEFT JOIN #__users u ON (u.id=h.user_id)' .
-			' WHERE h.task_id=' . ( (int) $taskId ) .
+			" WHERE h.feature='chatbots'" .
+			( empty($taskId) ? '' : ' AND h.task_id=' . $taskId ) .
 			( empty($where) ? '' : ' AND (' . implode(' OR ', $where) . ')' ) .
-			' GROUP BY DATE(h.created), h.user_id, u.user_login, h.ip, h.mode'; 
+			' GROUP BY DATE(h.created), h.task_id, h.user_id, u.user_login, h.ip, h.mode'; 
 		
 		$order = WaicUtils::getArrayValue($params, 'order', array(), 2);
 		$orderBy = 0;
@@ -824,32 +827,188 @@ class WaicChatbotsModel extends WaicModel {
 		} else {
 			$end = $totalCount;
 		}
-
+		$query = 'SELECT IF(l.question LIKE %s, l.question, l.answer)' .
+			' FROM @__history as h' .
+			' INNER JOIN @__chatlogs l ON (l.his_id=h.id)' .
+			' WHERE h.task_id=%d' .
+			' AND h.mode=%d' .
+			' AND h.user_id=%d' .
+			" AND h.created BETWEEN %s AND %s" .
+			' AND (l.question LIKE %s OR l.answer LIKE %s)' .
+			" AND ip=%s" .
+			' LIMIT 1'; 
 		$rows = array();
 		if ($totalCount > 0) {
 			$view = __('view', 'ai-copilot-content-generator');
 			$guest = __('guest', 'ai-copilot-content-generator');
 			$modes = array('front', 'admin', 'custom');
+			$maxStr = 50;
+			$halb = 25;
+			$sLen = WaicUtils::mbstrlen($search);
+			$dFormat = WaicUtils::getCurrentDateFormat();
+			$n = 0;
 			for ($i = $start; $i < $end; $i++) {
 				if (!isset($logs[$i])) {
 					break;
 				}
 				$log = $logs[$i];
+				$tId = $log['task_id'];
+				$mode = $log['mode'];
+				$uId = $log['user_id'];
+				$ip = $log['ip'];
+				$dd = $log['dd'];
+				$str = '';
+				
+				if (!empty($search)) {
+					$found = WaicDb::get($query, 'one', ARRAY_A, array($like, $tId, $mode, $uId, $dd . ' 00:00:00', $dd . ' 23:59:59', $like, $like, $ip));
+					if ($found) {
+						$found = wp_strip_all_tags($found);
+						$fLen = WaicUtils::mbstrlen($found);
+						if ($fLen <= $maxStr) {
+							$str = $found;
+						} else {
+							$pos = WaicUtils::mbstripos($found, $search);
+							if ($pos !== false) {
+								if ($pos < $halb) {
+									$str = 	WaicUtils::mbsubstr($found, 0, $maxStr);
+								} else if ($fLen - $pos < $maxStr) {
+									$str = '...' . WaicUtils::mbsubstr($found, $fLen - $maxStr);
+								} else {
+									$str = '...' . WaicUtils::mbsubstr($found, $pos - $halb, $maxStr) . '...';
+								}
+							}
+						}
+						$str = str_ireplace($search, '{{' . $search . '}}', str_replace('"', '', $str));
+					}
+				}
+				$data = array(
+					'task_id' => $tId,
+					'dd' => $dd,
+					'user_id' => $uId,
+					'ip' => $ip,
+					'mode' => $mode,
+				);
 				$rows[] = array(
-					'<div class="waic-log-dd" data-value="' . $log['dd'] . '">' . $log['dd'] . '</div>',
-					'<div class="waic-log-user" data-value="' . $log['user_id'] . '">' . ( empty($log['user_id']) ? $guest : $log['user_login'] ) . '</div>',
-					'<div class="waic-log-ip" data-value="' . $log['ip'] . '">' . $log['ip'] . '</div>',
-					'<div class="waic-log-mode" data-value="' . $log['mode'] . '">' . $modes[$log['mode']] . '</div>',
-					'<div class="waic-log-tokens" data-value="' . $log['sum_tokens'] . '">' . $log['sum_tokens'] . '</div>',
+					WaicUtils::convertDateFormat($dd, 'Y-m-d', $dFormat),
+					( empty($uId) ? $guest : $log['user_login'] ),
+					$ip,
+					$modes[$mode],
+					$log['sum_tokens'],
 					$log['duration'],
 					$log['cnt_mes'],
-					'<a href="#" class="waic-history-log">' . $view . '</a>',
+					'<a href="#" class="waic-history-log" data-num="' . $n . '"data-log="' . esc_attr(json_encode($data)) . '" data-found="' . esc_attr($str) . '">' . $view . '</a>',
 				);
+				$n++;
 			}
 		}
 		return array(
 			'data' => $rows,
 			'total' => $totalCount,
 		);
+	}
+	public function exportLog( $params ) {
+		$taskId = WaicUtils::getArrayValue($params, 'chat_id', 0, 1);
+		$isAll = empty($taskId);
+		
+		$mode = WaicUtils::getArrayValue($params, 'mode', 0, 1);
+		$users = WaicUtils::getArrayValue($params, 'users', 0, 1);
+		$from = WaicUtils::getArrayValue($params, 'from');
+		if (!WaicUtils::checkDateTime($from, 'Y-m-d')) {
+			$from = false;
+		}
+		$to = WaicUtils::getArrayValue($params, 'to');
+		if (!WaicUtils::checkDateTime($to, 'Y-m-d')) {
+			$to = false;
+		}
+		
+		if (ob_get_contents()) {
+			ob_end_clean();
+		}
+		header('Content-Type: application/json; charset=utf-8'); 
+		header('Content-Disposition: attachment; filename="aiwu_export.json"');
+		if (ob_get_contents()) {
+			ob_end_clean();
+		}
+		$query = 'SELECT DATE(created) as dd, task_id, user_id, ip, mode, model, sum(tokens) as sum_tokens, min(created) as started' .
+			' FROM @__history' .
+			" WHERE feature='chatbots'" .
+			( empty($taskId) ? '' : ' AND task_id=' . $taskId ) .
+			( 9 == $mode ? '' : ' AND mode=' . $mode ) .
+			( empty($users) ? '' : ' AND user_id' . ( 1 == $users ? '>0' : '=0' ) ) .
+			( $isAll ? '' : ' AND task_id=' . $taskId ) .
+			( $from ? " AND created>='" . $from . " 00:00:00'" : '' ) .
+			( $to ? " AND created<='" . $to . " 23:59:59'" : '' ) .
+			' GROUP BY DATE(created), task_id, user_id, ip, mode, model';
+		$sessions = array();
+		$history = WaicDb::get($query);
+		if ($history && !empty($history)) {
+			$chatbots = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTasksList(array('feature' => 'chatbots'));
+			$tools = array('prod' => 'search_products', 'post' => 'search_posts');
+			foreach ($history as $his) {
+				$dd = $his['dd'];
+				$model = $his['model'];
+				$tId = $his['task_id'];
+				$uId = $his['user_id'];
+				$ip = $his['ip'];
+				$query = "SELECT h.created, l.question, l.answer, IF(l.file='',0,1) as has_file" .
+					' FROM @__history as h' .
+					' INNER JOIN @__chatlogs l ON (l.his_id=h.id)' .
+					' WHERE h.task_id=' . ( (int) $tId ) .
+					" AND h.model='" . $model . "'" .
+					' AND h.mode=' . ( (int) $his['mode'] ) .
+					' AND h.user_id=' . ( (int) $uId ) .
+					" AND ip='" . $ip . "'" .
+					" AND h.created BETWEEN '" . $dd . " 00:00:00' AND '" . $dd . " 23:59:59'" .
+					' ORDER BY h.id';
+				$logs = WaicDb::get($query);
+				if ($logs && !empty($logs)) {
+					$messages = array();
+					foreach ($logs as $log) {
+						$messages[] = array(
+							'role' => 'user',
+							'ts' => $log['created'],
+							'text' => ( empty($log['has_file']) ? $this->tolalCleanStr($log['question']) : 'FILE UPLOADED' ),
+						);
+						$parts = explode('##IDS##', $log['answer']);
+						$message = array(
+							'role' => 'assistant',
+							'ts' => $log['created'],
+							'text' =>  $this->tolalCleanStr($parts[0]),     
+						);
+						if (count($parts) == 2) {
+							$textIds = trim($parts[1]);
+							$ps = explode(':', $textIds);
+							if (count($ps) == 2) {
+								$tool = WaicUtils::getArrayValue($tools, $ps[0]);
+								if (!empty($tool)) {
+									$message['tools'] = array($tool => $ps[1]);
+								}
+							}
+						}
+						$messages[] = $message;
+					}
+					$sessions[] = array(
+						'bot_id' => $tId,
+						'bot_name' => WaicUtils::getArrayValue($chatbots, $tId),
+						'model' => $model,
+						'user_id' => $uId,
+						'ip' => $ip,
+						'started' => $his['started'],
+						'tokens' => $his['sum_tokens'],
+						'messages' => $messages,
+					);
+					
+				}
+			}
+		}
+		if (empty($sessions)) {
+			WaicFrame::_()->pushError(esc_html__('The log is empty', 'ai-copilot-content-generator'));
+			return false;
+		}
+		
+		return json_encode(array('sessions' => $sessions), JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+	}
+	public function tolalCleanStr( $str ) {
+		return str_replace(["\n", "\r", "\t", '  '], ' ', wp_strip_all_tags($str));
 	}
 }
