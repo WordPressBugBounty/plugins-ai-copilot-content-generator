@@ -510,7 +510,7 @@ $hidden = $eErrorRequest ? '' : ' wbw-hidden';
 			<div class="wbw-settings-field">
 				<?php 
 					WaicHtml::text('context[error_thank]', array(
-						'value' => WaicUtils::getArrayValue($context, 'thank_message', __('Thank you, our expert will contact you as soon as possible.', 'ai-copilot-content-generator')),
+						'value' => WaicUtils::getArrayValue($context, 'error_thank', __('Thank you, our expert will contact you as soon as possible.', 'ai-copilot-content-generator')),
 					));
 					?>
 			</div>

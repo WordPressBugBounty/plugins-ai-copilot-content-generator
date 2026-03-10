@@ -1,0 +1,392 @@
+.wbw-bread-crumbs ul li {
+	font-weight: 600;
+}
+.waic-body-sub-title {
+	font-size: 14px;
+	color: #6b7785;
+	margin-top: -5px;
+}
+.waic-body-setup {
+	padding: 20px 0;
+}
+.waic-setup-wrap {
+	background: #fff;
+	border-radius: 14px;
+	padding: 24px;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+	margin-bottom: 20px;
+	max-width: 700px;
+	min-width: 300px;
+	color: #374151;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.waic-setup-wrap.compact {
+	gap: 8px;
+}
+.waic-setup-title {
+	font-size: 14px;
+	font-weight: 700;
+	color: #1a2332;
+	padding-bottom: 12px;
+	border-bottom: 1px solid #f0f2f7;
+}
+.waic-setup-wrap.compact .waic-setup-title {
+	margin-bottom: 16px;
+}
+.waic-setup-settings {
+	display: flex;
+	gap: 16px;
+	/*justify-content: space-between;*/
+	flex-wrap: wrap;
+}
+.waic-setup-setting {
+	flex: 1;
+	min-width: 280px;
+}
+.waic-setup-label {
+	font-size: 13px;
+	font-weight: 600;
+	margin: 0 2px 6px;
+}
+.waic-setup-setting .waic-setup-field input, 
+.waic-setup-setting .waic-setup-field textarea,
+.waic-setup-setting .waic-setup-field select {
+	width: 100%;
+	max-width: 100%;
+	padding: 10px 12px;
+	border: 2px solid #e5e9f0;
+	border-radius: 8px;
+	font-size: 13px;
+	font-family: inherit;
+	transition: border-color .2s;
+	height: 40px;
+}
+.waic-setup-setting .waic-setup-field textarea {
+	height: 100px;
+}
+.waic-setup-setting .waic-settings-gallery {
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+.waic-setup-setting .waic-gallery-element,
+.waic-setup-setting .waic-gallery-upload {
+	border-radius: 12px;
+	height: 50px;
+	width: 50px;
+	flex: 0 0 50px;
+	overflow: hidden;
+	border: 1px solid transparent;
+}
+.waic-setup-setting .waic-gallery-element:hover,
+.waic-setup-setting .waic-gallery-upload:hover {
+	border-color: #2563eb;
+}
+.waic-setup-setting .waic-gallery-element.selected {
+	border-color: #2563eb;
+	background: #eff6ff;
+	box-shadow: 0 0 0 3px #bfdbfe;
+}
+.waic-media-delete {
+	top: 5px;
+	right: -50px;
+	position: absolute;
+	background: #fff;
+	border: 1px solid transparent;
+	width: 15px;
+	height: 15px;
+	display: flex;
+	justify-content: center;
+	border-radius: 3px;
+	align-items: center;
+}
+.waic-media-delete:hover {
+	color: #2563eb;
+}
+.waic-gallery-media.selected .waic-media-delete {
+	right: 5px;
+}
+.waic-setup-setting .waic-gallery-element img {
+	width: 100%;
+	margin: 0;
+}
+.waic-setup-setting .waic-gallery-upload {
+	cursor: pointer;
+	background: #f8fafb;
+	border: 2px dashed #d1d5db;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #9ca3af;
+	font-size: 13px;
+	font-weight: 700;
+}
+.waic-gallery-media {
+	position: relative;
+}
+.waic-setup-buttons {
+	display: flex;
+	gap: 15px;
+	flex-wrap: wrap;
+}
+.waic-setup-buttons button.waic-setup-check {
+	margin: 0;
+	background: #f8fafb;
+	border: 2px solid #e5e9f0;
+	padding: 5px 12px;
+	border-radius: 6px;
+	font-size: 12px;
+	cursor: pointer;
+	font-weight: 500;
+	line-height: inherit;
+	color: #6b7785;
+}
+.waic-setup-buttons button.waic-setup-check:hover {
+	border-color: #2563eb;
+	color: #1d4ed8;
+}
+
+.waic-setup-block-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 14px;
+	background: #f8fafb;
+	border: 2px solid #e5e9f0;
+	border-radius: 10px;
+	transition: all .2s;
+	cursor: pointer;
+	user-select: none;
+}
+.waic-setup-block.on .waic-setup-block-head {
+	border-color: #2563eb;
+	background: #eff6ff;
+}
+.waic-setup-block-icon {
+	width: 32px;
+	height: 32px;
+	border-radius: 7px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.waic-green-icon {
+	background: #d1fae5;
+}
+.waic-blue-icon {
+	background: #dbeafe;
+}
+.waic-orange-icon {
+	background: #ffedd5;
+}
+.waic-violet-icon {
+	background: #ede9fe;
+}
+.waic-setup-block-left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+.waic-setup-block-name {
+	font-size: 13px;
+	font-weight: 600;
+	color: #1a2332;
+}
+.waic-setup-block-desc {
+	font-size: 11px;
+	color: #6b7785;
+	margin-top: 1px;
+}
+.waic-input-toggle {
+	position: relative;
+	width: 40px;
+	height: 22px;
+	border-radius: 11px;
+	background: #d1d5db;
+	cursor: pointer;
+	transition: background .2s;
+	flex-shrink: 0;
+	pointer-events: none;
+}
+.waic-input-toggle::after {
+	content: '';
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 18px;
+	height: 18px;
+	background: white;
+	border-radius: 50%;
+	transition: transform .2s;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+.waic-setup-block.on .waic-input-toggle {
+    background: #2563eb;
+}
+.waic-setup-block.on .waic-input-toggle::after {
+	transform: translateX(18px);
+}
+.waic-embed-badge {
+	display: inline-flex;
+	align-items: center;
+	background: #ede9fe;
+	color: #7c3aed;
+	font-size: 10px;
+	font-weight: 700;
+	padding: 2px 6px;
+	border-radius: 8px;
+	margin: 0 5px;
+	vertical-align: middle;
+}
+.waic-setup-block-body {
+	padding: 12px 14px;
+	background: #f0f7ff;
+	border: 2px solid #2563eb;
+	border-top: none;
+	border-radius: 0 0 10px 10px;
+	margin-top: -8px;
+	margin-bottom: 8px;
+	display: none;
+}
+.waic-setup-block.on .waic-setup-block-body {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.waic-setup-connect .waic-setup-block-head {
+	background: #f0fdf4;
+	border: 2px solid #10b981;
+}
+.waic-setup-connect .waic-setup-block-text {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 10px;
+}
+.waic-setup-connect .waic-setup-block-name {
+	color: #059669;
+}
+.waic-setup-connect.on .waic-setup-block-name {
+	color: #d97706;
+}
+.waic-setup-connect.on .waic-setup-block-head,
+.waic-setup-connect.on .waic-setup-block-body {
+	background: #fffbeb;
+	border-color: #f59e0b;
+}
+.waic-setup-connect .waic-connected,
+.waic-setup-connect.on .waic-notconnected {
+	display: block;
+}
+.waic-setup-connect.on .waic-connected,
+.waic-setup-connect .waic-notconnected {
+	display: none;
+}
+.waic-button-toggle button {
+	background: white;
+	border: 1.5px solid #10b981;
+	color: #059669;
+	padding: 5px 10px;
+	border-radius: 6px;
+	font-size: 11px;
+	font-weight: 700;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.waic-setup-divider {
+	height: 1px;
+	background: #f0f2f7;
+	margin: 16px 0;
+}
+.waic-setup-engine {
+	flex-wrap: wrap;
+}
+.waic-setup-engine button {
+	width: 100px;
+	max-width: 100px;
+	flex: 1;
+}
+.waic-btn-scheme {
+	width: 30px;
+	height: 30px;
+	border-radius: 6px;
+	cursor: pointer;
+	border: 3px solid transparent;
+	transition: all .15s;
+}
+.waic-btn-scheme.selected {
+	border-color: #1a2332;
+}
+.waic-setup-field input.wbw-color-input {
+	max-width: 100px;
+	height: 28px;
+}
+.waic-setup-group-button {
+	flex: 1;
+	transition: all .2s;
+}
+
+button.waic-setup-check.selected {
+	border-color: #2563eb;
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+.waic-setup-field select.waic-multiselect {
+	height: 100px;
+}
+.waic-setup-link {
+	display: flex;
+	gap: 15px;
+}	
+.waic-setup-link a {
+	margin: 16px auto 0 auto;
+	text-decoration: underline;
+}
+.waic-embed-block {
+	background: #faf5ff;
+	border: 2px solid #e9d5ff;
+	border-radius: 10px;
+	padding: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+.waic-setup-popup-overlay { 
+	position: absolute; 
+	top: 0; 
+	left: 0; 
+	width: 100%; 
+	height: 100%; 
+	background: rgba(0,0,0,0.5); 
+	justify-content: center; 
+	align-items: center; 
+} 
+.waic-setup-popup-body { 
+	background: #fff; 
+	padding: 30px; 
+	border-radius: 8px; 
+	min-width: 60%; 
+	max-width: 100%; 
+	height: 300px; 
+	max-height: 100%; 
+	text-align: center; 
+	box-shadow: 0 4px 10px rgba(0,0,0,0.3); 
+	position: fixed;
+	display: flex;
+	align-self: anchor-center;
+	justify-self: center;
+	justify-content: center;
+	flex-direction: column;
+	gap: 30px;
+}
+.waic-waiting-text {
+	font-size: 16px;
+	font-weight: 600;
+}
+.waic-setup-by-content {
+	flex: 0 0 auto;
+	white-space: nowrap;
+	min-width: auto;
+}

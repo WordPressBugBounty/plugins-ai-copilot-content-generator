@@ -313,6 +313,7 @@ abstract class WaicTable {
 		if ( ( 'UPDATE' == $method ) && !empty($where) ) {
 			$query .= ' WHERE ' . $this->_getQueryString($where, 'AND'); 
 		}
+
 		if (WaicDb::query($query)) {
 			if ('INSERT' == $method) {
 				return WaicDb::lastID();
@@ -444,23 +445,23 @@ abstract class WaicTable {
 						switch ($this->_fields[$k]->type) {
 							case 'int':
 							case 'tinyint':
-								$res .= $k . ' = ' . ( is_null($val) ? 'NULL' : ( (int) $val ) ) . ' ' . $delim . ' ';
+								$res .= '`' . $k . '` = ' . ( is_null($val) ? 'NULL' : ( (int) $val ) ) . ' ' . $delim . ' ';
 								break;
 							case 'float':
-								$res .= $k . ' = ' . ( is_null($val) ? 'NULL' : ( (float) $val ) ) . ' ' . $delim . ' ';
+								$res .= '`' . $k . '` = ' . ( is_null($val) ? 'NULL' : ( (float) $val ) ) . ' ' . $delim . ' ';
 								break;
 							case 'decimal':
-								$res .= $k . ' = ' . ( is_null($val) ? 'NULL' : ( (float) $val ) ) . ' ' . $delim . ' ';
+								$res .= '`' . $k . '` = ' . ( is_null($val) ? 'NULL' : ( (float) $val ) ) . ' ' . $delim . ' ';
 								break;
 							case 'free':    //Just set it as it is
-								$res .= $k . ' = ' . ( is_null($val) ? 'NULL' : $val ) . ' ' . $delim . ' ';
+								$res .= '`' . $k . '` = ' . ( is_null($val) ? 'NULL' : $val ) . ' ' . $delim . ' ';
 								break;
 							default:
-								$res .= $k . ' = ' . ( is_null($val) ? 'NULL' : '\'' . $val . '\'' ) . ' ' . $delim . ' ';
+								$res .= '`' . $k . '` = ' . ( is_null($val) ? 'NULL' : '\'' . $val . '\'' ) . ' ' . $delim . ' ';
 								break;
 						}
 					} else {
-						$res .= $k . ' = \'' . $val . '\' ' . $delim . ' ';
+						$res .= '`' . $k . '` = \'' . $val . '\' ' . $delim . ' ';
 					}
 				} elseif ('additionalCondition' == $k) {    //just add some string to query
 					$res .= $v . ' ' . $delim . ' ';

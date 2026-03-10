@@ -114,7 +114,7 @@ class WaicWorkspaceModel extends WaicModel {
 		return true;
 	}*/
 
-	public function startGeneration( $id, $force = false ) {
+	public function startGeneration( $id, $force = false, $runNow = true ) {
 		if (empty($id)) {
 			WaicFrame::_()->pushError(esc_html__('Generation ID not found', 'ai-copilot-content-generator'));
 			return false;
@@ -168,7 +168,9 @@ class WaicWorkspaceModel extends WaicModel {
 			$running = false;
 			$runningTask = $this->getRunningTask();
 			if (empty($runningTask) || $runningTask == $id || $force) {
-				$this->setRunningTask($id);
+				if ($runNow) {
+					$this->setRunningTask($id);
+				}
 				$running = true;
 			} 
 			$this->getModule()->runGenerationTask();
@@ -328,7 +330,6 @@ class WaicWorkspaceModel extends WaicModel {
 		//}
 		$results = $module->getModel()->doGeneration($task, $aiProvider);
 		$task = $this->controlSteps($task, $model);
-		
 		if (is_array($results)) {
 			return $tasksModel->updateTask($id, $results);
 		}

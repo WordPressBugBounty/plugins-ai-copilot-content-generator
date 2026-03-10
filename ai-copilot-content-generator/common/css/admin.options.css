@@ -600,20 +600,25 @@ a.wbw-feature-link:hover, a.wbw-feature-link:focus {
     width: fit-content;
 	margin: 5px auto;
 }
+.ui-dialog-content div.waic-table-list {
+	font-size: 13px;
+}
 .waic-table-pages .dt-length select.dt-input {
 	width: auto;
 	border: none;
-    color: #0091AE;
-    font-weight: 600;
-    font-size: 12px;
-    padding-right: 18px;
+	color: #0091AE;
+	font-weight: 600;
+	font-size: 12px;
+	padding-right: 18px;
 	box-shadow: none !important;
 }
 .wbw-container div.waic-table-pages .dt-paging {
 	margin: auto 10px;
 }
 .wbw-container div.waic-table-pages .dt-paging button.dt-paging-button,
-.wbw-container div.waic-table-pages .dt-paging .ellipsis {
+.wbw-container div.waic-table-pages .dt-paging .ellipsis,
+.ui-dialog-content div.waic-table-pages .dt-paging button.dt-paging-button,
+.ui-dialog-content div.waic-table-pages .dt-paging .ellipsis {
 	border: none !important;
     background: transparent;
 	color: #0091AE !important;

@@ -140,10 +140,10 @@ class WaicOptionsModel extends WaicModel {
 		$defaults = array(
 			'api' => array(
 				'api_key' => '',
-				'model' => 'gpt-4o',
+				'model' => 'gpt-5.2',
 				'deep_seek_model' => 'deepseek-chat',
 				'gemini_model' => 'gemini-2.5-flash',
-				'claude_model' => 'claude-haiku-4-5',
+				'claude_model' => 'claude-sonnet-4-6',
 				'perplexity_model' => 'sonar',
 				'openrouter_model' => 'openrouter/auto',
 				'engine' => 'open-ai',
@@ -311,8 +311,17 @@ class WaicOptionsModel extends WaicModel {
 					'perplexity' => 'perplexity_model',
 					'openrouter' => 'openrouter_model',
 				),
+				'key-fields' => array(
+					'open-ai' => 'api_key',
+					'gemini' => 'gemini_api_key',
+					'deep-seek' => 'deep_seek_api_key',
+					'claude' => 'claude_api_key',
+					'perplexity' => 'perplexity_api_key',
+					'openrouter' => 'openrouter_api_key',
+				),
 				'model' => array(
 					'open-ai' => array(
+						'gpt-5.2' => 'GPT-5.2',
 						'gpt-5' => 'GPT-5',
 						'gpt-5-mini' => 'GPT-5 mini',
 						'gpt-5-nano' => 'GPT-5 nano',
@@ -341,6 +350,8 @@ class WaicOptionsModel extends WaicModel {
 						'gemini-embedding-exp' => 'Gemini Embedding',
 					),
 					'claude' => array(
+						'claude-opus-4-6' => 'Claude Opus 4.6',
+						'claude-sonnet-4-6' => 'Claude Sonnet 4.6',
 						'claude-haiku-4-5' => 'Claude Haiku 4.5',
 						'claude-sonnet-4-5' => 'Claude Sonnet 4.5',
 						'claude-opus-4-1' => 'Claude Opus 4.1',
@@ -360,6 +371,7 @@ class WaicOptionsModel extends WaicModel {
 					)
 				),
 				'tokens' => array(
+					'gpt-5.2' => 128000,
 					'gpt-5' => 128000,
 					'gpt-5-mini' => 128000,
 					'gpt-5-nano' => 128000,
@@ -382,6 +394,8 @@ class WaicOptionsModel extends WaicModel {
 					'gemini-2.0-flash' => 8192,
 					'gemini-2.0-flash-lite' => 8192,
 					'gemini-embedding-exp' => 3072,
+					'claude-opus-4-6' => 128000,
+					'claude-sonnet-4-6' => 64000,
 					'claude-haiku-4-5' => 65536,
 					'claude-sonnet-4-5' => 65536,
 					'claude-opus-4-1' => 32768,

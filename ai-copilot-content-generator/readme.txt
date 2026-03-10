@@ -4,7 +4,7 @@ Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
 Tested up to: 6.9
-Stable tag: 1.4.9
+Stable tag: 1.4.10
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -199,6 +199,9 @@ Yes. AIWU combines AI chatbot, workflow automation, content generation, SEO auto
 No. Most features are no-code and work through visual builders and templates. Developers can extend everything using APIs if needed.
 
 == Changelog ==
+
+1.4.10 (10/03/2026)
+- AI ChatBot: Added onboarding tutorial
 
 1.4.4 (16/01/2026)
 - AI ChatBot: Real-time product and post recommendations with Function Calling

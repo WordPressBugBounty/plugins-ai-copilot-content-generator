@@ -31,22 +31,7 @@ $roles = WaicUtils::getAllUserRolesList();
 <?php } ?>
 <?php 
 $displayOn = WaicUtils::getArrayValue($general, 'display_on', 'shortcode');
-$pages = array(
-	'home' => __('Home', 'ai-copilot-content-generator'),
-	'account' => __('Account', 'ai-copilot-content-generator'),
-	'blog' => __('Blog page', 'ai-copilot-content-generator'),
-	'blog_post' => __('Blog posts', 'ai-copilot-content-generator'),
-	'blog_сat' => __('Blog categories', 'ai-copilot-content-generator'),
-	'blog_tag' => __('Blog tags', 'ai-copilot-content-generator'),
-);
-if (WaicUtils::isWooCommercePluginActivated()) {
-	$pages['shop'] = __('Shop', 'ai-copilot-content-generator');
-	$pages['product'] = __('Product Pages', 'ai-copilot-content-generator');
-	$pages['product_cat'] = __('Product categories', 'ai-copilot-content-generator');
-	$pages['product_tag'] = __('Product tags', 'ai-copilot-content-generator');
-	$pages['cart'] = __('Cart', 'ai-copilot-content-generator');
-	$pages['checkout'] = __('Checkout', 'ai-copilot-content-generator');
-}
+$pages = $this->getModule()->getModel()->getDisplayPages();
 ?>
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Display on', 'ai-copilot-content-generator'); ?></div>
@@ -106,7 +91,7 @@ $hideOn = WaicUtils::getArrayValue($general, 'hide_on', 'none');
 			<?php 
 				WaicHtml::selectbox('general[hide_on]', array(
 					'options' => array(
-						'node' => __('None', 'ai-copilot-content-generator'),
+						'none' => __('Don’t hide anywhere', 'ai-copilot-content-generator'),
 						'specific' => __('Specific pages', 'ai-copilot-content-generator'),
 					),
 					'value' => $hideOn,

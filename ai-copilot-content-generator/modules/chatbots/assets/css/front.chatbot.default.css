@@ -11,7 +11,7 @@
 	-ms-user-select: none;
 	user-select: none;
 }
-.waic-mobile {
+.waic-chatbot-wrapper .waic-mobile {
 	display: none;
 }
 /*.waic-chatbot-widget {

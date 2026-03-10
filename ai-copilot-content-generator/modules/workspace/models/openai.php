@@ -164,7 +164,7 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 			}
 			$url = $this->getApiChatCompletionsUrl();
 		}
-		$newModels = array('gpt-5', 'gpt-5-mini', 'gpt-5-nano');
+		$newModels = array('gpt-5.2', 'gpt-5', 'gpt-5-mini', 'gpt-5-nano');
 		if (in_array($params['model'], $newModels)) {
 			$params['max_completion_tokens'] = $params['max_tokens'];
 			unset($params['max_tokens'], $params['temperature'], $params['presence_penalty'], $params['frequency_penalty']);

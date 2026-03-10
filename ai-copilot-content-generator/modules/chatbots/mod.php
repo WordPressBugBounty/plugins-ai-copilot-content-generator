@@ -17,20 +17,37 @@ class WaicChatbots extends WaicModule {
 			'bread'      => true,
 			'last_Id' => 'waicTaskNameWrapper',
 		);
+		$tabs['chatbot-setup']   = array(
+			'label'      => esc_html__( 'Setup Your AI ChatBot', 'ai-copilot-content-generator' ),
+			'callback'   => array( $this, 'showChatbotSetup' ),
+			'hidden'     => 1,
+			'sort_order' => 0,
+			'bread'      => true,
+		);
 		return $tabs;
 	}
 	
 	public function showChatbotsTabContent() {
 		$taskId = WaicReq::getVar('task_id');
 		$title = __( 'Your Scenario name', 'ai-copilot-content-generator' );
+		$isNew = true;
 		if (!empty($taskId)) {
 			$taskTitle = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTaskTitle($taskId);
 			if (!is_null($taskTitle) && !empty($taskTitle)) {
 				$title = $taskTitle;
 			}
+			$isNew = false;
+		} else if (WaicReq::getVar('adv') == 1) {
+			$isNew = false;
 		}
+		
 		WaicFrame::_()->getModule('adminmenu')->setLastBread($title);
-		return $this->getView()->showCreateTabContent($taskId);
+		return $isNew ? $this->showChatbotSetup() : $this->getView()->showCreateTabContent($taskId);
+	}
+	public function showChatbotSetup() {
+		WaicFrame::_()->getModule('adminmenu')->setActiveTab('chatbot-setup');
+		WaicFrame::_()->getModule('adminmenu')->setLastBread(false);
+		return $this->getView()->showChatbotSetup();
 	}
 	public function getChatbotsTabsList( $current = '' ) {
 		$tabs = array(

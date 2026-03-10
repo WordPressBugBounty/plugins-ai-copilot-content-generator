@@ -69,6 +69,33 @@ class WaicChatbotsView extends WaicView {
 		}
 		return $str;
 	}
+	public function showChatbotSetup() {
+		$assets = WaicAssets::_();
+		$frame = WaicFrame::_();
+		$assets->loadChosenSelects();
+		$assets->loadColorPicker();
+		$module = $this->getModule();
+		$path = $this->getModule()->getModPath() . 'assets/';
+	
+		$frame->addScript('waic-chatbots-setup', $path . 'js/setup.chatbots.js');
+		$frame->addStyle('waic-chatbots-setup', $path . 'css/setup.chatbots.css');
+		
+		$options = $frame->getModule('options')->getModel();
+		
+		$this->assign('tool_groups', $module->getChatbotsToolGroups());
+		$this->assign('options', $options->get('api'));
+		$this->assign('variations', $options->getVariations('api'));
+		
+		$this->assign('tpl_path', WAIC_MODULES_DIR . 'workspace/views/tpl/');
+		$this->assign('img_url', $path . 'img/');
+		$this->assign('ai_avatars', $module->getAiChatbotImages('ai_avatars'));
+		$this->assign('user_avatars', $module->getAiChatbotImages('user_avatars'));
+		$this->assign('exist_products', WaicUtils::isWooCommercePluginActivated() ? 1 : 0);
+		$this->assign('exist_posts', 1);
+		$this->assign('is_pro', $frame->isPro() && $frame->moduleExists('chatbotspro'));
+
+		return parent::getContent('adminChatbotSetup');
+	}
 	
 	public function showCreateTabContent( $id = 0, $task = array(), $showSettings = false ) {
 		$assets = WaicAssets::_();
@@ -196,6 +223,8 @@ class WaicChatbotsView extends WaicView {
 					} else {
 						return '';
 					}
+				} else {
+					return '';
 				}
 			}
 			

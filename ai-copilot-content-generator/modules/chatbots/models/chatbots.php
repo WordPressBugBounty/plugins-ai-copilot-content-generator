@@ -5,6 +5,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WaicChatbotsModel extends WaicModel {
 	private $_optionChatbotShow = 'waic_chatbot_show';
 	private $_chatbotShowRules = null;
+	private $_launchFlagId = 21;
+	private $_launchTimeout = 300;
+	private $_workspace = null;
 
 	public function __construct() {
 		$this->_setTbl('chatlogs');
@@ -32,6 +35,32 @@ class WaicChatbotsModel extends WaicModel {
 	public function publishResults( $taskId, $publish ) {
 		WaicFrame::_()->getModule('workspace')->getModel('tasks')->updateTask($taskId, array('status' => 4));
 		return false;
+	}
+	public function getColorSchemes( $default = false ) {
+		$schemes = array('#2D3E70', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4');
+		if ($default) {
+			$schemes[] = '#2D3E50';
+		}
+		return $schemes;
+	}
+	public function getDisplayPages() {
+		$pages = array(
+			'home' => __('Home', 'ai-copilot-content-generator'),
+			'account' => __('Account', 'ai-copilot-content-generator'),
+			'blog' => __('Blog page', 'ai-copilot-content-generator'),
+			'blog_post' => __('Blog posts', 'ai-copilot-content-generator'),
+			'blog_сat' => __('Blog categories', 'ai-copilot-content-generator'),
+			'blog_tag' => __('Blog tags', 'ai-copilot-content-generator'),
+		);
+		if (WaicUtils::isWooCommercePluginActivated()) {
+			$pages['shop'] = __('Shop', 'ai-copilot-content-generator');
+			$pages['product'] = __('Product Pages', 'ai-copilot-content-generator');
+			$pages['product_cat'] = __('Product categories', 'ai-copilot-content-generator');
+			$pages['product_tag'] = __('Product tags', 'ai-copilot-content-generator');
+			$pages['cart'] = __('Cart', 'ai-copilot-content-generator');
+			$pages['checkout'] = __('Checkout', 'ai-copilot-content-generator');
+		}
+		return $pages;
 	}
 	public function clearEtaps( $taskId, $ids = false, $withContent = true ) {
 		if ($withContent) {
@@ -1010,5 +1039,554 @@ class WaicChatbotsModel extends WaicModel {
 	}
 	public function tolalCleanStr( $str ) {
 		return str_replace(["\n", "\r", "\t", '  '], ' ', wp_strip_all_tags($str));
+	}
+	
+	public function isRunningLaunch() {
+		$option = $this->_workspace->getWorkspaceFlagById($this->_launchFlagId);
+		if (is_null($option) || empty($option)) {
+			return true;
+		}
+		if (empty((int) $option['value'])) {
+			return false;
+		} 
+		if ($option['timeout'] < WaicUtils::getTimestamp()) {
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		return true;
+	}
+	public function setRunningLaunch( $data ) {
+		if (!$this->isRunningLaunch()) {
+			return $this->_workspace->updateById($data, $this->_launchFlagId);
+		}
+		return false;
+	}
+	public function updateRunningLaunch( $data ) {
+		if ($this->isRunningLaunch()) {
+			return $this->_workspace->updateById($data, $this->_launchFlagId);
+		}
+		return false;
+	}
+	/*public function resetRunningLaunch() {
+		return $this->updateRunningLaunch(array('value' => 0, 'flag' => 0, 'timeout' => 0));
+	}*/
+	public function getLaunchPercent( $code ) {
+		$launch = WaicFrame::_()->getModule('workspace')->getModel()->getWorkspaceFlagById($this->_launchFlagId);
+		if (empty($launch)) {
+			WaicFrame::_()->pushError(esc_html__('The launch process not found.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		
+		if (!empty($launch['value']) && $launch['value'] != $code) {
+			WaicFrame::_()->pushError(esc_html__('Another launch process is running. Please try again later', 'ai-copilot-content-generator'));
+			return false;
+		}
+		return (int) $launch['flag'];
+	}
+	
+	
+	public function launchChatbot( $code, $params ) {
+		$workspace = WaicFrame::_()->getModule('workspace');
+		$this->_workspace = $workspace->getModel();
+		
+		$setup = WaicUtils::getArrayValue($params, 'setup', array(), 2);
+		if (!empty($setup['api_keys']) && is_string($setup['api_keys'])) {
+			$setup['api_keys'] = WaicUtils::jsonDecode(stripslashes($setup['api_keys']), true);
+		}
+		$options = WaicFrame::_()->getModule('options')->getModel();
+		$apiOptions = $options->get('api');
+		$apiVariations = $options->getVariations('api');
+		
+		$engine = WaicUtils::getArrayValue($setup, 'engine');
+		$engines = WaicUtils::getArrayValue($apiVariations, 'engines', array(), 2);
+		if (!isset($engines[$engine])) {
+			WaicFrame::_()->pushError(esc_html__('The specified provider is not supported.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$model = WaicUtils::getArrayValue($setup, 'model');
+		$models = WaicUtils::getArrayValue($apiVariations, 'model', array(), 2);
+
+		if (empty($models[$engine]) || !isset($models[$engine][$model])) {
+			WaicFrame::_()->pushError(esc_html__('The specified model is not supported.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$apiOptions['engine'] = $engine;
+		$modelField = WaicUtils::getArrayValue($apiVariations['model-fields'], $engine, 'model');
+		$apiOptions[$modelField] = $model;
+		
+		$apiKeys = WaicUtils::getArrayValue($setup, 'api_keys', array(), 2);
+		$keyFields = WaicUtils::getArrayValue($apiVariations, 'key-fields', array(), 2);
+		$aiKeys = array();
+		foreach ($keyFields as $e => $field) {
+			$apiOptions[$field] = WaicUtils::getArrayValue($apiKeys, $e);
+		}
+		$keyField = WaicUtils::getArrayValue($keyFields, $engine);
+		if (empty($keyField) || empty($apiOptions[$keyField])) {
+			WaicFrame::_()->pushError(esc_html__('Enter the API key for the selected AI provider.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$context = WaicUtils::getArrayValue($params, 'context', array(), 2);
+		$botName = WaicUtils::getArrayValue($context, 'ai_name');
+		if (empty($botName)) {
+			WaicFrame::_()->pushError(esc_html__('Set Bot Name please.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		
+		$emProds = WaicUtils::getArrayValue($setup, 'knowledge_prods', 0, 1);
+		$emPosts = WaicUtils::getArrayValue($setup, 'knowledge_posts', 0, 1);
+		$emPages = WaicUtils::getArrayValue($setup, 'knowledge_pages', 0, 1);
+		$withEmbed = $emProds || $emPosts || $emPages;
+		$knowledge = $withEmbed ? WaicUtils::getArrayValue($params, 'knowledge', array(), 2) : array();
+		
+		if ($withEmbed) {
+			$embedOptions = WaicUtils::getArrayValue($knowledge, 'embed');
+			$embedEngine = WaicUtils::getArrayValue($embedOptions, 'engine');
+			if (!isset($engines[$embedEngine])) {
+				WaicFrame::_()->pushError(esc_html__('The specified provider for Embeddings is not supported.', 'ai-copilot-content-generator'));
+				return false;
+			}
+			$keyField = WaicUtils::getArrayValue($keyFields, $embedEngine);
+			if (empty($keyField) || empty($apiOptions[$keyField])) {
+				WaicFrame::_()->pushError(esc_html__('Enter the API key for the selected Embedding AI provider.', 'ai-copilot-content-generator'));
+				return false;
+			}
+			if (!$emProds) {
+				$knowledge['prods'] = array('prod_include' => 'none');
+			}
+			if (!$emPosts) {
+				$knowledge['posts'] = array('post_include' => 'none');
+			}
+			$knowledge['pages'] = array('page_include' => $emPages ? '' : 'none');
+			$knowledge['embeddings'] = 'new';
+			
+			$vector = WaicUtils::getArrayValue($embedOptions, 'vector');
+			if ('wpvector' != $vector) {
+				$vectorData = WaicUtils::getArrayValue($embedOptions, $vector, array(), 2);
+				if (empty($vectorData['api_key']) 
+					|| ('pinecone' == $vector && empty($vectorData['index_host']))
+					|| ('qdrant4' == $vector && empty($vectorData['api_url']))) {
+					WaicFrame::_()->pushError(esc_html__('Enter vector base data', 'ai-copilot-content-generator'));
+					return false;
+				}
+			}
+		}
+		
+		if ($this->isRunningLaunch()) {
+			WaicFrame::_()->pushError(esc_html__('Another launch process is running. Please try again later.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		set_time_limit(0);
+		
+		if (!$this->setRunningLaunch(array('value' => $code, 'flag' => 0, 'timeout' => WaicUtils::getTimestamp() + $this->_launchTimeout))) {
+			WaicFrame::_()->pushError(esc_html__('Error related to setting the launch flag.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		
+		$summary = $this->getSiteSummary();
+		if (!$this->updateRunningLaunch(array('flag' => 20))) {
+			WaicFrame::_()->pushError(esc_html__('Error related to setting the launch flag.', 'ai-copilot-content-generator') . '(1)');
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		
+		$aiProvider = WaicFrame::_()->getModule('workspace')->getModel('aiprovider')->getInstance($apiOptions);
+		if (!$aiProvider) {
+			WaicFrame::_()->pushError(esc_html__('The specified provider is not found.', 'ai-copilot-content-generator'));
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		$aiProvider->init(0, 0, '', 0, false);
+		
+		if (!$aiProvider->setApiOptions($apiOptions)) {
+			WaicFrame::_()->pushError(esc_html__('The specified provider options is not supported.', 'ai-copilot-content-generator'));
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		$lang = WaicUtils::getArrayValue($setup, 'language', 'en');
+		$language = WaicUtils::getArrayValue(WaicUtils::getArrayValue($apiVariations, 'language', array(), 2), $lang);
+		
+		$prompt = 'Your task is to generate a system prompt for an AI chatbot for the following website: ' . PHP_EOL .
+			$summary . PHP_EOL .
+			'Context: ' . PHP_EOL .
+			'- Website language: ' . $language . PHP_EOL .
+			'- User instructions: ' . WaicUtils::getArrayValue($setup, 'role') . PHP_EOL .
+			'Requirements: ' . PHP_EOL .
+			'Generate a concise system prompt (3–5 sentences) that: ' . PHP_EOL .
+			'1. Clearly defines the chatbot’s role and purpose for THIS specific website and business. ' . PHP_EOL .
+			'2. Describes what the chatbot can help users with (sales, support, navigation, information), based on the business type and selected role. ' . PHP_EOL .
+			'3. Reflects the brand’s tone and communication style inferred from the website content. ' . PHP_EOL .
+			'4. Explains how the chatbot should guide users (e.g. to products, categories, pages, support, or contact options when needed). ' . PHP_EOL .
+			'5. Sets clear boundaries: what the chatbot can answer, and when it should suggest contacting a human or using official pages. ' . PHP_EOL .
+			'Important rules: ' . PHP_EOL .
+			'- Do not invent product details. When users ask about products or availability, rely on connected tools (e.g. catalog search / function calling) if they exist. If such tools are not available, answer only based on the provided website summary. ' . PHP_EOL .
+			'- If key pages or links (such as Contact, Support, Shipping, Returns, FAQ, About) are provided in the website summary, use them as the primary sources for directing users. If they are not available, guide users in a generic way (e.g. suggest visiting the contact or support section of the website). ' . PHP_EOL .
+			'- Keep the prompt specific to this business, not a generic assistant description. ' . PHP_EOL .
+			'Write the final system prompt in ' . $language . PHP_EOL . 
+			'Be specific, practical, and tailored to this website. ' . PHP_EOL .
+			'You must respond with exactly the system prompt text only. Do NOT include any headings, labels, explanations, code fences, markdown, or extra text. Return a single paragraph of 3-5 sentences tailored to the website. Nothing else.';
+		$result = $aiProvider->getText(array('prompt' => $prompt));
+		
+		
+		if ($result['error']) {
+			WaicFrame::_()->pushError($result['msg']);
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		if (!$this->updateRunningLaunch(array('flag' => 60))) {
+			WaicFrame::_()->pushError(esc_html__('Error related to setting the launch flag.', 'ai-copilot-content-generator') . '(2)');
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		$appearance = WaicUtils::getArrayValue($params, 'appearance', array(), 2);
+		$chatParams = array(
+			'general' => WaicUtils::getArrayValue($params, 'general', array(), 2),
+			'api' => $apiOptions,
+			'tools' => WaicUtils::getArrayValue($params, 'tools', array(), 2),
+			'knowledge' => $knowledge,
+		);
+		$context['instructions'] = 'You are an AI assistant designed to provide helpful, accurate, and context-aware responses. Follow the given instructions carefully and ensure your replies are relevant, concise, and aligned with the user’s needs.' . PHP_EOL . $result['data'];
+		$position = WaicUtils::getArrayValue($setup, 'position');
+		$appearance['desktop'] = array('position' => $position);
+		$appearance['mobile'] = array('position' => $position);
+		
+		$messages = array(
+			'welcome_message' => '👋 Want to chat? I’m an AI chatbot here to help you find your way. Ask me or select an option below.',
+			'human_assistance_request' => 'Talk to a Human',
+			'predefined_message_for_user' => 'Please provide your email address so we can assist you further. Our team will get back to you within 24 hours. Thank you!',
+			'loader_text' => 'typing',
+			'placeholder_text' => 'Write a message',
+			'file_loader_text' => 'Uploading',
+			'predefined_error_message' => 'We’re currently experiencing temporary technical issues. Please leave your email, and we’ll get back to you as soon as possible.',
+			'placeholder_for_email' => 'Your email',
+			'invalid_email_message' => 'Email is not correct',
+			'thank_you_message' => 'Thank you, our expert will contact you as soon as possible',
+			'pop_up_welcome_message' => '👋 Want to chat? I’m an AI chatbot here to help you find your way. Ask me or select an option below.',
+		);
+		$messagesNew = array();
+		if ('en' != $lang) {
+			$prompt = 'You are a localization assistant for AIWU ChatBOT. Your job is to produce ALL system UI messages for the chatbot in the requested language. ' . PHP_EOL . PHP_EOL .
+				'IMPORTANT RULES: ' . PHP_EOL .
+				'- Output must be ONLY valid JSON. No markdown, no comments, no extra text. Return only valid JSON — no markdown, no code fences, no extra text.' . PHP_EOL .
+				'- Do not change JSON keys. ' . PHP_EOL .
+				'- Preserve meaning, keep it natural and concise for UI. ' . PHP_EOL .
+				'- Keep capitalization and punctuation appropriate for the target language. ' . PHP_EOL .
+				'- Do NOT add emojis unless they already exist in the source text. ' . PHP_EOL .
+				'- If the source contains placeholders in curly braces (e.g., {website_summary}, {bot_name}), keep them EXACTLY as-is. ' . PHP_EOL . PHP_EOL .
+				'INPUT: ' . PHP_EOL .
+				'Target language: ' . $language . PHP_EOL .
+				'Website summary: ' . $summary . PHP_EOL .
+				'Chatbot name: ' . $botName . PHP_EOL . PHP_EOL .
+				'TASK: ' . PHP_EOL .
+				'1) Generate a localized "welcome_message" in ' . $language . ' (1–2 sentences) that: ' . PHP_EOL .
+				'- Introduces the chatbot by name (Chatbot name) ' . PHP_EOL .
+				'- Briefly explains what it can help with, based on Website summary ' . PHP_EOL .
+				'- Invites the user to ask a question or choose an option ' . PHP_EOL .
+				'- Matches the brand tone implied by Website summary ' . PHP_EOL .
+				'Return ONLY the final message text in the JSON field.' . PHP_EOL . PHP_EOL .
+				'2) Translate ALL other provided UI strings into ' . $language . '. Return only translations (no explanations). ' . PHP_EOL . PHP_EOL .
+				' SOURCE STRINGS (English): ' . json_encode($messages, JSON_UNESCAPED_UNICODE) . PHP_EOL .
+				' OUTPUT JSON SCHEMA (keys must match exactly): ' . PHP_EOL .
+				'{"welcome_message": "","human_assistance_request": "","predefined_message_for_user": "","loader_text": "","placeholder_text": "","file_loader_text": "","predefined_error_message": "","placeholder_for_email": "","invalid_email_message": "","thank_you_message": "","pop_up_welcome_message": ""}' . PHP_EOL . PHP_EOL .
+				'Return only valid JSON — no markdown, no code fences, no extra text. Now produce the final JSON in ' . $language . '.';
+			$result = $aiProvider->getText(array('prompt' => $prompt));
+		
+			if ($result['error']) {
+				WaicFrame::_()->pushError($result['msg']);
+				$this->_workspace->resetRunningFlag($this->_launchFlagId);
+				return false;
+			}
+			$messagesNew = $result['data'];
+			if (is_string($messagesNew)) {
+				$messagesNew = WaicUtils::jsonDecode(stripslashes(str_replace(array('```json', '```', "\n"), array('', '', ''), $messagesNew)));
+			}
+		}
+		if (!$this->updateRunningLaunch(array('flag' => 90))) {
+			WaicFrame::_()->pushError(esc_html__('Error related to setting the launch flag.', 'ai-copilot-content-generator') . '(2)');
+			$this->_workspace->resetRunningFlag($this->_launchFlagId);
+			return false;
+		}
+		
+		$context['welcome_message'] = empty($messagesNew['welcome_message']) ? $messages['welcome_message'] : $messagesNew['welcome_message'];
+		$context['human_request_button'] = empty($messagesNew['human_assistance_request']) ? $messages['human_assistance_request'] : $messagesNew['human_assistance_request'];
+		$context['human_request_message'] = empty($messagesNew['predefined_message_for_user']) ? $messages['predefined_message_for_user'] : $messagesNew['predefined_message_for_user'];
+		
+		$context['loader_text'] = empty($messagesNew['loader_text']) ? $messages['loader_text'] : $messagesNew['loader_text'];
+		$context['plh_text'] = empty($messagesNew['placeholder_text']) ? $messages['placeholder_text'] : $messagesNew['placeholder_text'];
+		$context['loader_file'] = empty($messagesNew['file_loader_text']) ? $messages['file_loader_text'] : $messagesNew['file_loader_text'];
+		$context['error_message'] = empty($messagesNew['predefined_error_message']) ? $messages['predefined_error_message'] : $messagesNew['predefined_error_message'];
+		
+		$context['plh_email'] = empty($messagesNew['placeholder_for_email']) ? $messages['placeholder_for_email'] : $messagesNew['placeholder_for_email'];
+		$context['error_email'] = empty($messagesNew['invalid_email_message']) ? $messages['invalid_email_message'] : $messagesNew['invalid_email_message'];
+		$context['error_thank'] = empty($messagesNew['thank_you_message']) ? $messages['thank_you_message'] : $messagesNew['thank_you_message'];
+		$popupMessage = empty($messagesNew['pop_up_welcome_message']) ? $messages['pop_up_welcome_message'] : $messagesNew['pop_up_welcome_message'];
+		
+		$appearance['desktop']['popup_message'] = $popupMessage;
+		$appearance['mobile']['popup_message'] = $popupMessage;
+		
+		$chatParams['context'] = $context;
+		$chatParams['appearance'] = $appearance;
+		
+		$id = $workspace->getModel('tasks')->saveTask('chatbots', 0, $chatParams);
+		$this->_workspace->resetRunningFlag($this->_launchFlagId);
+		return $id;
+	}
+	public function getSiteSummary() {
+		$isShop = WaicUtils::isWooCommercePluginActivated();
+		$summary = 'Website URL: ' . home_url() . PHP_EOL .
+			'Website name: ' . get_bloginfo('name') . PHP_EOL .
+			'Website description: ' . get_bloginfo('description') . PHP_EOL;
+			
+		if ($isShop) {
+			$summary .= 'Business type: ecommerce' . PHP_EOL .
+				'Country: ' . get_option('woocommerce_default_country') . PHP_EOL .
+				'Currency: ' . get_woocommerce_currency() . PHP_EOL;
+			$zones = WC_Shipping_Zones::get_zones(); 
+			$data = array();
+			foreach ($zones as $zone) {
+				$shippingZone = new WC_Shipping_Zone($zone['id']);
+				$methods = $shippingZone->get_shipping_methods();
+				$zoneData = array(
+					'zone' => $shippingZone->get_zone_name(),
+					'methods' => array()
+				); 
+				foreach ($methods as $method) {
+					$methodInfo = array(
+						'id' => isset($method->id) ? $method->id : null,
+						'instance_id' => method_exists($method, 'get_instance_id') ? $method->get_instance_id() : null,
+						'title' => method_exists($method, 'get_title') ? $method->get_title() : ( isset($method->title) ? $method->title : '' ),
+						'cost' => null, 
+					);
+					if (method_exists( $method, 'get_cost' )) { 
+						$methodInfo['cost'] = $method->get_cost();
+					} else {
+						if (method_exists($method, 'get_option')) {
+							$opt = $method->get_option('cost', '');
+							$methodInfo['cost'] = $opt !== '' ? $opt : null; 
+						} else if (property_exists($method, 'cost')) {
+							$methodInfo['cost'] = $method->cost;
+						} 
+					} 
+					$zoneData['methods'][] = $methodInfo;
+				}
+				$data[] = $zoneData; 
+			} 
+			$summary .= 'Shipping Terms: ' . json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
+			
+			$args = array(
+				'post_type' => array('product'),
+				'post_status' => 'publish',
+				'ignore_sticky_posts' => true,
+				'posts_per_page' => 10,
+				'meta_key' => 'total_sales',
+				'orderby' => 'meta_value_num',
+				'order' => 'DESC',
+			);
+			$products = array();
+			$topProducts = new WP_Query($args);
+			if ($topProducts->have_posts()) {
+				foreach ($topProducts->posts as $post) {
+					$products[] = array(
+						'id' => $post->ID,
+						'title' => $post->post_title,
+						'short_description' => $post->post_excerpt,
+					);
+				}
+			}
+			$summary .= 'Top products: ' . json_encode($products, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
+				
+			global $wpdb;
+			$query = 'SELECT t.term_id, t.name, tt.count' .
+				' FROM ' . $wpdb->terms . ' as t' .
+				' INNER JOIN ' . $wpdb->term_taxonomy . ' as tt ON t.term_id=tt.term_id' .
+				" WHERE tt.taxonomy='product_cat'" .
+				' ORDER BY tt.count DESC' .
+				' LIMIT 10';
+			$topCategories = $wpdb->get_results($query);
+			$categories = array();
+			foreach ($topCategories as $cat) {
+				$categories[] = array(
+					'id' => $cat->term_id,
+					'name' => $cat->name,
+					'count_products' => $cat->count,
+				); 
+			}
+			$summary .= 'Top categories: ' . json_encode($categories, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
+
+		}
+		
+		$locations = get_nav_menu_locations();
+		$location = isset($locations['footer']) ? 'footer' : '';
+		if (empty($location)) {
+			foreach (array_keys($locations) as $key) {
+				if (strpos($key, 'footer') !== false) {
+					$location = $key;
+					break;
+				}
+			}
+		}
+		$menuItems = array();
+		if ($location && isset($locations[$location])) {
+			$menuId = $locations[$location];
+			$items = wp_get_nav_menu_items($menuId);
+        
+			if ($items) {
+				foreach ($items as $item) {
+					$menuItems[] = array(
+						'id' => $item->ID,
+						'title' => $item->title,
+						'url' => $item->url,
+						'description' => $item->description,
+						'parent' => $item->menu_item_parent,
+					);
+				}
+			}
+		}
+		$summary .= 'Footer menu: ' . json_encode($menuItems, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
+		$limit = 3000;
+		$homePageText = '';
+		if (get_option('show_on_front') === 'page') {
+			$homepageId = get_option('page_on_front');
+			if ($homepageId) {
+				$homePageText = $this->convertContenToText($post->post_content);
+			}
+		} else {
+			$recentPosts = get_posts(array(
+				'numberposts' => 10,
+				'post_status' => 'publish',
+				'orderby' => 'date',
+				'order' => 'DESC', 
+				'post_type' => 'post',
+			));
+
+			foreach ($recentPosts as $post) {
+				$homePageText .= $this->convertContenToText($post->post_content) . " ";
+				if (WaicUtils::mbstrlen($homePageText) >= $limit) {
+					break;
+				}
+			}
+		}
+		$summary .= 'Homepage content: ' . WaicUtils::mbsubstr($homePageText, 0, $limit);
+
+		return $summary;
+	}
+	public function convertContenToText( $raw ) {
+		//$content = strip_shortcodes($raw);
+		$content = apply_filters('the_content', $raw);
+		$content = str_replace(']]>', ']]&gt;', $content);
+		
+		/*$content = do_shortcode($content);
+		$textParts = array(); 
+		if (function_exists('parse_blocks')) {
+			$blocks = parse_blocks($content);
+			$textParts = $this->extractTextFromBlocks($blocks);
+		} else {
+			$textParts = array($content);
+		}
+		$combined = implode("\n\n", $textParts);
+		$combined = preg_replace('#<script.*?>.*?</script>#is', '', $combined);
+		$combined = preg_replace('#<style.*?>.*?</style>#is', '', $combined);
+		$combined = preg_replace('#<pre.*?>.*?</pre>#is', '', $combined);
+		$combined = preg_replace('#<code.*?>.*?</code>#is', '', $combined);
+		$text = wp_strip_all_tags($combined);*/
+		
+		$text = wp_strip_all_tags($content);
+		
+		$text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+		$text = preg_replace('/\s+/u', ' ', trim($text));
+    
+		//$content = wp_strip_all_tags($content);
+		//$content = preg_replace('/\s+/', ' ', $content);
+		return trim($text);
+	}
+
+	public function extractTextFromBlocks( $blocks ) {
+		$out = array();
+
+		$skipBlocks = array(
+			'core/code',
+			'core/preformatted',
+			'core/html',
+			'core/embed',
+			'core/video',
+			'core/audio',
+			'core/file',
+		);
+		$textBlocks = array(
+			'core/paragraph',
+			'core/heading',
+			'core/list',
+			'core/quote',
+			'core/pullquote',
+			'core/table',
+			'core/group',
+			'core/columns',
+			'core/column',
+			'core/verse',
+		);
+
+		foreach ($blocks as $block) {
+			if (empty($block) || !is_array($block)) {
+				continue;
+			}
+			$blockName = isset($block['blockName']) ? $block['blockName'] : '';
+			if ($blockName && in_array($blockName, $skipBlocks, true)) {
+				continue;
+			}
+			if (!empty($block['innerBlocks']) && is_array($block['innerBlocks'])) {
+				$inner = $this->extractTextFromBlocks($block['innerBlocks']);
+				if (!empty($inner)) {
+					$out = array_merge($out, $inner);
+				}
+			}
+			$renderedHtml = '';
+			if ($blockName) {
+				try {
+					$renderedHtml = render_block($block);
+				} catch (Exception $e) {
+					$renderedHtml = '';
+				}
+			}
+			if (!empty($renderedHtml)) {
+				$renderedHtml = preg_replace('#<script.*?>.*?</script>#is', '', $renderedHtml);
+				$renderedHtml = preg_replace('#<style.*?>.*?</style>#is', '', $renderedHtml);
+				$renderedHtml = preg_replace('#<pre.*?>.*?</pre>#is', '', $renderedHtml);
+				$renderedHtml = preg_replace('#<code.*?>.*?</code>#is', '', $renderedHtml);
+
+				$out[] = $renderedHtml;
+				continue;
+			}
+
+			if (isset($block['innerHTML']) && $block['innerHTML'] !== '') {
+				if ($blockName === '' || in_array($blockName, $text_blocks, true)) {
+					$out[] = $block['innerHTML'];
+					continue;
+				}
+				$out[] = $block['innerHTML'];
+				continue;
+			}
+			if (isset( $block['attrs']) && is_array($block['attrs'])) {
+				foreach (array('content', 'text', 'heading', 'description') as $k) {
+					if (!empty($block['attrs'][$k]) && is_string($block['attrs'][$k])) {
+						$out[] = $block['attrs'][$k];
+					}
+				}
+			}
+			if (isset($block['innerContent']) && is_array($block['innerContent'])) {
+				$out = array_merge($out, $block['innerContent']);
+			}
+		}
+		return $out;
+	}
+
+	public function maskApiKey( $key, $startLen = 7, $endLen = 4, $maskChar = ' . . . ' ) {
+		$total = strlen($key);
+		if ($total == 0) {
+			return ''; 
+		}
+		if ($total <= $startLen + $endLen) {
+			return substr($key, 0, $total - 2) . $maskChar;
+		} 
+		
+		return substr($key, 0, $startLen) . $maskChar . substr($key, $total - $endLen); 
 	}
 }

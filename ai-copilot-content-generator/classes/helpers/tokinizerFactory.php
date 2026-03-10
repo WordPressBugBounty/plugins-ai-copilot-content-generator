@@ -156,7 +156,7 @@ class WaicTokinizerFactory {
 					self::ENDOFTEXT => 50256,
 				);
 
-				return new WaicTokinizer('gpt2', $mergeableRanks, $pattenRegex, $specialTokens, explicitNVocab: 50257);
+				return new WaicTokinizer('gpt2', $mergeableRanks, $pattenRegex, $specialTokens, 50257);
 			},
 			'r50k_base' => function () {
 				$mergeableRanks = static::loadTiktokenBpe(__DIR__ . '/assets/r50k_base.tiktoken');
@@ -165,7 +165,7 @@ class WaicTokinizerFactory {
 					self::ENDOFTEXT => 50256,
 				);
 
-				return new WaicTokinizer('r50k_base', $mergeableRanks, $pattenRegex, $specialTokens, explicitNVocab: 50257);
+				return new WaicTokinizer('r50k_base', $mergeableRanks, $pattenRegex, $specialTokens, 50257);
 			},
 			'p50k_base' => function () {
 				$mergeableRanks = static::loadTiktokenBpe(__DIR__ . '/assets/p50k_base.tiktoken');
@@ -174,7 +174,7 @@ class WaicTokinizerFactory {
 					self::ENDOFTEXT => 50256,
 				);
 
-				return new WaicTokinizer('p50k_base', $mergeableRanks, $pattenRegex, $specialTokens, explicitNVocab: 50281);
+				return new WaicTokinizer('p50k_base', $mergeableRanks, $pattenRegex, $specialTokens, 50281);
 			},
 			'p50k_edit' => function () {
 				$mergeableRanks = static::loadTiktokenBpe(__DIR__ . '/assets/p50k_base.tiktoken');

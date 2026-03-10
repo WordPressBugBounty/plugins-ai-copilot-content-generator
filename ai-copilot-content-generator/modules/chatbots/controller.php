@@ -7,7 +7,7 @@ class WaicChatbotsController extends WaicController {
 	protected $_code = 'chatbots';
 
 	public function getNoncedMethods() {
-		return array('saveChatbot', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
+		return array('saveChatbot', 'launchChatbot', 'getLaunchPercent', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
 	}
 	
 	public function getHistoryPage() {
@@ -70,6 +70,32 @@ class WaicChatbotsController extends WaicController {
 			} else {
 				$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
 			}
+		}
+		return $res->ajaxExec();
+	}
+	public function launchChatbot() {
+		$res = new WaicResponse();
+		$code = WaicReq::getVar('code', 'post');
+		$params = WaicReq::getVar('params', 'post');
+		$error = '';
+		$taskId = $this->getModel()->launchChatbot($code, $params);
+		if (empty($taskId)) {
+			$res->pushError(WaicFrame::_()->getErrors());
+		} else {
+			$result = $this->getModel()->setChatbotParams($taskId, array());
+			$res->addData('taskUrl', WaicFrame::_()->getModule('workspace')->getTaskUrl($taskId, $this->_code));
+		}
+		return $res->ajaxExec();
+		exit;
+	}
+	public function getLaunchPercent() {
+		$res = new WaicResponse();
+		$code = WaicReq::getVar('code', 'post');
+		$result = $this->getModel()->getLaunchPercent($code);
+		if (false === $result) {
+			$res->pushError(WaicFrame::_()->getErrors());
+		} else {
+			$res->addData('percent', $result);
 		}
 		return $res->ajaxExec();
 	}

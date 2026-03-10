@@ -37,6 +37,9 @@ class WaicInstallerDbUpdater {
 		if ( WaicDb::get( "SELECT 1 FROM `@__workspace` WHERE name='flow'", 'one' ) != 1 ) {
 			WaicDb::query( "INSERT INTO `@__workspace` (id, name, value, flag, timeout) VALUES (11, 'flow', 0, 0, 0);" );
 		}
+		if ( WaicDb::get( "SELECT 1 FROM `@__workspace` WHERE name='launch_bot'", 'one' ) != 1 ) {
+			WaicDb::query( "INSERT INTO `@__workspace` (id, name, value, flag, timeout) VALUES (21, 'launch_bot', 0, 0, 0);" );
+		}
 		if ( ! WaicDb::existsTableColumn( '@__tasks', 'cycle' ) ) {
 			WaicDb::query( 'ALTER TABLE `@__tasks` ADD COLUMN `cycle` INT NOT NULL DEFAULT 0 AFTER `steps`' );
 			WaicDb::query( "ALTER TABLE `@__tasks` ADD COLUMN `message` VARCHAR(250) DEFAULT '' AFTER `cycle`" );

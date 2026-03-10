@@ -162,7 +162,7 @@ class WaicWorkspace extends WaicModule {
 		return $features;
 	}
 		
-	public function getFeatureUrl( $feature = '', $cur = '' ) {
+	public function getFeatureUrl( $feature = '', $cur = '', $add = '' ) {
 		static $mainUrl;
 		if (empty($mainUrl)) {
 			$mainUrl = WaicFrame::_()->getModule('adminmenu')->getMainLink();
@@ -173,6 +173,9 @@ class WaicWorkspace extends WaicModule {
 		}
 		if (!empty($cur)) {
 			$url .= '&cur=' . $cur;
+		}
+		if (!empty($add)) {
+			$url .= '&' . $add;
 		}
 		return $url;
 	}

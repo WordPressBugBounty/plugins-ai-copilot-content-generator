@@ -139,6 +139,9 @@ class WaicHtml {
 		if (isset($params['max'])) {
 			$params['attrs'] .= ' max="' . $params['max'] . '"';
 		}
+		if (isset($params['step'])) {
+			$params['attrs'] .= ' step="' . $params['step'] . '"';
+		}
 		self::input($name, $params);
 	}
 	public static function checkbox( $name, $params = array('attrs' => '', 'value' => '', 'checked' => '') ) {
@@ -269,8 +272,12 @@ class WaicHtml {
 		$params['class'] = isset($params['class']) ? $params['class'] : '';
 		$params['attrs'] = isset($params['attrs']) ? $params['attrs'] : '';
 		$params['attrs'] .= self::_dataToAttrs($params);
+		
+		if (empty($params['no_chosen'])) {
+			$params['class'] .= ' wbw-chosen';
+		}
 
-		echo '<select multiple="multiple" class="wbw-chosen ' . esc_attr($params['class']) . '" size="' . esc_attr($params['size']) . '"' . ( empty($name) ? '' : ' name="' . esc_attr($name) . '"' ) . ' ';
+		echo '<select multiple="multiple" class="' . esc_attr($params['class']) . '" size="' . esc_attr($params['size']) . '"' . ( empty($name) ? '' : ' name="' . esc_attr($name) . '"' ) . ' ';
 		if (!empty($params['attrs'])) {
 			self::echoEscapedHtml($params['attrs']);
 		}

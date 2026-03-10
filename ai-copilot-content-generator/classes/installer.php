@@ -59,7 +59,8 @@ class WaicInstaller {
 				(1, 'task', 0, 0, 0),
 				(2, 'flag', 0, 0, 0),
 				(3, 'publish', 0, 0, 0),
-				(11, 'flow', 0, 0, 0);");
+				(11, 'flow', 0, 0, 0),
+				(21, 'launch_bot', 0, 0, 0);");
 		}
 		/**
 		 * Table tasks

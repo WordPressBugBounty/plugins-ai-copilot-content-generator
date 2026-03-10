@@ -8,7 +8,7 @@ $presets = $props['presets'];
 $preset = WaicUtils::getArrayValue($appearance, 'preset', 'default', 0, array_keys($presets));
 $scheme = WaicUtils::getArrayValue($appearance, 'scheme');
 $borderStyles = array();
-$schemes = array('#2D3E70', '#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4');
+$schemes = $this->getModule()->getModel()->getColorSchemes();
 ?>
 <section class="wbw-body-options">
 	<div class="wbw-settings-form wbw-settings-top row">
