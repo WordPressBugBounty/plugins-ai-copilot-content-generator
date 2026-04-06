@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $tools = WaicUtils::getArrayValue($props['settings'], 'tools', array(), 2);
 ?>
@@ -266,4 +267,5 @@ $modeCards = WaicUtils::getArrayValue($tools, 'post_card_layout', 'h');
 		</div>
 	</div>
 </div>
-
+<?php 
+// phpcs:enable

@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $task = $props['task'];
 $tStatus = WaicUtils::getArrayValue($task, 'status', 9, 1);
@@ -65,3 +65,5 @@ $completed = round(WaicUtils::getArrayValue($task, 'step', 0, 1) * 100 / WaicUti
 		<textarea id="waicBodySectionEditor" class="waic-field-html"></textarea>
 	</div>
 </section>
+<?php 
+// phpcs:enable

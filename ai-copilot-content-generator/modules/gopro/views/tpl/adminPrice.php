@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <div class="waic-gopro-parag">
 	<?php echo esc_html('If you’d like to unlock the PRO version of the plugin with advanced features and priority support, please place your order on this page or on', 'ai-copilot-content-generator') . ' <a href="https://aiwuplugin.com/#pricing" target="_blank">' . esc_html('our website', 'ai-copilot-content-generator') . '</a>.'; ?>

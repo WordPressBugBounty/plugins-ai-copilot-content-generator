@@ -188,7 +188,7 @@ class WaicLogic_lp_orders extends WaicLogic {
 
 		$loopIds = wc_get_orders($args);
 		
-		wp_reset_query();
+		wp_reset_postdata();
 		
 		if (empty($loopIds)) {
 			$loopIds = array();

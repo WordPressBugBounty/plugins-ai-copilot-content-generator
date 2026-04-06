@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['fields'], 'categories', array(), 2);
 $fCategories = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), 'categories', array(), 2);
@@ -82,3 +83,5 @@ $hidden = 'generate' == $tMode ? '' : ' wbw-hidden';
 			?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

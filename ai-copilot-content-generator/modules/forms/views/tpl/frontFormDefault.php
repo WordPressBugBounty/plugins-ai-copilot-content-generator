@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $allowedTags = array(
 	'div' => array('class' => true),
@@ -56,3 +57,5 @@ $allowedTags = array(
 		} 
 	?>
 </div>
+<?php
+// phpcs:enable

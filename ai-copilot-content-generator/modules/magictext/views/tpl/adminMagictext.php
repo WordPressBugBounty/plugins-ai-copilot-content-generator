@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 ?>
 
@@ -63,3 +64,5 @@ $props = $this->props;
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

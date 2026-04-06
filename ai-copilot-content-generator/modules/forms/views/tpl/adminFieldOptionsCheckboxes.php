@@ -2,12 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $curField = $this->props['cur_field'];
 $isTemp = '#n#' === $curField;
 $tooltip = $isTemp ? 'no-tooltip' : 'wbw-tooltip';
 $fData = $isTemp ? array() : WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), $curField, array(), 2);
-
+// phpcs:enable
 ?>
 <div class="wbw-settings-form row">
 	<div class="wbw-settings-label col-2"><?php esc_html_e('Field name', 'ai-copilot-content-generator'); ?></div>

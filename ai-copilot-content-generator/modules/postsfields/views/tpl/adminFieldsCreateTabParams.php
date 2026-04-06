@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $common = WaicUtils::getArrayValue($props['settings'], 'common', array(), 2);
 $selectedFields = WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2);
@@ -215,3 +216,5 @@ $publishes = array(
 		</div>
 	</div>
 </section>
+<?php 
+// phpcs:enable

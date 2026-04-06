@@ -118,8 +118,8 @@ class WaicIntegration_smtp extends WaicIntegration {
 			}
 		}
 		if (empty($error)) {
-			$ehloHost = parse_url(home_url(), PHP_URL_HOST);
-			fwrite($socket, "EHLO $ehloHost\r\n");
+			$ehloHost = wp_parse_url(home_url(), PHP_URL_HOST);
+			fwrite($socket, "EHLO $ehloHost\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 
 			$ehloSuccess = false;
 			while ($line = fgets($socket)) {
@@ -137,13 +137,13 @@ class WaicIntegration_smtp extends WaicIntegration {
 			}
 		}
 		if (empty($error) && !$isSSL) {
-			fwrite($socket, "STARTTLS\r\n");
+			fwrite($socket, "STARTTLS\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			$tlsResponse = fgets($socket);
 			if (stripos($tlsResponse, '220') !== 0) {
 				$error = 'STARTTLS failed: ' . trim($tlsResponse);
 			} else {
 				stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT);
-				fwrite($socket, "EHLO $ehloHost\r\n");
+				fwrite($socket, "EHLO $ehloHost\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			}
 			while ($line = fgets($socket)) {
 				if (strpos($line, '250 ') === 0) break;
@@ -151,17 +151,17 @@ class WaicIntegration_smtp extends WaicIntegration {
 		}
 
 		if (empty($error)) {
-			fwrite($socket, "AUTH LOGIN\r\n");
+			fwrite($socket, "AUTH LOGIN\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			$authPrompt = fgets($socket);
 			if (stripos($authPrompt, '334') !== 0) {
 				$error = 'AUTH LOGIN not accepted: ' . trim($authPrompt);
 			} else {
-				fwrite($socket, base64_encode($username) . "\r\n");
+				fwrite($socket, base64_encode($username) . "\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 				$userResponse = fgets($socket);
 				if (stripos($userResponse, '334') !== 0) {
 					$error = 'Username rejected: ' . trim($userResponse);
 				} else {
-					fwrite($socket, base64_encode($password) . "\r\n");
+					fwrite($socket, base64_encode($password) . "\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 					$passResponse = fgets($socket);
 					if (stripos($passResponse, '235') !== 0) {
 						$error = 'Authentication failed: ' . trim($passResponse);
@@ -171,8 +171,8 @@ class WaicIntegration_smtp extends WaicIntegration {
 		}
 		if ($socket) {
 			if ($close) {
-				fwrite($socket, "QUIT\r\n");
-				fclose($socket);
+				fwrite($socket, "QUIT\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+				fclose($socket); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			} else {
 				$this->_socket = $socket;
 			}
@@ -191,7 +191,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 				$socket = $this->_socket;
 				$from = $this->getParam('username');
 				
-				fwrite($socket, "MAIL FROM:<$from>\r\n");
+				fwrite($socket, "MAIL FROM:<$from>\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 				$resp = fgets($socket);
 				if (stripos($resp, '250') !== 0) {
 					$error = 'MAIL FROM failed: ' . trim($resp);
@@ -204,7 +204,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 			$to = explode(',', $data['to']);
 			foreach ($to as $addr) {
 				$addr = trim($addr);
-				fwrite($socket, "RCPT TO:<$addr>\r\n");
+				fwrite($socket, "RCPT TO:<$addr>\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 				$resp = fgets($socket);
 				if (stripos($resp, '250') !== 0) {
 					$error = "RCPT TO failed ($addr): " . trim($resp);
@@ -217,7 +217,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 			$cc = explode(',', $data['cc']);
 			foreach ($cc as $addr) {
 				$addr = trim($addr);
-				fwrite($socket, "RCPT TO:<$addr>\r\n");
+				fwrite($socket, "RCPT TO:<$addr>\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 				$resp = fgets($socket);
 				if (stripos($resp, '250') !== 0) {
 					$error = "RCPT TO CC failed ($addr): " . trim($resp);
@@ -230,7 +230,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 			$bcc = explode(',', $data['bcc']);
 			foreach ($bcc as $addr) {
 				$addr = trim($addr);
-				fwrite($socket, "RCPT TO:<$addr>\r\n");
+				fwrite($socket, "RCPT TO:<$addr>\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 				$resp = fgets($socket);
 				if (stripos($resp, '250') !== 0) {
 					$error = "RCPT TO BCC failed ($addr): " . trim($resp);
@@ -239,7 +239,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 			}
 		}
 		if (empty($error)) {
-			fwrite($socket, "DATA\r\n");
+			fwrite($socket, "DATA\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			$resp = fgets($socket);
 			if (stripos($resp, '354') !== 0) {
 				$error = "DATA not accepted: " . trim($resp);
@@ -252,7 +252,7 @@ class WaicIntegration_smtp extends WaicIntegration {
 			$headers .= 'Subject: ' . $data['subject'] . "\r\n";
 			$headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-			fwrite($socket, $headers . "\r\n" . $data['message'] . "\r\n.\r\n");
+			fwrite($socket, $headers . "\r\n" . $data['message'] . "\r\n.\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
 			$resp = fgets($socket);
 			if (stripos($resp, '250') !== 0) {
 				$error = 'Message not accepted: ' . trim($resp);
@@ -261,8 +261,8 @@ class WaicIntegration_smtp extends WaicIntegration {
 		if (!empty($error) && $socket) {
 			fgets($socket);
 
-			fwrite($socket, "QUIT\r\n");
-			fclose($socket);
+			fwrite($socket, "QUIT\r\n"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite
+			fclose($socket); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 		}
 		$result['error'] = $error;
 		return $result;

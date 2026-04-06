@@ -2,9 +2,11 @@
 if (! defined('ABSPATH')) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['fields'], 'translate', array(), 2);
 $tooltip = !empty($options['modes_tooltip']) ? $options['modes_tooltip'] : __('This setting determines how the article title will be generated. Generate based on Topic: Generates the article title based on the topic you enter. Generate based on section headers: Creates the article title based on the section headers within the article (unavailable for Single-prompt article body creation mode). Use topic as title: The article title will be exactly the same as the topic you enter.', 'ai-copilot-content-generator');
+// phpcs:enable
 ?>
 <div class="wbw-settings-form row">
 	<div class="wbw-settings-label col-2"><?php esc_html_e('Name', 'ai-copilot-content-generator'); ?></div>

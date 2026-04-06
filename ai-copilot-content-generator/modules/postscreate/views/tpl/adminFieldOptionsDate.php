@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['fields'], 'date', array(), 2);
 $fDate = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), 'date', array(), 2);
@@ -86,3 +87,5 @@ $hidden = WaicUtils::getArrayValue($fDate, 'mode') == 'period' ? '' : ' wbw-hidd
 			?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

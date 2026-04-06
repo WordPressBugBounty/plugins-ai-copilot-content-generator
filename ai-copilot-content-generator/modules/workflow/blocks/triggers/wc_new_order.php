@@ -72,7 +72,7 @@ class WaicTrigger_wc_new_order extends WaicTrigger {
 				'label' => __('Coupon Applied', 'ai-copilot-content-generator'),
 				'default' => '',
 				'options' => array(
-					'' => __('', 'ai-copilot-content-generator'),
+					'' => '',
 					'yes' => __('Yes', 'ai-copilot-content-generator'),
 					'no' => __('No', 'ai-copilot-content-generator'),
 				),
@@ -236,6 +236,6 @@ class WaicTrigger_wc_new_order extends WaicTrigger {
 				return false;
 			}
 		}
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_order_id' => $orderId, 'waic_user_id' => $userId, 'obj_id' => $orderId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_order_id' => $orderId, 'waic_user_id' => $userId, 'obj_id' => $orderId);
 	}
 }

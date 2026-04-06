@@ -2,8 +2,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
-//$module = $this->getModule();
 $tmpUrl = $props['tmp_url'];
 ?>
 <section class="wbw-body-workspace">
@@ -32,7 +32,7 @@ $tmpUrl = $props['tmp_url'];
 	<ul class="wbw-ws-group" id="waicTemplatesList">
 	<?php foreach ($props['templates'] as $key => $block) { ?>
 		<li class="wbw-ws-block<?php echo empty($block['class']) ? '' : ' ' . esc_attr($block['class']); ?>">
-			<a href="<?php echo $tmpUrl . '&task_id=' . esc_attr($key); ?>" class="wbw-feature-link">
+			<a href="<?php echo esc_url($tmpUrl . '&task_id=' . esc_attr($key)); ?>" class="wbw-feature-link">
 				<div class="wbw-ws-block-in">
 					<div class="wbw-ws-block-text">
 						<div class="wbw-ws-title"><?php echo esc_html($block['title']); ?></div>
@@ -63,3 +63,5 @@ $tmpUrl = $props['tmp_url'];
 	</ul>
 	<div class="wbw-clear"></div>
 </section>
+<?php 
+// phpcs:enable

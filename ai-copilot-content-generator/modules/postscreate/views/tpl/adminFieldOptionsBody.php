@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['fields'], 'body', array(), 2);
 $fBody = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), 'body', array(), 2);
@@ -115,3 +116,5 @@ $hidden = 'single' == $tMode ? ' wbw-hidden' : '';
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

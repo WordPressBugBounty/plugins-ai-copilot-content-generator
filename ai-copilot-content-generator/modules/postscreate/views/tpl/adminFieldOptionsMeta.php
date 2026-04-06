@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 //$options = WaicUtils::getArrayValue($props['fields'], 'meta', array(), 2);
 $fMeta = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), 'meta', array(), 2);
@@ -29,3 +30,5 @@ $fMeta = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], '
 			?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

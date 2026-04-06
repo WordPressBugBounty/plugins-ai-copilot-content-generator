@@ -93,7 +93,7 @@ class WaicTrigger_wu_workflow_ended extends WaicTrigger {
 				return false;
 			}
 		}
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'run_number' => $countRuns + 1, 'waic_run_id' => $runId, 'obj_id' => $taskId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'run_number' => $countRuns + 1, 'waic_run_id' => $runId, 'obj_id' => $taskId);
 	}
 	
 }

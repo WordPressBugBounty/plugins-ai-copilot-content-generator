@@ -95,7 +95,7 @@ class WaicFormsView extends WaicView {
 		
 		$frame->addStyle('waic-forms-front', $path . 'css/front.forms.' . $preset . '.css');
 		
-		$viewId = $taskId . '-' . mt_rand(0, 999999);
+		$viewId = $taskId . '-' . wp_rand(0, 999999);
 		$this->assign('view_id', $viewId);
 		$this->assign('task_id', $taskId);
 		$this->assign('preset', $preset);
@@ -280,7 +280,7 @@ class WaicFormsView extends WaicView {
 					$cnt = count($choices);
 					foreach ($choices as $choice) {
 						$choice = trim($choice);
-						$for = 'aiwu_check_' . mt_rand(9, 99999);
+						$for = 'aiwu_check_' . wp_rand(9, 99999);
 						$html .= '<div class="aiwu-field-check aiwu-field-' . $id . ( empty($data['class']) ? '' : ' ' . $data['class'] ) . '">' .
 							'<input type="checkbox" class="aiwu-form-field" name="' . $name . '[]"' . 
 							' data-id="' . $id . '"' .
@@ -297,7 +297,7 @@ class WaicFormsView extends WaicView {
 					$choices = explode(PHP_EOL, $choices);
 					foreach ($choices as $choice) {
 						$choice = trim($choice);
-						$for = 'aiwu_radio_' . mt_rand(9, 99999);
+						$for = 'aiwu_radio_' . wp_rand(9, 99999);
 						$cnt = count($choices);
 						$html .= '<div class="aiwu-field-radio aiwu-field-' . $id . ( empty($data['class']) ? '' : ' ' . $data['class'] ) . '">' .
 							'<input type="radio" class="aiwu-form-field" name="' . $name . '"' . 

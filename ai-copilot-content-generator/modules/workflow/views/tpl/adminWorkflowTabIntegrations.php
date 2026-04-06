@@ -2,10 +2,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $integModel = $this->getModule()->getModel('integrations');
-//$o = array_merge(array('' => __('All categories', 'ai-copilot-content-generator')), $integModel->getIntegCategories());
-//error_log(json_encode($o));
 $integrations = $integModel->getIntegCodes();
 $integSaved = $integModel->getAllSavedIntegrations(true, false);
 $integStatuses = $integModel->getStatuses();
@@ -97,4 +96,5 @@ $integStatuses = $integModel->getStatuses();
 		</div>
 	</div>
 </section>
-
+<?php 
+// phpcs:enable

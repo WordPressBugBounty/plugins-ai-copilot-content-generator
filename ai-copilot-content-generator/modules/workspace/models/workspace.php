@@ -326,7 +326,7 @@ class WaicWorkspaceModel extends WaicModel {
 		$model = $module->getModel();
 		$task = $this->controlSteps($task, $model);
 		//if (!empty($task['steps']) && $task['steps'] > 3) { 
-			set_time_limit(0);
+			set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		//}
 		$results = $module->getModel()->doGeneration($task, $aiProvider);
 		$task = $this->controlSteps($task, $model);

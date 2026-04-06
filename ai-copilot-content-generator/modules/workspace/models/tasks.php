@@ -130,7 +130,7 @@ class WaicTasksModel extends WaicModel {
 	}
 	public function updateTaskTitle( $id, $title ) {
 		$id = (int) $id;
-		$title = strip_tags(str_replace(array('"', "'"), array('', ''), stripslashes($title)));
+		$title = wp_strip_all_tags(str_replace(array('"', "'"), array('', ''), stripslashes($title)));
 		$this->updateById(array('title' => $title), $id);
 		
 		return $title;

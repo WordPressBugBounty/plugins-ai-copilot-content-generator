@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $appearance = WaicUtils::getArrayValue($props['settings'], 'appearance', array(), 2);
 $presets = $props['presets'];
@@ -1555,6 +1556,7 @@ $options = array(
 	'caret-down' => __('Arrow down', 'ai-copilot-content-generator'),
 	'caret-up' => __('Arrow up', 'ai-copilot-content-generator'),
 );
+// phpcs:enable
 ?>
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Close icon', 'ai-copilot-content-generator'); ?></div>

@@ -220,7 +220,7 @@ class WaicFormsModel extends WaicModel {
 			return array('answer' => __('Submit not found.', 'ai-copilot-content-generator'), 'error' => 1);
 		}
 		$data['FORM_ID'] = $taskId;
-		$data['TIMESTAMP'] = date('Y-m-d H:i:s');
+		$data['TIMESTAMP'] = date_i18n('Y-m-d H:i:s'); //date('Y-m-d H:i:s');
 		
 		$sendWebhook = WaicUtils::getArrayValue($submit, 'webhook', 0, 1) == 1;
 		$webhookSend = $sendWebhook ? WaicUtils::getArrayValue($submit, 'w_send') : '';
@@ -395,7 +395,7 @@ class WaicFormsModel extends WaicModel {
 			'From: ' . get_option( 'woocommerce_email_from_name' ) . ' <' . get_option( 'woocommerce_email_from_address' ) . '>'
 			);
 		if (!wp_mail($to, $subject, $message, $headers)) {
-			WaicFrame::_()->pushError(__('Error by sending email', 'wupsales-reward-points'));
+			WaicFrame::_()->pushError(__('Error by sending email', 'ai-copilot-content-generator'));
 			return false;
 		}
 		return true;

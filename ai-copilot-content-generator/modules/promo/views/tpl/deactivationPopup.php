@@ -2,9 +2,11 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $imgPath = $props['image_path'];
 $options = $props['options'];
+// phpcs:enable
 ?>
 <div id="waicDeactivationPopup" class="waic-admin-popup waic-modal-popup">
 	<div class="waic-popup-panel">

@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['fields'], 'title', array(), 2);
 $fTitle = WaicUtils::getArrayValue(WaicUtils::getArrayValue($props['settings'], 'fields', array(), 2), 'title', array(), 2);
@@ -35,3 +36,5 @@ $hidden = WaicUtils::getArrayValue($fTitle, 'mode', 'gen_by_topic') == 'use_topi
 			?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

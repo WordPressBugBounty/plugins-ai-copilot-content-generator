@@ -523,7 +523,7 @@ class WaicWorkflowModel extends WaicModel {
 			$nodeId = $node['id'];
 			$nodeData = WaicUtils::getArrayValue($node, 'data', array(), 2);
 			if (empty($nodeData)) {
-				$error = __('A source node [' . $nodeId . '] has a corrupted structure.', 'ai-copilot-content-generator');
+				$error = __('A source node has a corrupted structure.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 				return false;
 			}
 			
@@ -531,25 +531,25 @@ class WaicWorkflowModel extends WaicModel {
 				return $e['source'] === $nodeId && $e['sourceHandle'] === 'output-right';
 			});
 			if (count($startEdges) > 1) {
-				$error = __('A source node [' . $nodeId . '] can only be linked to one target.', 'ai-copilot-content-generator');
+				$error = __('A source node can only be linked to one target.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 				return false;
 			}
 			$elseEdges = array_filter($edges, function($e) use ($nodeId) {
 				return $e['source'] === $nodeId && $e['sourceHandle'] === 'output-else';
 			});
 			if (count($elseEdges) > 1) {
-				$error = __('A source node [' . $nodeId . '] from each output can only be connected to one target.', 'ai-copilot-content-generator');
+				$error = __('A source node from each output can only be connected to one target.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 				return false;
 			}
 			$thenEdges = array_filter($edges, function($e) use ($nodeId) {
 				return $e['source'] === $nodeId && $e['sourceHandle'] === 'output-then';
 			});
 			if (count($thenEdges) > 1) {
-				$error = __('A source node [' . $nodeId . '] from each output can only be linked to one target.', 'ai-copilot-content-generator');
+				$error = __('A source node from each output can only be linked to one target.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 				return false;
 			}
 			if ($this->hasPath($nodeId, $nodeId, $edges)) {
-				$error = __('Noda [' . $nodeId . '] is cyclical or in cycle.', 'ai-copilot-content-generator');
+				$error = __('Noda is cyclical or in cycle.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 				return false;
 			}
 			$settings = WaicUtils::getArrayValue($nodeData, 'settings', array(), 2);
@@ -561,7 +561,7 @@ class WaicWorkflowModel extends WaicModel {
 						foreach ($matches[1] as $nId) {
 							if (!$this->hasPath($nId, $nodeId, $edges)) {
 								$errNodes[] = array($nodeId, $k);
-								$error = __('Noda [' . $nodeId . '] has an invalid variable - reference to a non-existent node.', 'ai-copilot-content-generator');
+								$error = __('Noda has an invalid variable - reference to a non-existent node.', 'ai-copilot-content-generator') . ' [' . $nodeId . ']';
 								return false;
 							}
 						}
@@ -588,18 +588,18 @@ class WaicWorkflowModel extends WaicModel {
 		foreach ($loopNodes as $loopId => $children) {
 			foreach ($children as $i => $child) {
 				if (isset($loopNodes[$child])) {
-					$error = __('Nested loops [' . $child . '] are not permitted.', 'ai-copilot-content-generator');
+					$error = __('Nested loops are not permitted.', 'ai-copilot-content-generator') . ' [' . $child . ']';
 					return false;
 				}
 				foreach ($loopNodes as $lpId => $chs) {
 					if ($lpId != $loopId && in_array($child, $chs)) {
-						$error = __('The Loop branch must be isolated and have no connections to nodes outside the branch. Problem node [' . $child . ']', 'ai-copilot-content-generator');
+						$error = __('The Loop branch must be isolated and have no connections to nodes outside the branch. Problem node', 'ai-copilot-content-generator') . ' [' . $child . ']';
 						return false;
 					}
 				}
 				foreach ($endNodes as $lpId => $chs) {
 					if ($lpId == $loopId && in_array($child, $chs)) {
-						$error = __('The Loop branch must be isolated and nodes inside the loop should not be able to reach the END output. Problem node [' . $child . ']', 'ai-copilot-content-generator');
+						$error = __('The Loop branch must be isolated and nodes inside the loop should not be able to reach the END output. Problem node', 'ai-copilot-content-generator') . ' [' . $child . ']';
 						return false;
 					}
 				}
@@ -607,7 +607,7 @@ class WaicWorkflowModel extends WaicModel {
 					if ($edge['target'] === $child) { 
 						$source = $edge['source']; 
 						if ($source != $loopId && !in_array($source, $children)) {
-							$error = __('Loop node [' . $child . '] cannot be entered directly from outside the loop. Entry must be through LOOP-output.', 'ai-copilot-content-generator');
+							$error = __('Loop node cannot be entered directly from outside the loop. Entry must be through LOOP-output.', 'ai-copilot-content-generator') . ' [' . $child . ']';
 							return false;
 						}
 					} 
@@ -649,7 +649,7 @@ class WaicWorkflowModel extends WaicModel {
 			foreach ($flows as $flow) {
 				$id = $flow['id'];
 				$skip = $this->needSkip($flow['flags'], $id);
-				if (!$skip && $runsModel->createRun($flow['task_id'], $id, array('date' => date('Y-m-d'), 'time' => date('H:i:s')))) {
+				if (!$skip && $runsModel->createRun($flow['task_id'], $id, array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s')))) {
 					$period = $flow['sch_period'];
 					if (empty($period)) {
 						$this->updateById(array('status' => 3, 'updated' => $now), $id);
@@ -692,7 +692,7 @@ class WaicWorkflowModel extends WaicModel {
 		if ($this->isRunningFlow()) {
 			return true;
 		}
-		set_time_limit(0);
+		set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		do {
 			$run = $this->runModel->setWhere(array('status' => 1, 'additionalCondition' => 'waiting<' . WaicUtils::getTimestamp()))->setSortOrder('id')->setLimit(1)->getFromTbl(array('return' => 'row'));
 			if ($run) {

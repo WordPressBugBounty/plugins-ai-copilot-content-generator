@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $preset = $props['preset'];
 $viewId = $props['view_id'];
@@ -12,7 +13,9 @@ $viewId = $props['view_id'];
 			<style type="text/css" id="waicCustomCss-<?php echo esc_attr($viewId); ?>" data-waic-form="1">
 				<?php WaicHtml::echoEscapedHtml($props['custom_css']); ?>
 			</style>
-		<? } ?>
+		<?php } ?>
 		<?php include 'frontForm' . waicStrFirstUp($preset) . '.php'; ?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

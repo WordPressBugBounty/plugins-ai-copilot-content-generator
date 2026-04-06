@@ -78,14 +78,14 @@ class WaicWorkspace extends WaicModule {
 	public function getWorkspaceFeatures() {
 		$features = array(
 			'workflow' => array(
-				'title' => __('Workflow Builder'),
+				'title' => __('Workflow Builder', 'ai-copilot-content-generator'),
 				'desc' => __('Build custom AI automations with a visual drag-and-drop editor. Connect triggers, AI actions, and WordPress tools seamlessly.', 'ai-copilot-content-generator'),
 				'class' => 'wbw-ws-block-big',
 				'fake' => true,
 				'hidden' => true,
 			),
 			'template' => array(
-				'title' => __('Workflow Template'),
+				'title' => __('Workflow Template', 'ai-copilot-content-generator'),
 				'desc' => '',
 				'fake' => true,
 				'hidden' => true,

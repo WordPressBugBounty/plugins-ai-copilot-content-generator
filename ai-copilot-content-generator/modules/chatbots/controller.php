@@ -141,7 +141,10 @@ class WaicChatbotsController extends WaicController {
 	
 	public function sendMessage() {
 		$res = new WaicResponse();
-		$message = empty($_POST['message']) ? '' : preg_replace('/\r\n|\r|\n/', '<br>', sanitize_textarea_field($_POST['message'])); // WaicReq::getVar('message', 'post');
+		$message = WaicReq::getVar('message', 'post');
+		$message = empty($message) ? '' : preg_replace('/\r\n|\r|\n/', '<br>', $message);
+		
+		//$message = empty($_POST['message']) ? '' : preg_replace('/\r\n|\r|\n/', '<br>', sanitize_textarea_field($_POST['message']));
 		$taskId = WaicReq::getVar('task_id', 'post');
 		$mode = WaicReq::getVar('mode', 'post');
 		$typ = WaicReq::getVar('typ', 'post');

@@ -1,1 +1,4 @@
-pages
+<?php 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}

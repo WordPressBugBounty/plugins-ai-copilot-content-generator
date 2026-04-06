@@ -35,10 +35,10 @@ if (!function_exists('waicDateToTimestamp')) {
 if (!function_exists('waicGetRandName')) {
 	function waicGetRandName( $lenFrom = 6, $lenTo = 9 ) {
 		$res = '';
-		$len = mt_rand($lenFrom, $lenTo);
+		$len = wp_rand($lenFrom, $lenTo);
 		if ($len) {
 			for ($i = 0; $i < $len; $i++) {
-				$res .= chr(mt_rand(97, 122)); /*rand symbol from a to z*/
+				$res .= chr(wp_rand(97, 122)); /*rand symbol from a to z*/
 			}
 		}
 		return $res;
@@ -218,7 +218,7 @@ if (!function_exists('waicPrepareParams')) {
 		}
 		if (isset($d['code'])) {
 			if ('' == $d['code']) {
-				$d['code'] = waicPrepareFieldCode($d['label']) . '_' . rand(0, 9999999);
+				$d['code'] = waicPrepareFieldCode($d['label']) . '_' . wp_rand(0, 9999999);
 			}
 		}
 		return $d;
@@ -267,6 +267,7 @@ if (!function_exists('waicRecImplode')) {
 	}
 }
 if (!function_exists('aiwuSimpleTextQuery')) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 	function aiwuSimpleTextQuery( $prompt, $options = false ) {
 		if (empty($prompt) || !class_exists('WaicFrame')) {
 			return false;
@@ -296,6 +297,7 @@ if (!function_exists('aiwuSimpleTextQuery')) {
 	}
 }
 if (!function_exists('aiwuAskChatbot')) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 	function aiwuAskChatbot( $botId, $message, $options = false ) {
 		$botId = (int) $botId;
 		if (empty($botId) || empty($message) || !class_exists('WaicFrame')) {
@@ -333,6 +335,7 @@ add_action('rest_api_init', function() {
 	));
 });
 if (!function_exists('aiwuSimpleTextQueryRest')) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 	function aiwuSimpleTextQueryRest( $request ) {
 		try {
 			$params = $request->get_params();
@@ -359,6 +362,7 @@ add_action('rest_api_init', function() {
 	));
 });
 if (!function_exists('aiwuAskChatbotRest')) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 	function aiwuAskChatbotRest( $request ) {
 		try {
 			$params = $request->get_params();
@@ -380,8 +384,10 @@ if (!function_exists('aiwuAskChatbotRest')) {
 	}
 }
 if (!function_exists('aiwuAllowPublicApi')) {
+	// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedFunctionFound
 	function aiwuAllowPublicApi($feature, $extra) {
 		$isAdmin = current_user_can('manage_options');
+		// phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		return apply_filters('aiwu_allow_public_api', $isAdmin, $feature, $extra);
 	}
 }

@@ -2,12 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $appearance = WaicUtils::getArrayValue($props['settings'], 'appearance', array(), 2);
 $presets = $props['presets'];
 $preset = WaicUtils::getArrayValue($appearance, 'preset', 'default', 0, array_keys($presets));
 $customCss = WaicUtils::getArrayValue($appearance, 'custom_css');
-//$borderStyles = array();
+// phpcs:enable
 ?>
 <section class="wbw-body-options">
 	<div class="wbw-settings-form row">

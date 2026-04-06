@@ -4,6 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 class WaicMcpModel extends WaicModel {
 	private $tools = false;
+	private $blockFullOptions = array('siteurl', 'home', 'admin_email', 'default_role', 'users_can_register', 'blogname');
+	private $blockPartOptions = array('_key', '_secret', '_password', '_token');
 
 	public function getToolsList() {
 		$tools = $this->getTools();
@@ -17,7 +19,7 @@ class WaicMcpModel extends WaicModel {
 				$tool['category'] = 'Core';
 			}
 		}
-		$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '';
+		$userAgent = isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : '';
 		/*if (strpos($userAgent, 'openai-mcp') === false) {
 			unset($tools['search'], $tools['fetch']);
 		}*/
@@ -596,11 +598,15 @@ class WaicMcpModel extends WaicModel {
 					'display_name' => sanitize_text_field(WaicUtils::getArrayValue($a, 'display_name')),
 					'role' => sanitize_key(WaicUtils::getArrayValue($a, 'role', get_option('default_role', 'subscriber'))),
 				);
-				$uid = wp_insert_user($data);
-				if (is_wp_error($uid)) {
-					$r['error'] = array('code' => $uid->get_error_code(), 'message' => $uid->get_error_message());
+				if ('administrator' == $data['role']) {
+					$r['error'] = array('code' => -42606, 'message' => 'Admin creation should only be possible through the WordPress dashboard');
 				} else {
-					$this->addResultText($r, 'User created ID ' . $uid);
+					$uid = wp_insert_user($data);
+					if (is_wp_error($uid)) {
+						$r['error'] = array('code' => $uid->get_error_code(), 'message' => $uid->get_error_message());
+					} else {
+						$this->addResultText($r, 'User created ID ' . $uid);
+					}
 				}
 				break;
 			case 'wp_update_user':
@@ -702,12 +708,22 @@ class WaicMcpModel extends WaicModel {
 					$r['error'] = array('code' => -42602, 'message' => 'key required');
 					break;
 				}
+				if (!$this->controlOptionKey($a['key'], true)) {
+					$r['error'] = array('code' => -42602, 'message' => 'Get this option is prohibited');
+					break;
+				}
+				
 				$val = get_option(sanitize_key($a['key']));
 				$this->addResultText($r, wp_json_encode($val, JSON_PRETTY_PRINT));
 				break;
 			case 'wp_update_option':
 				if (empty($a['key']) || !isset($a['value'])) {
 					$r['error'] = array('code' => -42602, 'message' => 'key & value required');
+					break;
+				}
+				
+				if (!$this->controlOptionKey($a['key'])) {
+					$r['error'] = array('code' => -42602, 'message' => 'Editing this option is prohibited');
 					break;
 				}
 				$set = update_option(sanitize_key($a['key']), $a['value'], 'yes');
@@ -728,7 +744,7 @@ class WaicMcpModel extends WaicModel {
 					break;
 				}
 				$tax = sanitize_key($a['taxonomy']);
-				$total = wp_count_terms($tax, array('hide_empty' => false));
+				$total = wp_count_terms($tax);
 				if (is_wp_error($total)) {
 					$r['error'] = array('code' => $total->get_error_code(), 'message' => $total->get_error_message());
 				} else {
@@ -1100,13 +1116,19 @@ class WaicMcpModel extends WaicModel {
 					require_once ABSPATH . 'wp-admin/includes/file.php';
 					require_once ABSPATH . 'wp-admin/includes/media.php';
 					require_once ABSPATH . 'wp-admin/includes/image.php';
+					$control = $this->controlDownloadUrl($a['url']);
+					if (true !== $control) {
+						$r['error'] = array('code' => -42607, 'message' => $control);
+						break;
+					}
 					$tmp = download_url($a['url']);
+					
 					if (is_wp_error($tmp)) {
 						throw new Exception($tmp->get_error_message(), $tmp->get_error_code());
 					}
-					$file = array('name' => basename(parse_url($a['url'], PHP_URL_PATH)), 'tmp_name' => $tmp);
+					$file = array('name' => basename(wp_parse_url($a['url'], PHP_URL_PATH)), 'tmp_name' => $tmp);
 					$id = media_handle_sideload($file, 0, WaicUtils::getArrayValue($a, 'description'));
-					@unlink( $tmp );
+					wp_delete_file($tmp);
 					if (is_wp_error($id)) {
 						throw new Exception($id->get_error_message(), $id->get_error_code());
 					}
@@ -1271,7 +1293,7 @@ class WaicMcpModel extends WaicModel {
 					$r['error'] = array('code' => -42603, 'message' => 'Resource not found or not published');
 					break;
 				}
-				$content = apply_filters('the_content', $post->post_content);
+				$content = apply_filters('the_content', $post->post_content); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 				$content = wp_strip_all_tags( $content );
 				$metadata = array(
 					'author' => get_the_author_meta('display_name', $post->post_author),
@@ -1307,5 +1329,35 @@ class WaicMcpModel extends WaicModel {
 			default: $r['error'] = array('code' => -42609, 'message' => 'Unknown tool');
 		}
 		return $r;
+	}
+
+	public function controlOptionKey( $key, $partOnly = false ) {
+		if (!$partOnly && in_array($key, $this->blockFullOptions)) {
+			return false;
+		}
+		foreach ($this->blockFullOptions as $part) {
+			if (strpos($key, $part) !== false) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public function controlDownloadUrl( $url ) {
+		$scheme = parse_url($url, PHP_URL_SCHEME);
+		if (!in_array($scheme, ['http', 'https'], true)) {
+			return 'Only http/https schemes are allowed.';
+		}
+		$host = parse_url($url, PHP_URL_HOST);
+		if (!$host) {
+			return 'Invalid host in URL.';
+		}
+		$ip = gethostbyname($host);
+		if (!$ip || $ip === $host) {
+			return 'Could not resolve host.';
+		}
+		if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+			return 'URL resolves to a private or reserved IP.';
+		}
+		return true;
 	}
 }

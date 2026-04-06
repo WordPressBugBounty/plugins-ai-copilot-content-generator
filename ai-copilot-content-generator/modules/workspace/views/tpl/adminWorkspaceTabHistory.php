@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <section class="wbw-body-history">
 	<div class="wbw-table-list mt-3">
@@ -23,7 +22,7 @@ $props = $this->props;
 		</table>
 	</div>
 	<?php 
-		WaicHtml::selectbox('', array('options' => $props['features_list'], 'attrs' => 'id="waicFeaturesList" class="wbw-rigth-block wbw-nosave"'));
+		WaicHtml::selectbox('', array('options' => $this->props['features_list'], 'attrs' => 'id="waicFeaturesList" class="wbw-rigth-block wbw-nosave"'));
 	?>
 	<div class="wbw-clear"></div>
 </section>

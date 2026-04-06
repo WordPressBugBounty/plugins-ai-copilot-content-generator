@@ -2,11 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $tools = $props['tools'];
 $defValue = empty($tools) ? 1 : 0;
 $postObj = $props['obj'];
 $objId = $postObj->ID;
+// phpcs:enable
 ?>
 <div class="waic-chatbot-card waic-card-post waic-card-hor" data-obj-id="<?php echo esc_attr($objId); ?>" data-href="<?php echo esc_url(get_permalink($postObj)); ?>">
 	<?php if (WaicUtils::getArrayValue($tools, 'post_card_image', $defValue, 1)) { ?>

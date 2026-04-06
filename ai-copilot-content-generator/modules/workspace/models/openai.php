@@ -75,14 +75,14 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 	}
 
 	public function addSettingsForStreamOpenAI( $handle ) {
-		if (null !== $this->streamMethod) {
+		/*if (null !== $this->streamMethod) {
 			curl_setopt($handle, CURLOPT_SSL_VERIFYPEER, false);
 			curl_setopt($handle, CURLOPT_SSL_VERIFYHOST, false);
 			curl_setopt($handle, CURLOPT_WRITEFUNCTION, function ( $info, $data ) {
 				return call_user_func($this->streamMethod, $this, $data);
 			});
-		}
-		curl_setopt($handle, CURLOPT_TIMEOUT, 200);
+		}*/
+		curl_setopt($handle, CURLOPT_TIMEOUT, 200); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 	}
 	public function setApiOptions( $options ) {
 		$real = WaicFrame::_()->getModule('options')->get('api');

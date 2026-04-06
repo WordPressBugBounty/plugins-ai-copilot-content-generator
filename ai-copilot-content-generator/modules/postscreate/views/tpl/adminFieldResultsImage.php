@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 if (isset($results['image'])) {
 	?>
@@ -42,4 +43,6 @@ if (isset($results['image_alt'])) {
 		</div>
 	</div>
 </div>
-<?php } ?>
+<?php 
+}  
+// phpcs:enable

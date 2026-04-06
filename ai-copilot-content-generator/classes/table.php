@@ -53,7 +53,7 @@ abstract class WaicTable {
 	public static function getInstance( $table = '' ) {
 		static $instances = array();
 		if (!$table) {
-			throw new Exception('Unknown table [' . $table . ']');
+			throw new Exception(esc_html('Unknown table [' . $table . ']'));
 		}
 		if (!isset($instances[$table])) {
 			$class = waicStrFirstUp(WAIC_CODE) . 'Table' . waicStrFirstUp($table);
@@ -67,12 +67,6 @@ abstract class WaicTable {
 	}
 	public static function _( $table = '' ) {
 		return self::getInstance($table);
-	}
-	public function isRealTable() {
-		return WaicDb::get("SHOW TABLES LIKE '" . $this->_table . "'");
-	}
-	public function bulkUpdate( $set, $where ) {
-		return WaicDb::query('UPDATE ' . $this->_table . ' SET ' . $set . ' WHERE ' . $where);
 	}
 	public function innerJoin( $table, $on ) {
 		$this->_join[] = 'INNER JOIN ' . $table->getTable() . ' ' . $table->alias() . ' ON ' . $table->alias() . '.' . $table->getID() . ' = ' . $this->_alias . '.' . $on;
@@ -325,63 +319,6 @@ abstract class WaicTable {
 		}
 		return false;
 	}
-	public function bulkInsert( $data ) {
-		$this->_clearErrors();
-		if ($this->_escape) {
-			$data = WaicDb::escape($data);
-		}
-		if (empty($data)) {
-			$this->_addError(esc_html__('Nothing to insert', 'ai-copilot-content-generator'));
-			return false;
-		}
-
-		$query = 'INSERT INTO ' . $this->_table;
-		$fields = $this->_fields;
-		$fieldId = $this->_id;
-		$list = '';
-		foreach ($fields as $field) {
-			$name = $field->name;
-			if ($name == $fieldId) {
-				continue;
-			}
-			$list .= '`' . $name . '`,';
-		}
-		$query .= '(' . substr($list, 0, -1) . ') VALUES';
-		foreach ($data as $row) {
-			$q = '';
-			foreach ($fields as $field) {
-				$name = $field->name;
-				if ($name == $fieldId) {
-					continue;
-				}
-				if (isset($row[$name])) {
-					$val = $row[$name];
-					switch ($field->type) {
-						case 'int':
-						case 'tinyint':
-							$q .= ( (int) $val ) . ',';
-							break;
-						case 'float':
-						case 'decimal':
-							$q .= ( (float) $val ) . ',';
-							break;
-						default:
-							$q .= '\'' . $val . '\',';
-							break;
-					}
-				} else {
-					$q .= '\'' . $field->default . '\',';
-				}
-			}
-			$query .= '(' . substr($q, 0, -1) . '),';
-		}
-
-		if (!WaicDb::query(substr($query, 0, -1))) {
-			$this->_addError(WAIC_TEST_MODE ? WaicDb::getError() : esc_html__('Database error. Please contact your developer.', 'ai-copilot-content-generator'));
-			return false;
-		}
-		return true;
-	}
 	public function insert( $data ) {
 		return $this->store($data);
 	}
@@ -506,7 +443,8 @@ abstract class WaicTable {
 		if (!$field) {
 			$field = $this->_id;
 		}
-		return WaicDb::get('SELECT ' . $this->_id . ' FROM ' . $this->_table . ' WHERE ' . $field . ' = "' . $value . '"', 'one');
+		return WaicDb::get("SELECT {$this->_id} FROM {$this->_table} WHERE {$field} = %s", 'one', ARRAY_A, array($value));
+		//return WaicDb::get('SELECT ' . $this->_id . ' FROM ' . $this->_table . ' WHERE ' . $field . ' = "' . $value . '"', 'one');
 	}
 	protected function _addError( $error ) {
 		if (is_array($error)) {

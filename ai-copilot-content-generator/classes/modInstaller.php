@@ -21,7 +21,8 @@ class WaicModInstaller {
 			if (self::isModule($path)) {
 				$filesMoved = false;
 				if (empty($module['ex_plug_dir'])) {
-					$filesMoved = self::moveFiles($module['code'], $path);
+					//$filesMoved = self::moveFiles($module['code'], $path);
+					$filesMoved = false;
 				} else {
 					$filesMoved = true;     //Those modules doesn't need to move their files
 				}
@@ -77,20 +78,19 @@ class WaicModInstaller {
 	 * @param string $path path from what module will be moved
 	 * @return bool is success - true, else - false
 	 */
-	public static function moveFiles( $code, $path ) {
+	/*public static function moveFiles( $code, $path ) {
 		if (!is_dir(WAIC_MODULES_DIR . $code)) {
 			if (mkdir(WAIC_MODULES_DIR . $code)) {
 				WaicUtils::copyDirectories($path, WAIC_MODULES_DIR . $code);
 				return true;
 			} else {
-				/* translators: %s: module directory */
 				WaicErrors::push(esc_html(sprintf(__('Cannot create module directory. Try to set permission to %s directory 755 or 777', 'ai-copilot-content-generator'), WAIC_MODULES_DIR)), WaicErrors::MOD_INSTALL);
 			}
 		} else {
 			return true;
 		}
 		return false;
-	}
+	}*/
 	private static function _getPluginLocations() {
 		$locations = array();
 		$plug = WaicReq::getVar('plugin');
@@ -238,7 +238,7 @@ class WaicModInstaller {
 				$modDataArr = WaicUtils::xmlNodeAttrsToArr($m);
 				self::_uninstallTables($modDataArr);
 				WaicFrame::_()->getModule('adminmenu')->getModel('modules')->delete(array('code' => $modDataArr['code']));
-				WaicUtils::deleteDir(WAIC_MODULES_DIR . $modDataArr['code']);
+				//WaicUtils::deleteDir(WAIC_MODULES_DIR . $modDataArr['code']);
 				if ('license' == $modDataArr['code']) {
 					WaicFrame::_()->getModule('options')->getModel()->save('lic', 'license_save_name', '');
 				}

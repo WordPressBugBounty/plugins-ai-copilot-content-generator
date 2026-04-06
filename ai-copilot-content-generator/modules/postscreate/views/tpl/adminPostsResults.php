@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $task = $props['task'];
 $isBulk = $props['is_bulk'];
@@ -66,3 +67,5 @@ $completed = round(WaicUtils::getArrayValue($task, 'step', 0, 1) * 100 / WaicUti
 		<?php /*wp_editor('iiiiiiiiiii', 'waicBodySectionEditor', array('textarea_name' => 'waicBodySectionEditor_n', 'textarea_rows' => 10));*/ ?>
 	</div>
 </section>
+<?php 
+// phpcs:enable

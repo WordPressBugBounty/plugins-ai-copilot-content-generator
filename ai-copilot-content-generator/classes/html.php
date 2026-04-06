@@ -162,7 +162,7 @@ class WaicHtml {
 		if ( !isset($params['value']) || ( null === $params['value'] ) ) {
 			$params['value'] = 1;
 		}
-		$id = ( empty($params['id']) ? self::nameToClassId($name) . mt_rand(9, 9999) : $params['id'] );
+		$id = ( empty($params['id']) ? self::nameToClassId($name) . wp_rand(9, 9999) : $params['id'] );
 		$params['attrs'] = 'id="' . esc_attr($id) . '" class="toggle" ' . ( isset($params['attrs']) ? $params['attrs'] . ' ' : '' ) . $params['checked'];
 		
 		self::input($name, $params);
@@ -304,7 +304,7 @@ class WaicHtml {
 		echo '</select>';
 	}
 	public static function file( $name, $params = array() ) {
-		$id = ( empty($params['id']) ? self::nameToClassId($name) . mt_rand(9, 9999) : $params['id'] );
+		$id = ( empty($params['id']) ? self::nameToClassId($name) . wp_rand(9, 9999) : $params['id'] );
 		echo '<div class="wbw-inputfile">
 			<input type="file" id="' . esc_attr($id) . '" name="' . esc_attr($name) . '">
 			<label for="' . esc_attr($id) . '">

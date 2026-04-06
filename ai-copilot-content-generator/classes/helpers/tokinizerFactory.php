@@ -72,7 +72,7 @@ class WaicTokinizerFactory {
 
 	public static function registerModelToEncoding( string $modelName, string $encodingName ) {
 		if (array_key_exists($modelName, self::$modelToEncoding)) {
-			throw new InvalidArgumentException("\"{$modelName}\" already exists in map");
+			throw new InvalidArgumentException(esc_html("\"{$modelName}\" already exists in map"));
 		}
 
 		self::$modelToEncoding[$modelName] = $encodingName;
@@ -80,7 +80,7 @@ class WaicTokinizerFactory {
 
 	public static function registerModelPrefixToEncoding( string $modelPrefix, string $encodingName ) {
 		if (array_key_exists($modelPrefix, self::$modelPrefixToEncoding)) {
-			throw new InvalidArgumentException("Prefix \"{$modelPrefix}\" already exists in map");
+			throw new InvalidArgumentException(esc_html("Prefix \"{$modelPrefix}\" already exists in map"));
 		}
 
 		self::$modelPrefixToEncoding[$modelPrefix] = $encodingName;
@@ -90,7 +90,7 @@ class WaicTokinizerFactory {
 		static::initConstructor();
 
 		if (array_key_exists($encodingName, self::$encodingConstructors)) {
-			throw new InvalidArgumentException("\"{$encodingName}\" already exists");
+			throw new InvalidArgumentException(esc_html("\"{$encodingName}\" already exists"));
 		}
 
 		self::$encodingConstructors[$encodingName] = $constructor;
@@ -116,8 +116,8 @@ class WaicTokinizerFactory {
 
 		if (is_null($encodingName)) {
 			throw new InvalidArgumentException(
-				"Could not automatically map \"{$modelName}\" to a tokeniser. " .
-				"Please use `createByEncodingName` to explicitly get the tokeniser you expect."
+				esc_html("Could not automatically map \"{$modelName}\" to a tokeniser. " .
+				"Please use `createByEncodingName` to explicitly get the tokeniser you expect.")
 			);
 		}
 
@@ -132,7 +132,7 @@ class WaicTokinizerFactory {
 		static::initConstructor();
 
 		if (!array_key_exists($encodingName, static::$encodingConstructors)) {
-			throw new InvalidArgumentException("Unknown encoding: \"{$encodingName}\"");
+			throw new InvalidArgumentException(esc_html("Unknown encoding: \"{$encodingName}\""));
 		}
 
 		$constructor = static::$encodingConstructors[$encodingName];

@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $licenseData = $this->props['license_data'];
 $credentials = WaicUtils::getArrayValue($licenseData, 'credentials', array(), 2);
@@ -97,4 +98,7 @@ $isExpired = WaicUtils::getArrayValue($licenseData, 'isExpired', 0, 1);
 	</div>
 <?php } ?>
 </section>
-<?php include_once 'adminContact.php'; ?>
+<?php 
+include_once 'adminContact.php'; 
+// phpcs:enable
+?>

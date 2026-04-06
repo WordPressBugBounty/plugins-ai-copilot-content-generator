@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $curField = $this->props['cur_field'];
 $isTemp = '#n#' === $curField;
@@ -98,7 +99,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 			?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('URL', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('POST JSON', 'ai-copilot-content-generator'); ?>">
@@ -110,7 +111,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Headers', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('Enter each header on a new line. Separate the Key and Value with a colon (key:value).', 'ai-copilot-content-generator'); ?>">
@@ -122,7 +123,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Payload template', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('Text with variables {FIELD}, {AI_RESPONSE}, {FORM_ID}, {TIMESTAMP}', 'ai-copilot-content-generator'); ?>">
@@ -134,7 +135,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][webhook]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Send when', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('???', 'ai-copilot-content-generator'); ?>">
@@ -162,7 +163,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 			?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('To', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('Email list', 'ai-copilot-content-generator'); ?>">
@@ -174,7 +175,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Subject', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('Subject with variables.', 'ai-copilot-content-generator'); ?>">
@@ -186,7 +187,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Message template', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('HTML/text with variables {FIELD}, {AI_RESPONSE}, {FORM_ID}, {TIMESTAMP}', 'ai-copilot-content-generator'); ?>">
@@ -198,7 +199,7 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
-<div class="wbw-settings-form row<?php echo $hidden; ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
+<div class="wbw-settings-form row<?php echo esc_attr($hidden); ?>" data-parent-check="submits[<?php echo esc_attr($curField); ?>][email]">
 	<div class="wbw-settings-label col-2 wbw-label-sub"><?php esc_html_e('Send when', 'ai-copilot-content-generator'); ?></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="<?php echo esc_attr($tooltip); ?>" title="<?php esc_html_e('???', 'ai-copilot-content-generator'); ?>">
@@ -211,3 +212,5 @@ $notifications = $this->getModel()->getNotificationsSendModes();
 		?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

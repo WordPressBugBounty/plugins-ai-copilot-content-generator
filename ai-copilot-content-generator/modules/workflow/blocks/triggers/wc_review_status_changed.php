@@ -258,6 +258,6 @@ class WaicTrigger_wc_review_status_changed extends WaicTrigger {
 				return false;
 			}
 		}
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_comment_id' => $commentId, 'com_status_old' => $oldStatus, 'waic_product_id' => $postId, 'waic_user_id' => $userId, 'obj_id' => $commentId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_comment_id' => $commentId, 'com_status_old' => $oldStatus, 'waic_product_id' => $postId, 'waic_user_id' => $userId, 'obj_id' => $commentId);
 	}
 }

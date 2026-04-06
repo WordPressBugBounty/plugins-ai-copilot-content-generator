@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $context = WaicUtils::getArrayValue($props['settings'], 'context', array(), 2);
 $imgUrl = $props['img_url'];
@@ -459,6 +460,7 @@ $isCustom = strpos($userAvatar, 'user_avatar') !== 0;
 <?php
 $eErrorRequest = WaicUtils::getArrayValue($context, 'e_error_request', 0, 1);
 $hidden = $eErrorRequest ? '' : ' wbw-hidden';
+// phpcs:enable
 ?>
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Prompt User Email?', 'ai-copilot-content-generator'); ?></div>

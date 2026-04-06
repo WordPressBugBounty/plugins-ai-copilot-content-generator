@@ -52,7 +52,7 @@ class WaicTokinizer {
 			}
 
 			if ($maxTokenValue !== $explicitNVocab - 1) {
-				throw new InvalidArgumentException("explicitNVocab check failed: Max token({$maxTokenValue}) !== {$explicitNVocab} - 1");
+				throw new InvalidArgumentException(esc_html("explicitNVocab check failed: Max token({$maxTokenValue}) !== {$explicitNVocab} - 1"));
 			}
 		}
 	}
@@ -108,12 +108,12 @@ class WaicTokinizer {
 			if (count($matches[0]) > 0) {
 				$token = $matches[0][0];
 				throw new ValueError(
-					"Encountered text corresponding to disallowed special token '{$token}'.\n" .
+					esc_html("Encountered text corresponding to disallowed special token '{$token}'.\n" .
 					"If you want this text to be encoded as a special token, " .
 					"pass it to `allowedSpecial`, e.g. `allowedSpecial: ['{$token}', ...]`.\n" .
 					"If you want this text to be encoded as normal text, disable the check for this token " .
 					"by passing `disallowedSpecial: array_diff(\$enc->getSpecialTokensSet(), ['{$token}']))`.\n" .
-					"To disable this check for all special tokens, pass `disallowedSpecial: []`.\n"
+					"To disable this check for all special tokens, pass `disallowedSpecial: []`.\n")
 				);
 			}
 		}

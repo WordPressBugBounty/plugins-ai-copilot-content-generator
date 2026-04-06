@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $users = WaicFrame::_()->getModule('workspace')->getUsersList();
 ?>
@@ -19,3 +20,5 @@ $users = WaicFrame::_()->getModule('workspace')->getUsersList();
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

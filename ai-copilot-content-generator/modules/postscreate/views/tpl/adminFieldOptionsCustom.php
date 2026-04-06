@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 //var_dump($props);
 $customSlug = $props['custom_slug'];
@@ -87,3 +88,5 @@ $hidden = 'generate' == $tMode ? '' : ' wbw-hidden';
 			?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

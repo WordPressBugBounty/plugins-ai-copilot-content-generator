@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $module = $this->getModule();
 $cntFeatures = 0;
@@ -60,3 +61,5 @@ if ( !$isApiKey ) {
 	</ul>
 	<div class="wbw-clear"></div>
 </section>
+<?php
+// phpcs:enable

@@ -21,7 +21,7 @@ class WaicReq {
 	*/
 	public static function getVar( $name, $from = 'all', $default = null, $html = false, $base = true ) {
 		if (self::$_requestWithNonce) {
-			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field($_REQUEST['_wpnonce']);
+			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field(wp_unslash($_REQUEST['_wpnonce']));
 			if (!wp_verify_nonce($nonce, 'my-nonce')) {
 				echo esc_html__('Security check', 'ai-copilot-content-generator');
 				exit(); 
@@ -40,24 +40,26 @@ class WaicReq {
 		switch ($from) {
 			case 'get':
 				if (isset($_GET[$name])) {
-					return sanitize_text_field($_GET[$name]);
+					return sanitize_text_field(wp_unslash($_GET[$name]));
 				}
 				break;
 			case 'post':
 				if (isset($_POST[$name])) {
 					if (is_array($_POST[$name])) {
-						self::addSanitizeHook();
-						$data = sanitize_text_field($_POST[$name]);
+						/*self::addSanitizeHook();
+						$data = sanitize_text_field(wp_unslash($_POST[$name]));
 						self::removeSanitizeHook();
-						return $html && is_array($html) ? self::recursive_sanitize_text_field($data, $html) : $data;
+						return $html && is_array($html) ? self::recursive_sanitize_text_field($data, $html) : $data;*/
+						return self::recursive_sanitize_text_field($_POST[$name], $html);
 					} else {
 						if (true === $html) {
-							self::addSanitizeHook();
-							$data = sanitize_text_field($_POST[$name]);
-							self::removeSanitizeHook();
-							return $base ? base64_encode($data) : $data;
+							/*self::addSanitizeHook();
+							$data = sanitize_text_field(wp_unslash($_POST[$name]));
+							self::removeSanitizeHook();*/
+							$data = wp_unslash($_POST[$name]);
+							return $base ? base64_encode($data) : wp_kses_post($data);
 						}
-						return sanitize_text_field($_POST[$name]);
+						return sanitize_text_field(wp_unslash($_POST[$name]));
 						//return ( true === $html ? base64_encode($_POST[$name]) : sanitize_text_field($_POST[$name]) );
 					}
 				}
@@ -75,12 +77,12 @@ class WaicReq {
 				break;
 			case 'server':
 				if (isset($_SERVER[$name])) {
-					return sanitize_text_field($_SERVER[$name]);
+					return sanitize_text_field(wp_unslash($_SERVER[$name]));
 				}
 				break;
 			case 'cookie':
 				if (isset($_COOKIE[$name])) {
-					$value = sanitize_text_field($_COOKIE[$name]);
+					$value = sanitize_text_field(wp_unslash($_COOKIE[$name]));
 					if (strpos($value, '_JSON:') === 0) {
 						$value = explode('_JSON:', $value);
 						$value = WaicUtils::jsonDecode(array_pop($value));
@@ -97,7 +99,7 @@ class WaicReq {
 			if ( is_array( $value ) ) {
 				$value = self::recursive_sanitize_text_field($value, $html);
 			} else {
-				$value = ( $isHtml && !is_numeric($key) && in_array($key, $html) ? base64_encode($value) : sanitize_text_field($value) );
+				$value = ( $isHtml && !is_numeric($key) && in_array($key, $html) ? base64_encode($value) : wp_kses_post($value) );
 			}
 		}
 		return $array;
@@ -132,7 +134,7 @@ class WaicReq {
 	}
 	public static function clearVar( $name, $in = 'input', $params = array() ) {
 		if (self::$_requestWithNonce) {
-			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field($_REQUEST['_wpnonce']);
+			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field(wp_unslash($_REQUEST['_wpnonce']));
 			if (!wp_verify_nonce($nonce, 'my-nonce')) {
 				esc_html__('Security check', 'ai-copilot-content-generator');
 				exit(); 
@@ -163,7 +165,7 @@ class WaicReq {
 	}
 	public static function get( $what ) {
 		if (self::$_requestWithNonce) {
-			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field($_REQUEST['_wpnonce']);
+			$nonce = empty($_REQUEST['_wpnonce']) ? '' : sanitize_text_field(wp_unslash($_REQUEST['_wpnonce']));
 			if (!wp_verify_nonce($nonce, 'my-nonce')) {
 				esc_html__('Security check', 'ai-copilot-content-generator');
 				exit(); 
@@ -171,7 +173,7 @@ class WaicReq {
 		}
 		$what = strtolower($what);
 		$vars = null;
-		self::addSanitizeHook();
+		//self::addSanitizeHook();
 		switch ($what) {
 			case 'get':
 				$vars = self::sanitizeArray($_GET);
@@ -186,7 +188,7 @@ class WaicReq {
 				$vars = self::sanitizeFilesArray($_FILES);
 				break;
 		}
-		self::removeSanitizeHook();
+		//self::removeSanitizeHook();
 		return $vars;
 	}
 	public static function sanitizeArray( $arr ) {
@@ -205,7 +207,7 @@ class WaicReq {
 	}
 	public static function getMethod() {
 		if (!self::$_requestMethod) {
-			self::$_requestMethod = strtoupper( self::getVar('method', 'all', isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field($_SERVER['REQUEST_METHOD']) : '') );
+			self::$_requestMethod = strtoupper( self::getVar('method', 'all', isset($_SERVER['REQUEST_METHOD']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD'])) : '') );
 		}
 		return self::$_requestMethod;
 	}
@@ -218,9 +220,9 @@ class WaicReq {
 		return false;
 	}
 	public static function getRequestUri( $simple = false) {
-		$uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field($_SERVER['REQUEST_URI']) : '';
+		$uri = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
 		if ($simple && !empty($uri)) {
-			$parts = parse_url($uri);
+			$parts = wp_parse_url($uri);
 			$path = isset($parts['path']) ? $parts['path'] : $uri;
 			$uri = str_replace('/wp-json', '', $path);
 		}

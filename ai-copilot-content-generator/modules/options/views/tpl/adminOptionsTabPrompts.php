@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 //var_dump($props['options']['prompts']);
 $options = WaicUtils::getArrayValue($props['options'], 'prompts', array(), 2);
@@ -139,5 +140,6 @@ $defaults = WaicUtils::getArrayValue($props['defaults'], 'prompts', array(), 2);
 	$this->includeExtTemplate('postsrss', 'adminOptionsTabPrompts');
 	$this->includeExtTemplate('postslinks', 'adminOptionsTabPrompts');
 	$this->includeExtTemplate('productsfields', 'adminOptionsTabPrompts');
+	// phpcs:enable
 ?>
 </section>

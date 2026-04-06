@@ -112,6 +112,6 @@ class WaicTrigger_wp_user_register extends WaicTrigger {
 			}
 		}
 
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_user_id' => $userId, 'obj_id' => $userId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_user_id' => $userId, 'obj_id' => $userId);
 	}
 }

@@ -104,7 +104,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		do {
 			$step++;
 			if($isTools) {
-				set_time_limit(300);
+				set_time_limit(300); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 			}
 			$data = $this->provider->getText( $params, $stream );
 
@@ -555,7 +555,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 						);
 					}
 				}
-				wp_reset_query();
+				wp_reset_postdata();
 				break;
 			case 'search_posts':
 				$query = WaicUtils::getArrayValue($args, 'query');
@@ -683,7 +683,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 						);
 					}
 				}
-				wp_reset_query();
+				wp_reset_postdata();
 				break;
 		}
 		return $result;
@@ -693,7 +693,8 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		global $wpdb;
 		if (!empty($wp_query->get( 'waic_search_query' ))) {
 			$s = esc_sql($wp_query->get('waic_search_query'));
-			$where .= ' AND (' . $wpdb->posts . '.post_title LIKE \'%' . $s . '%\' OR ' . $wpdb->posts . '.post_content LIKE \'%' . $s . '%\' OR ' . $wpdb->posts . '.post_excerpt LIKE \'%' . $s . '%\')';
+			$like = '%' . $wpdb->esc_like($s) . '%';
+			$where .= $wpdb->prepare(" AND ({$wpdb->posts}.post_title LIKE %s OR {$wpdb->posts}.post_content LIKE %s OR {$wpdb->posts}.post_excerpt LIKE %s)", $like, $like, $like);
 		}
 		return $where;
 	}

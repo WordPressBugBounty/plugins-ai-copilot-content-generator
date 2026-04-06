@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 ?>
 <div class="wbw-settings-form row waic-field-block" data-block="tags">
@@ -33,3 +34,5 @@ $props = $this->props;
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

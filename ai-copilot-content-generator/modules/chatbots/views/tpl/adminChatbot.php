@@ -2,16 +2,15 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <section class="wbw-body-options">
-	<?php include_once $props['tpl_path'] . 'adminTaskCreateTabs.php'; ?>
+	<?php include_once $this->props['tpl_path'] . 'adminTaskCreateTabs.php'; ?>
 	<div class="waic-body-content">
 		<div class="wbw-tabs-content">
 			<form id="waicChatbotCreateForm">
-			<?php foreach ($props['tabs'] as $key => $data) { ?>
-				<div class="wbw-tab-content" id="content-tab-<?php echo esc_attr($key); ?>">
-					<?php include_once 'adminChatbotTab' . waicStrFirstUp($key) . '.php'; ?>
+			<?php foreach ($this->props['tabs'] as $waicKey => $waicData) { ?>
+				<div class="wbw-tab-content" id="content-tab-<?php echo esc_attr($waicKey); ?>">
+					<?php include_once 'adminChatbotTab' . waicStrFirstUp($waicKey) . '.php'; ?>
 					<div class="wbw-clear"></div>
 				</div>
 			<?php } ?>
@@ -22,15 +21,15 @@ $props = $this->props;
 				</div>
 			</div>
 			<?php 
-				WaicHtml::hidden('task_title', array('value' => $props['task_title'], 'attrs' => 'id="waicTaskTitle"'));
+				WaicHtml::hidden('task_title', array('value' => $this->props['task_title'], 'attrs' => 'id="waicTaskTitle"'));
 			?>
 			</form>
 			<form id="waicUploadForm" class="waic-hidden waic-dataset-upload" method="POST" enctype="multipart/form-data">  
 				<input type="file" accept=".txt, .csv, .json" name="trainingfile">  
 			</form>
 			<?php 
-				WaicHtml::hidden('', array('value' => WaicUtils::jsonEncode($props['lang']), 'attrs' => 'id="waicLangSettingsJson" class="wbw-nosave"'));
-				WaicHtml::hidden('task_id', array('value' => $props['task_id'], 'attrs' => 'id="waicPCId"'));
+				WaicHtml::hidden('', array('value' => WaicUtils::jsonEncode($this->props['lang']), 'attrs' => 'id="waicLangSettingsJson" class="wbw-nosave"'));
+				WaicHtml::hidden('task_id', array('value' => $this->props['task_id'], 'attrs' => 'id="waicPCId"'));
 			?>
 		</div>
 		<div class="wbw-preview-content">

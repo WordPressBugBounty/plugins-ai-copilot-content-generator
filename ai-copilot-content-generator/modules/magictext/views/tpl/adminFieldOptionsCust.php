@@ -2,10 +2,12 @@
 if (! defined('ABSPATH')) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 
 $options = WaicUtils::getArrayValue($props['fields'], $key, array(), 2);
 $tooltip = !empty($options['modes_tooltip']) ? $options['modes_tooltip'] : __('Set a custom name for this feature. This is how it will appear in the quick menu.', 'ai-copilot-content-generator');
+// phpcs:enable
 ?>
 <div class="wbw-settings-form row">
 	<div class="wbw-settings-label col-2"><?php esc_html_e('Name', 'ai-copilot-content-generator'); ?></div>

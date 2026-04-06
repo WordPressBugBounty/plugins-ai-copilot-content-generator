@@ -139,6 +139,6 @@ class WaicTrigger_wp_comment_updated extends WaicTrigger {
 		}
 		$postId = (int) $comment->comment_post_ID;
 		
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_comment_id' => $commentId, 'waic_post_id' => $postId, 'waic_user_id' => $userId, 'obj_id' => $commentId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_comment_id' => $commentId, 'waic_post_id' => $postId, 'waic_user_id' => $userId, 'obj_id' => $commentId);
 	}
 }

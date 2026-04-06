@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 class WaicChatbots extends WaicModule {
 	public function init() {
 		add_shortcode(WAIC_CHATBOT, array($this, 'renderChatbot'));

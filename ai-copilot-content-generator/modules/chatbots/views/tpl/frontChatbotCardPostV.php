@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $tools = $props['tools'];
 $postObj = $props['obj'];
@@ -19,7 +20,7 @@ $objId = $postObj->ID;
 			<div class="waic-card-name"><?php echo wp_kses_post($postObj->post_title); ?></div>
 		<?php } ?>
 		<?php if (WaicUtils::getArrayValue($tools, 'post_card_desc', 0, 1)) { ?>
-			<div class="waic-card-desc"><?php echo wp_trim_words(wp_strip_all_tags(isset($postObj->post_excerpt) && !empty($postObj->post_excerpt) ? $postObj->post_excerpt : ''), 255); ?></div>
+			<div class="waic-card-desc"><?php echo wp_kses_post(wp_trim_words(wp_strip_all_tags(isset($postObj->post_excerpt) && !empty($postObj->post_excerpt) ? $postObj->post_excerpt : ''), 255)); ?></div>
 		<?php } ?>
 		<div class="waic-card-footer">
 			<?php 
@@ -36,4 +37,5 @@ $objId = $postObj->ID;
 		</div>
 	</div>
 </div>
-
+<?php 
+// phpcs:enable

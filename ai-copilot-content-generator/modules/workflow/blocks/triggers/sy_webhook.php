@@ -147,7 +147,7 @@ class WaicTrigger_sy_webhook extends WaicTrigger {
 				$params = json_decode(json_encode($xml), true);
 			}
 		}
-		$result = array('date' => date('Y-m-d'), 'time' => date('H:i:s'));
+		$result = array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'));
 		$fields = WaicUtils::flattenJson($params);
 		
 		$result = $this->getFieldsArray($fields, 'webhook_field', $result);

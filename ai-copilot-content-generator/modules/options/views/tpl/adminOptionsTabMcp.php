@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['options'], 'mcp', array(), 2);
 $variations = WaicUtils::getArrayValue($props['variations'], 'mcp', array(), 2);
@@ -56,18 +57,17 @@ $defaults = WaicUtils::getArrayValue($props['defaults'], 'mcp', array(), 2);
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Url for connectors', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
-		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Copy this base URL and append your Access Token as ?token=YOUR_TOKEN when adding a connector (e.g. ChatGPT Developer Mode). For Claude.ai with OAuth 2.1 enabled, use the OAuth Url field below instead — no token needed.', 'ai-copilot-content-generator')); ?>">
-		<div class="wbw-settings-field">
-		<?php
-			$mcpToken = WaicUtils::getArrayValue($options, 'mcp_token', '');
-			$tokenSuffix = !empty($mcpToken) ? '?token=' . $mcpToken : '?token=GENERATE_TOKEN_ABOVE';
-			WaicHtml::text('', array(
-				'value' => home_url() . '/wp-json/mcp/v1/sse' . $tokenSuffix,
-				'attrs' => 'readonly id="waicMCPUrl" class="wbw-fullwidth-max"',
-			));
-			?>
-		</div>
-	</div>
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Copy this base URL and append your Access Token as ?token=YOUR_TOKEN when adding a connector (e.g. ChatGPT Developer Mode). For Claude.ai with OAuth 2.1 enabled, use the OAuth Url field below instead — no token needed.', 'ai-copilot-content-generator')); ?>">
+			<div class="wbw-settings-field">
+			<?php
+				$mcpToken = WaicUtils::getArrayValue($options, 'mcp_token', '');
+				$tokenSuffix = !empty($mcpToken) ? '?token=' . $mcpToken : '?token=GENERATE_TOKEN_ABOVE';
+				WaicHtml::text('', array(
+					'value' => home_url() . '/wp-json/mcp/v1/sse' . $tokenSuffix,
+					'attrs' => 'readonly id="waicMCPUrl" class="wbw-fullwidth-max"',
+				));
+				?>
+			</div>
 		</div>
 	</div>
 <?php 
@@ -228,3 +228,5 @@ $mcpOAuth = WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1);
 		</div>
 	</div>
 </section>
+<?php 
+// phpcs:enable

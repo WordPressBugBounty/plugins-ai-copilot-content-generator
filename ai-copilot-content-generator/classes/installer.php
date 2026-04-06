@@ -249,7 +249,7 @@ class WaicInstaller {
 	public static function delete() {
 		global $wpdb;
 		$wpPrefix = $wpdb->prefix;
-		$wpdb->query('DROP TABLE IF EXISTS `' . $wpdb->prefix . esc_sql(WAIC_DB_PREF) . 'modules`');
+		$wpdb->query('DROP TABLE IF EXISTS `' . $wpdb->prefix . esc_sql(WAIC_DB_PREF) . 'modules`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		delete_option($wpPrefix . WAIC_DB_PREF . 'db_version');
 		delete_option($wpPrefix . WAIC_DB_PREF . 'db_installed');
 	}

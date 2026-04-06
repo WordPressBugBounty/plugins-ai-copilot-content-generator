@@ -732,7 +732,7 @@ class WaicChatbotsModel extends WaicModel {
 		$newLog = array(
 			'his_id' => $result['his_id'], 
 			'question' => $this->controlText($message),
-			'answer' => $this->controlText($result['error'] ? $result['msg'] : $result['data']),
+			'answer' => wp_kses_post($this->controlText($result['error'] ? $result['msg'] : $result['data'])),
 			'file' => $file,
 			'error' => $result['error'],
 			'tt' => WaicUtils::getFormatedDateTime(WaicUtils::getTimestamp(), 'H:i'),
@@ -1175,7 +1175,7 @@ class WaicChatbotsModel extends WaicModel {
 			WaicFrame::_()->pushError(esc_html__('Another launch process is running. Please try again later.', 'ai-copilot-content-generator'));
 			return false;
 		}
-		set_time_limit(0);
+		set_time_limit(0); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		
 		if (!$this->setRunningLaunch(array('value' => $code, 'flag' => 0, 'timeout' => WaicUtils::getTimestamp() + $this->_launchTimeout))) {
 			WaicFrame::_()->pushError(esc_html__('Error related to setting the launch flag.', 'ai-copilot-content-generator'));
@@ -1395,13 +1395,13 @@ class WaicChatbotsModel extends WaicModel {
 			$summary .= 'Top products: ' . json_encode($products, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) . PHP_EOL;
 				
 			global $wpdb;
-			$query = 'SELECT t.term_id, t.name, tt.count' .
-				' FROM ' . $wpdb->terms . ' as t' .
-				' INNER JOIN ' . $wpdb->term_taxonomy . ' as tt ON t.term_id=tt.term_id' .
-				" WHERE tt.taxonomy='product_cat'" .
-				' ORDER BY tt.count DESC' .
-				' LIMIT 10';
-			$topCategories = $wpdb->get_results($query);
+			$query = "SELECT t.term_id, t.name, tt.count
+				FROM {$wpdb->terms} as t
+				INNER JOIN {$wpdb->term_taxonomy} as tt ON t.term_id=tt.term_id
+				WHERE tt.taxonomy='product_cat'
+				ORDER BY tt.count DESC
+				LIMIT 10";
+			$topCategories = $wpdb->get_results($query); // phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
 			$categories = array();
 			foreach ($topCategories as $cat) {
 				$categories[] = array(
@@ -1471,7 +1471,7 @@ class WaicChatbotsModel extends WaicModel {
 	}
 	public function convertContenToText( $raw ) {
 		//$content = strip_shortcodes($raw);
-		$content = apply_filters('the_content', $raw);
+		$content = apply_filters('the_content', $raw); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedHooknameFound
 		$content = str_replace(']]>', ']]&gt;', $content);
 		
 		/*$content = do_shortcode($content);

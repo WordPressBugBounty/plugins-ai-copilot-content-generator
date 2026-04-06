@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $viewId = $props['view_id'];
 $isPreview = $this->props['preview'];
@@ -167,7 +168,7 @@ if (!empty($customCss)) { ?>
 						<div class="waic-message-name waic-name-<?php echo esc_html($typ); ?>"><?php echo esc_html($isAi ? $aiName : $userName); ?></div>
 						<div class="waic-message-text waic-text-<?php echo esc_html($typ); ?>">
 						<?php 
-							echo empty($message['file']) ? wp_kses_post($message['msg']) : '<img src="' . $message['file'] . '">'; 
+							echo empty($message['file']) ? wp_kses_post($message['msg']) : '<img src="' . wp_kses_post($message['file']) . '">'; 
 						?>
 						</div>
 						<?php 
@@ -262,3 +263,5 @@ if (!empty($customCss)) { ?>
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

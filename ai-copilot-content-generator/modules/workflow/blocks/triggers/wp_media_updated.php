@@ -110,7 +110,7 @@ class WaicTrigger_wp_media_updated extends WaicTrigger {
 			return false;
 		}
 		
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_media_id' => $attachmentId, 'obj_id' => $attachmentId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_media_id' => $attachmentId, 'obj_id' => $attachmentId);
 	}
 	
 }

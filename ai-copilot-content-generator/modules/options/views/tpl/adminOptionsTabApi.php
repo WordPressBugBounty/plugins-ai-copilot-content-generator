@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $options = WaicUtils::getArrayValue($props['options'], 'api', array(), 2);
 $notShow = WaicUtils::getArrayValue($props, 'not_show', array('vision' => 1), 2);
@@ -494,3 +495,5 @@ if (empty($notShow['language'])) { ?>
 		</div>
 	</div>
 </section>
+<?php 
+// phpcs:enable

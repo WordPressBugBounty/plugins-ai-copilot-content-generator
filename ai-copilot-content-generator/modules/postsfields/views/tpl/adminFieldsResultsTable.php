@@ -2,17 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $task = $props['task'];
-//$results = $props['results'];
 $pcData = $props['pc_data'];
 $results = $pcData['results'];
 $fields = $props['fields'];
 $tplPath = $props['tpl_path'];
-//$workspace = WaicFrame::_()->getModule('workspace');
-//var_dump($results);
-//$params = WaicUtils::getArrayValue($task, 'params', array(), 2);
-//$order = WaicUtils::getArrayValue($task, 'params', array(), 2);
 ?>
 <div class="waic-post-results" data-post="<?php echo esc_attr($pcData['id']); ?>" data-post-status="<?php echo esc_attr($pcData['status']); ?>" data-can-publish="<?php echo $pcData['can_publish'] ? 1 : 0; ?>" data-can-update="<?php echo $pcData['can_update'] ? 1 : 0; ?>">
 	<?php 
@@ -31,3 +27,5 @@ $tplPath = $props['tpl_path'];
 	}
 	?>
 </div>
+<?php 
+// phpcs:enable

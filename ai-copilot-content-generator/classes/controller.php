@@ -130,53 +130,6 @@ abstract class WaicController {
 	protected function _prepareModelBeforeListSelect( $model ) {
 		return $model->setSelectFields('*');
 	}
-	/**
-	 * Common method for list table data
-	 */
-	public function getListForTbl() {
-		$res = new WaicResponse();
-		$res->ignoreShellData();
-		$model = $this->getModel();
-
-		$params = WaicReq::get('post');
-
-		$length = WaicUtils::getArrayValue($params, 'length', 10, 1);
-		$start = WaicUtils::getArrayValue($params, 'start', 0, 1);
-		$search = WaicUtils::getArrayValue(WaicUtils::getArrayValue($params, 'search', array(), 2), 'value');
-
-		if (!empty($search)) {
-			$model->addWhere(array('additionalCondition' => "title like '%" . $search . "%'"));
-		}
-		$order = WaicUtils::getArrayValue($params, 'order', array(), 2);
-		$orderBy = 'id';
-		$sortOrder = 'DESC';
-		if (isset($order[0])) {
-			$orderBy = WaicUtils::getArrayValue($order[0], 'column', $orderBy, 1);
-			$sortOrder = WaicUtils::getArrayValue($order[0], 'dir', $sortOrder);
-		}
-
-		// Get total pages count for current request
-		$totalCount = $model->getCount(array('clear' => array('selectFields')));
-		if ($length > 0) {
-			if ($start >= $totalCount) {
-				$start = 0;
-			}
-			$model->setLimit($start . ', ' . $length);
-		}
-
-		$model->setOrderBy($orderBy)->setSortOrder($sortOrder);
-		$data = $this->_prepareModelBeforeListSelect($model)->getFromTbl();
-		
-		$data = empty($data) ? array() : $this->_prepareListForTbl($data);
-		$res->data = $data;
-
-		$res->recordsFiltered = $totalCount;
-		$res->recordsTotal = $totalCount;
-		$res->draw = WaicUtils::getArrayValue($params, 'draw', 0, 1);
-
-		$res = WaicDispatcher::applyFilters($this->getCode() . '_getListForTblResults', $res);
-		$res->ajaxExec();
-	}
 	public function removeGroup() {
 		$res = new WaicResponse();
 		if ($this->getModel()->removeGroup(WaicReq::getVar('ids', 'post'))) {

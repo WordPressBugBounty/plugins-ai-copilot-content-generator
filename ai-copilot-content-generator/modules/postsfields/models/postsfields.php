@@ -104,7 +104,7 @@ class WaicPostsfieldsModel extends WaicModel {
 				);
 			}
 		}
-		wp_reset_query();
+		wp_reset_postdata();
 		
 		return array(
 			'data' => $rows,
@@ -125,7 +125,8 @@ class WaicPostsfieldsModel extends WaicModel {
 	public function addSearchByTitle( $where, $wp_query ) {
 		global $wpdb;
 		if (!empty($wp_query->get( 'waic_post_title' ))) {
-			$where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql( $wpdb->esc_like( $wp_query->get( 'waic_post_title' ) ) ) . '%\'';
+			$like = '%' . $wpdb->esc_like($wp_query->get('waic_post_title')) . '%';
+			$where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $like);
 		}
 		return $where;
 	}

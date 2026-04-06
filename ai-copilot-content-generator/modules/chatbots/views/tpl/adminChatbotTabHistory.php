@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $chatbots = array();
 $taskId = $props['task_id'];
@@ -15,6 +16,7 @@ foreach ($props['chatbots'] as $tId => $tTitle) {
 		$chatbots[$tId] = $tTitle;
 	}
 }
+// phpcs:enable
 ?>
 <section class="wbw-body-history">
 	<div class="waic-table-filters mt-3" data-no-preview="1">

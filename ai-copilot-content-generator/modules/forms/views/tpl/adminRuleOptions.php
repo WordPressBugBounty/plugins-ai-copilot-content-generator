@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $curField = $this->props['cur_field'];
 $isTemp = '#n#' === $curField;
@@ -168,5 +169,8 @@ foreach ($elses as $i => $data) {
 		</div>
 	</div>
 </div>
-<?php } ?>
+<?php 
+} 
+// phpcs:enable
+?>
 

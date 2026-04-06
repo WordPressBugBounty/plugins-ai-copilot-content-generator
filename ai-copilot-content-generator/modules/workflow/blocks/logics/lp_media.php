@@ -208,7 +208,7 @@ class WaicLogic_lp_media extends WaicLogic {
 			$cnt = $result->found_posts;
 			$loopIds = $result->posts;
 		}
-		wp_reset_query();
+		wp_reset_postdata();
 		
 		$this->_results = array(
 			'result' => array(
@@ -246,16 +246,20 @@ class WaicLogic_lp_media extends WaicLogic {
 	public function addSearchByWhere( $where, $wp_query ) {
 		global $wpdb;
 		if (!empty($wp_query->get( 'waic_post_title' ))) {
-			$where .= ' AND ' . $wpdb->posts . '.post_title LIKE \'%' . esc_sql( $wpdb->esc_like( $wp_query->get( 'waic_post_title' ) ) ) . '%\'';
+			$like = '%' . $wpdb->esc_like($wp_query->get('waic_post_title')) . '%';
+			$where .= $wpdb->prepare(" AND {$wpdb->posts}.post_title LIKE %s", $like);
 		}
 		if (!empty($wp_query->get( 'waic_post_content' ))) {
-			$where .= ' AND ' . $wpdb->posts . '.post_content LIKE \'%' . esc_sql( $wpdb->esc_like( $wp_query->get( 'waic_post_content' ) ) ) . '%\'';
+			$like = '%' . $wpdb->esc_like($wp_query->get('waic_post_content')) . '%';
+			$where .= $wpdb->prepare(" AND {$wpdb->posts}.post_content LIKE %s", $like);
 		}
 		if (!empty($wp_query->get( 'waic_post_excerpt' ))) {
-			$where .= ' AND ' . $wpdb->posts . '.post_excerpt LIKE \'%' . esc_sql( $wpdb->esc_like( $wp_query->get( 'waic_post_excerpt' ) ) ) . '%\'';
+			$like = '%' . $wpdb->esc_like($wp_query->get('waic_post_excerpt')) . '%';
+			$where .= $wpdb->prepare(" AND {$wpdb->posts}.post_excerpt LIKE %s", $like);
 		}
 		if (!empty($wp_query->get( 'waic_post_alt' ))) {
-			$where .= " AND waic_altmeta.meta_value LIKE '%" . esc_sql( $wpdb->esc_like( $wp_query->get( 'waic_post_alt' ) ) ) . "%'";
+			$like = '%' . $wpdb->esc_like($wp_query->get('waic_post_alt')) . '%';
+			$where .= $wpdb->prepare(" AND waic_altmeta.meta_value LIKE %s", $like);
 		}
 		return $where;
 	}

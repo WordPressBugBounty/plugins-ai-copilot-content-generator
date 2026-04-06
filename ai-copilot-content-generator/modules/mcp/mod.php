@@ -34,7 +34,7 @@ class WaicMcp extends WaicModule {
 		if ( !$this->logging || empty( $_SERVER['REQUEST_METHOD'] ) || empty( $_SERVER['REQUEST_URI'] ) ) {
 			return;
 		}
-		$uri = $_SERVER['REQUEST_URI'];
+		$uri = sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI']));
 		if (strpos( $uri, '/mcp/' ) === false && strpos( $uri, '/aiwu/' ) === false && strpos( $uri, '/.well-known/oauth' ) === false ) {
 			return;
 		}
@@ -49,7 +49,7 @@ class WaicMcp extends WaicModule {
 		$ip = WaicUtils::getIP();
 		$uri = WaicReq::getRequestUri();
 		if ($this->logging) {
-			WaicFrame::_()->saveDebugLogging(array('uri' => $uri, 'agent' => $userAgent, 'ip' => $ip, 'method' => $_SERVER['REQUEST_METHOD']), false, 'MCP');
+			WaicFrame::_()->saveDebugLogging(array('uri' => $uri, 'agent' => $userAgent, 'ip' => $ip, 'method' => sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD']))), false, 'MCP');
 		}
 	}
 
@@ -63,7 +63,7 @@ class WaicMcp extends WaicModule {
 		if ( empty( $_SERVER['REQUEST_URI'] ) ) {
 			return;
 		}
-		$uri = wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH );
+		$uri = wp_parse_url(sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])), PHP_URL_PATH );
 		if ( false === $uri ) {
 			return;
 		}
@@ -274,9 +274,9 @@ class WaicMcp extends WaicModule {
 			}
 		}
 
-		@ini_set('zlib.output_compression', '0');
-		@ini_set('output_buffering', '0');
-		@ini_set('implicit_flush', '1');
+		@ini_set('zlib.output_compression', '0'); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+		@ini_set('output_buffering', '0'); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
+		@ini_set('implicit_flush', '1'); // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged
 		if (function_exists('ob_implicit_flush')) {
 			ob_implicit_flush( true );
 		}
@@ -355,11 +355,11 @@ class WaicMcp extends WaicModule {
 			}
 			return;
 		}
-		echo 'event: ' . $event . "\n";
+		echo 'event: ' . esc_html($event) . "\n";
 		if ('json' === $enc) {
 			$data = null === $data ? '{}' : str_replace('[]', '{}', wp_json_encode($data, JSON_UNESCAPED_UNICODE));
 		}
-		echo 'data: ' . $data . "\n\n";
+		echo 'data: ' . esc_html($data) . "\n\n";
 
 		if (ob_get_level()) {
 			ob_end_flush();
@@ -730,7 +730,7 @@ class WaicMcp extends WaicModule {
 	private function fetchMessages( $sess ) {
 		global $wpdb;
 		$like = $wpdb->esc_like( '_transient_' . "{$this->queueKey}_{$sess}_" ) . '%';
-
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$rows = $wpdb->get_results(
 			$wpdb->prepare("SELECT option_name, option_value FROM {$wpdb->options} WHERE option_name LIKE %s",  $like),
 			ARRAY_A
@@ -994,8 +994,10 @@ class WaicMcp extends WaicModule {
 			.actions { margin-top: 20px; text-align: right; }
 			.info { color: #646970; font-size: 13px; margin-top: 12px; }
 		</style></head><body><div class="card">';
+		/* translators: %s - client name */
 		echo '<h1>' . esc_html( sprintf( __( 'Authorize %s', 'ai-copilot-content-generator' ), $clientName ) ) . '</h1>';
-		echo '<p>' . esc_html( sprintf( __( '%s wants to access your MCP tools on %s.', 'ai-copilot-content-generator' ), $clientName, $siteName ) ) . '</p>';
+		/* translators: %1$s - client name, %2$s - site name */
+		echo '<p>' . esc_html( sprintf( __( '%1$s wants to access your MCP tools on %2$s.', 'ai-copilot-content-generator' ), $clientName, $siteName ) ) . '</p>';
 
 		if ( $scope ) {
 			echo '<div class="scope"><strong>' . esc_html__( 'Requested scope:', 'ai-copilot-content-generator' ) . '</strong> ' . esc_html( $scope ) . '</div>';

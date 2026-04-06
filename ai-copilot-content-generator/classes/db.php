@@ -22,21 +22,21 @@ class WaicDb {
 		$res = null;
 		$query = self::prepareQuery($query, $args);
 		self::$query = $query;
-		$wpdb->waic_prepared_query = $wpdb->prepare($query, $args);
+		$wpdb->waic_prepared_query = $wpdb->prepare($query, $args); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		switch ($get) {
 			case 'one':
-				$res = $wpdb->get_var($wpdb->waic_prepared_query);
+				$res = $wpdb->get_var($wpdb->waic_prepared_query); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				break;
 			case 'row':
-				$res = $wpdb->get_row($wpdb->waic_prepared_query, $outputType);
+				$res = $wpdb->get_row($wpdb->waic_prepared_query, $outputType); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				break;
 			case 'col':
-				$res = $wpdb->get_col($wpdb->waic_prepared_query);
+				$res = $wpdb->get_col($wpdb->waic_prepared_query); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				break;
 			case 'all':
 			default:
-				$res = $wpdb->get_results($wpdb->waic_prepared_query, $outputType);
+				$res = $wpdb->get_results($wpdb->waic_prepared_query, $outputType); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 				break;
 		}
 		return $res;
@@ -49,6 +49,7 @@ class WaicDb {
 	public static function query( $query, $affected = false, $args = array(1) ) {
 		global $wpdb;
 		$wpdb->waic_prepared_query = self::prepareQuery($query, $args);
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $affected ? $wpdb->query($wpdb->waic_prepared_query) : ( $wpdb->query($wpdb->waic_prepared_query) === false ? false : true );
 	}
 	/**
@@ -80,7 +81,7 @@ class WaicDb {
 	public static function prepareQuery( $query, &$args = array(1) ) {
 		global $wpdb;
 		if (self::$prepareQ) {
-			$query = $wpdb->prepare($query);
+			$query = $wpdb->prepare($query); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 		}
 		if (empty($args)) {
 			$args = array(1);
@@ -149,13 +150,14 @@ class WaicDb {
 		return waicDateToTimestamp($arr[2] . WAIC_DATE_DL . $arr[1] . WAIC_DATE_DL . $arr[0]);
 	}
 	public static function exist( $table, $column = '', $value = '' ) {
+		$table = self::controlTableName($table);
 		if (empty($column) && empty($value)) {       //Check if table exist
 			$args = array(1);
 			$res = self::get('SHOW TABLES LIKE %s', 'one', ARRAY_A, array(self::prepareQuery($table, $args)));
 		} elseif (empty($value)) {                   //Check if column exist
 			$res = self::get('SHOW COLUMNS FROM ' . $table . ' LIKE %s', 'one', ARRAY_A, array($column));
 		} else {                                    //Check if value in column table exist
-			$res = self::get('SELECT COUNT(*) AS total FROM ' . $table . ' WHERE ' . $column . ' = "' . $value . '"', 'one');
+			$res = self::get("SELECT COUNT(*) AS total FROM `{$table}` WHERE {$column} = %s", 'one', ARRAY_A, array($value));
 		}
 		return !empty($res);
 	}
@@ -184,16 +186,19 @@ class WaicDb {
 		return $wpdb->_escape($data);
 	}
 	public static function getTableColumns( $table ) {
-		return self::get('SHOW COLUMNS FROM ' . $table);
+		$table = self::controlTableName($table);
+		return self::get("SHOW COLUMNS FROM {$table}");
 	}
 	public static function getAutoIncrement( $table ) {
+		$table = self::controlTableName($table);
 		return (int) self::get('SELECT AUTO_INCREMENT
 			FROM information_schema.tables
-			WHERE table_name = "' . $table . '"
-			AND table_schema = DATABASE( );', 'one');
+			WHERE table_name = %s
+			AND table_schema = DATABASE( );', 'one', ARRAY_A, array($table));
 	}
 	public static function setAutoIncrement( $table, $autoIncrement ) {
-		return self::query('ALTER TABLE `' . $table . '` AUTO_INCREMENT = ' . $autoIncrement . ';');
+		$table = self::controlTableName($table);
+		return self::query("ALTER TABLE `{$table}` AUTO_INCREMENT = %d", false, array($autoIncrement));
 	}
 	public static function createTemporaryTable( $table, $sql, $strusture = false ) {
 		$resultTable = $table;
@@ -217,6 +222,15 @@ class WaicDb {
 		return $resultTable;
 	}
 	public static function existsTableColumn( $table, $column ) {
-		return self::get("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name='" . $table . "' AND table_schema=DATABASE( ) AND column_name='" . $column . "'", 'one') == 1;
+		$table = self::controlTableName($table);
+		return self::get("SELECT 1 FROM INFORMATION_SCHEMA.COLUMNS WHERE table_name=%s AND table_schema=DATABASE( ) AND column_name=%s", 'one', ARRAY_A, array($table, $column)) == 1;
+	}
+	public static function controlTableName( $table ) {
+		global $wpdb;
+		$table = str_replace(
+			array('#__', '^__', '@__'), 
+			array($wpdb->prefix, WAIC_DB_PREF, $wpdb->prefix . WAIC_DB_PREF),
+			$table);
+		return sanitize_key($table);
 	}
 }

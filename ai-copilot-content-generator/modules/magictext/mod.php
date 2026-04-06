@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 class WaicMagictext extends WaicModule {
 	public function init() {
 		WaicDispatcher::addFilter('mainAdminTabs', array($this, 'addAdminTab'));

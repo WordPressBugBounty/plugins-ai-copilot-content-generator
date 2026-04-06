@@ -2,11 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $tools = $props['tools'];
 $prodObj = $props['obj'];
 $objId = $prodObj->get_id();
 $setFeatured = WaicUtils::getArrayValue($tools, 'prod_card_featured', 0, 1) && $prodObj->is_featured();
+// phpcs:enable
 ?>
 <div class="waic-chatbot-card waic-card-prod waic-card-ver" data-obj-id="<?php echo esc_attr($objId); ?>" data-href="<?php echo esc_url($prodObj->get_permalink()); ?>">
 	<?php if (WaicUtils::getArrayValue($tools, 'prod_card_image', 0, 1)) { ?>
@@ -29,7 +31,7 @@ $setFeatured = WaicUtils::getArrayValue($tools, 'prod_card_featured', 0, 1) && $
 			<div class="waic-card-desc"><?php echo wp_kses_post($prodObj->get_short_description()); ?></div>
 		<?php } ?>
 		<?php if (WaicUtils::getArrayValue($tools, 'prod_card_price', 0, 1)) { ?>
-			<div class="waic-card-price"><?php echo $prodObj->get_price_html(); ?></div>
+			<div class="waic-card-price"><?php echo wp_kses_post($prodObj->get_price_html()); ?></div>
 		<?php } ?>
 		<?php if (WaicUtils::getArrayValue($tools, 'prod_card_cart', 0, 1)) { ?>
 			<div class="waic-card-cart"><?php echo do_shortcode('[add_to_cart id="' . $objId . '" class="" style="" show_price="false"]'); ?></div>

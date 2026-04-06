@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $pcData = $props['pc_data'];
 ?>
@@ -31,3 +32,5 @@ $pcData = $props['pc_data'];
 		<?php } ?>
 	</div>
 </div>
+<?php 
+// phpcs:enable

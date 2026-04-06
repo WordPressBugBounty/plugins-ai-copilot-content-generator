@@ -2,10 +2,12 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $imgPath = $props['image_path'];
 $data = $props['data'];
 $step = $props['step'];
+// phpcs:enable
 ?>
 <div id="waicGuidePopup" class="waic-admin-popup waic-guide-popup waic-popup-compact<?php echo empty($props['is_skipped']) ? '' : ' waic-popup-hidden'; ?>" style="display:none;" data-step="<?php echo esc_attr($step); ?>">
 	<div class="waic-popup-panel">

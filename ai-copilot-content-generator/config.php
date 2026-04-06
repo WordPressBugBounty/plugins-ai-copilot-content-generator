@@ -12,7 +12,7 @@ if (!defined('WPLANG') || WPLANG == '') {
 define('WAIC_DS', DIRECTORY_SEPARATOR);
 define('WAIC_PLUG_NAME', basename(dirname(__FILE__)));
 define('WAIC_DIR', WP_PLUGIN_DIR . WAIC_DS . WAIC_PLUG_NAME . WAIC_DS);
-define('WAIC_LOG_DIR', WAIC_DIR . 'logs' . WAIC_DS);
+define('WAIC_LOG_DIR', WP_CONTENT_DIR . WAIC_DS . 'waic_logs');
 define('WAIC_CLASSES_DIR', WAIC_DIR . 'classes' . WAIC_DS);
 define('WAIC_TABLES_DIR', WAIC_CLASSES_DIR . 'tables' . WAIC_DS);
 define('WAIC_HELPERS_DIR', WAIC_CLASSES_DIR . 'helpers' . WAIC_DS);
@@ -46,7 +46,7 @@ define('WAIC_MAIN_FILE', 'ai-copilot-content-generator.php');
 
 define('WAIC_DEFAULT', 'default');
 
-define('WAIC_VERSION', '1.4.10');
+define('WAIC_VERSION', '1.4.14');
 
 define('WAIC_CLASS_PREFIX', 'waicc');
 define('WAIC_TEST_MODE', true);

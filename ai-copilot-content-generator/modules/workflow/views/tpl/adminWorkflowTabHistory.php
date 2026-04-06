@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <section class="wbw-body-history">
 	<div class="wbw-table-list mt-3">

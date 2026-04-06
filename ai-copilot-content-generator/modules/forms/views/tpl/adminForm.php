@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 ?>
 <section class="wbw-body-options">
@@ -178,3 +179,5 @@ $props = $this->props;
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

@@ -192,16 +192,11 @@ class WaicAssets {
 		}
 	}
 	public function loadCodemirror() {
-		$path = WAIC_LIB_PATH . 'codemirror/';
-		WaicFrame::_()->addStyle('waic-codemirror', $path . 'codemirror.css');
-		WaicFrame::_()->addStyle('waic-codemirror-addon-hint', $path . 'addon/hint/show-hint.css');
-		WaicFrame::_()->addScript('waic-codemirror', $path . 'codemirror.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-addon-show-hint', $modPath . 'lib/codemirror/addon/hint/show-hint.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-addon-xml-hint', $modPath . 'lib/codemirror/addon/hint/xml-hint.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-addon-html-hint', $modPath . 'lib/codemirror/addon/hint/html-hint.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-mode-xml', $modPath . 'lib/codemirror/mode/xml/xml.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-mode-javascript', $modPath . 'lib/codemirror/mode/javascript/javascript.js');
-		WaicFrame::_()->addScript('waic-codemirror-mode-css', $path . 'mode/css/css.js');
-		//WaicFrame::_()->addScript('wtbp-codemirror-mode-htmlmixed', $modPath . 'lib/codemirror/mode/htmlmixed/htmlmixed.js');
+		//WaicFrame::_()->addScript('codemirror');
+		$path = WAIC_LIB_PATH . 'cdmirror/';
+		WaicFrame::_()->addStyle('waic-cdmirror', $path . 'cdmirror.css');
+		WaicFrame::_()->addStyle('waic-cdmirror-addon-hint', $path . 'addon/hint/show-hint.css');
+		WaicFrame::_()->addScript('waic-cdmirror', $path . 'cdmirror.js');
+		WaicFrame::_()->addScript('waic-cdmirror-mode-css', $path . 'mode/css/css.js');
 	}
 }

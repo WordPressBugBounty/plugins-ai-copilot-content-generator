@@ -2,13 +2,10 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $general = WaicUtils::getArrayValue($props['settings'], 'general', array(), 2);
 
-/*$modes = array(
-	'chat' => __('Chat', 'ai-copilot-content-generator'),
-	//'assistant' => __('Assistant', 'ai-copilot-content-generator'),
-);*/
 $limitRoles = WaicUtils::getArrayValue($general, 'limit_roles', array(), 2);
 $roles = WaicUtils::getAllUserRolesList();
 ?>
@@ -274,3 +271,5 @@ $n = 0;
 		</div>
 	</div>
 </section>
+<?php
+// phpcs:enable

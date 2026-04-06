@@ -124,7 +124,7 @@ class WaicLogic_lp_users extends WaicLogic {
 			$cnt = $result->total_users;
 			$loopIds = $result->results;
 		}
-		wp_reset_query();
+		wp_reset_postdata();
 		
 		$this->_results = array(
 			'result' => array(

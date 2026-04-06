@@ -749,7 +749,7 @@ class WaicPostscreateModel extends WaicModel {
 									$f = WaicUtils::getTimestampFrom($from);
 									$t = WaicUtils::getTimestampFrom($to);
 									if (!empty($f) && !empty($t)) {
-										$dt = WaicUtils::getFormatedDateTimeDB(rand($f, $t));
+										$dt = WaicUtils::getFormatedDateTimeDB(wp_rand($f, $t));
 									}
 								}
 								break;
@@ -1535,6 +1535,7 @@ class WaicPostscreateModel extends WaicModel {
 		$imageType = end($array);
 		$uniqName = md5($imageUrl);
 		$fileName = $uniqName . '.' . $imageType;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$checkExist = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->postmeta} WHERE meta_value LIKE %s", '%/' . $wpdb->esc_like($fileName)));
 		if ($checkExist) {
 			$attId = $checkExist->post_id;

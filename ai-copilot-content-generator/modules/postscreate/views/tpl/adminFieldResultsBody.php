@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $bodys = WaicUtils::getArrayValue($data, 'r', array(), 2);//$data['r'];
 $isOne = count($bodys) <= 1;
@@ -53,3 +54,5 @@ if ($isOne) {
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

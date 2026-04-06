@@ -2,11 +2,13 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $preset = $props['preset'];
 $isPreview = $props['preview'];
 $classes = $props['classes'];
 $viewId = $props['view_id'];
+// phpcs:enable
 ?>
 <div class="waic-chatbot-widget-wrapper" data-preset="<?php echo esc_attr($preset); ?>"<?php echo ( $isPreview ? '' : ' style="display:none;"' ); ?>>
 <?php if ($isPreview) { ?>

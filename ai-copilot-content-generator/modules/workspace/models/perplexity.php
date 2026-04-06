@@ -44,7 +44,7 @@ class WaicPerplexityModel extends WaicModel implements WaicAIProviderInterface {
 	}
 	
 	public function addSettingsForStreamPerplexity( $handle ) {
-		curl_setopt($handle, CURLOPT_TIMEOUT, 200);
+		curl_setopt($handle, CURLOPT_TIMEOUT, 200); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 	}
 	public function setApiOptions( $options ) {
 		$real = WaicFrame::_()->getModule('options')->get('api');

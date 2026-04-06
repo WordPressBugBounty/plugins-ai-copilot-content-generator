@@ -100,7 +100,7 @@ class WaicFrame extends WaicBaseObject {
 	}
 	public function init() {
 		WaicReq::init();
-		WaicCache::_()->init();
+		//WaicCache::_()->init();
 		
 		$this->_extractTables();
 
@@ -127,16 +127,17 @@ class WaicFrame extends WaicBaseObject {
 		register_uninstall_hook(WAIC_DIR . WAIC_DS . WAIC_MAIN_FILE, array('WaicUtils', 'deletePlugin'));
 		register_deactivation_hook(WAIC_DIR . WAIC_DS . WAIC_MAIN_FILE, array( 'WaicUtils', 'deactivatePlugin' ) );
 
-		add_action('init', array($this, 'connectLang'));
+		//add_action('init', array($this, 'connectLang'));
+		$waicLangOK = true;
 		//WaicUtils::setTimeZone();
 	}
 	public function isSuccessInit() {
 		return !empty($this->_modules) && $this->getModule('options') && $this->getModule('adminmenu');
 	}
-	public function connectLang() {
+	/*public function connectLang() {
 		global $waicLangOK;
 		$waicLangOK = load_plugin_textdomain('ai-copilot-content-generator', false, WAIC_PLUG_NAME . '/languages/');
-	}
+	}*/
 	/**
 	 * Check permissions for action in controller by $code and made corresponding action
 	 *
@@ -498,13 +499,23 @@ class WaicFrame extends WaicBaseObject {
 		return 'https://aiwuplugin.com';
 	}
 	private function _writeLog( $data, $type ) {
-		if (is_array($data)) {
+		if (!file_exists(WAIC_LOG_DIR)) {
+			wp_mkdir_p(WAIC_LOG_DIR);
+			$indexFile = WAIC_LOG_DIR . WAIC_DS . 'index.php';
+			file_put_contents($indexFile, '');
+		}
+
+		/*if (is_array($data)) {
 			ob_start();
 			var_dump($data); 
 			$data = ob_get_clean();
+		}*/
+		if (is_array($data)) {
+			//$data = print_r($data, true);
+			$data = wp_json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
 		}
 		$data = gmdate('c') . ' ' . $type . ': ' . $data . PHP_EOL;
-		file_put_contents(WAIC_LOG_DIR . 'waic' . gmdate('Y-m-d') . '.log', $data, FILE_APPEND);
+		file_put_contents(WAIC_LOG_DIR . WAIC_DS . 'waic' . gmdate('Y-m-d') . '.log', $data, FILE_APPEND);
 	}
 	public function saveDebugLogging( $debug = '', $wc = true, $typ = 'DEBUG' ) {
 		if ($this->getModule('options')->getModel()->get('plugin', 'logging') == 1) {

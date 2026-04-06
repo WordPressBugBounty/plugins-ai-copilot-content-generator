@@ -371,7 +371,7 @@ class WaicIntegration_telegram extends WaicIntegration {
 					if (false === $tmpPath) {
 						$fileUrl = empty($data['document']) ? '' : $data['document'];
 						if (empty($filename)) {
-							$filename = basename(parse_url($fileUrl, PHP_URL_PATH));
+							$filename = basename(wp_parse_url($fileUrl, PHP_URL_PATH));
 						}
 						$tmpPath = get_temp_dir() . $filename;
 						$responseFile = wp_remote_get($fileUrl);
@@ -391,15 +391,15 @@ class WaicIntegration_telegram extends WaicIntegration {
 					if ($tmpPath) {
 						$mime = mime_content_type($tmpPath);
 						$data['document'] = new \CURLFile($tmpPath);
-						$ch = curl_init();
-						curl_setopt($ch, CURLOPT_URL, $url);
-						curl_setopt($ch, CURLOPT_POST, true);
-						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-						curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+						$ch = curl_init(); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_init
+						curl_setopt($ch, CURLOPT_URL, $url); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+						curl_setopt($ch, CURLOPT_POST, true); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
+						curl_setopt($ch, CURLOPT_POSTFIELDS, $data); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_setopt
 
-						$response = curl_exec($ch);
-						$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-						curl_close($ch);
+						$response = curl_exec($ch); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_exec
+						$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_getinfo
+						curl_close($ch); // phpcs:ignore WordPress.WP.AlternativeFunctions.curl_curl_close
 						if (200 !== $httpCode) {
 							$result['error'] = 'Telegram API error: HTTP ' . $httpCode;
 						} else {
@@ -436,7 +436,7 @@ class WaicIntegration_telegram extends WaicIntegration {
 			}
 		}
 		if ($tmpPath) {
-			unlink($tmpPath);
+			wp_delete_file($tmpPath);
 		}
 		return $result;
 	}

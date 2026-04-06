@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $curField = $this->props['cur_field'];
 $isTemp = '#n#' === $curField;
@@ -57,7 +58,7 @@ $fields = $this->props['fields'];
 			?>
 	</div>
 </div>
-<div class="wbw-settings-form wbw-settings-sub row<?php echo esc_attr($hidden); ?>" data-parent-select="resets[<? echo esc_attr($curField); ?>][field]" data-select-value="selected">
+<div class="wbw-settings-form wbw-settings-sub row<?php echo esc_attr($hidden); ?>" data-parent-select="resets[<?php echo esc_attr($curField); ?>][field]" data-select-value="selected">
 	<div class="wbw-settings-label col-2"></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info_leer.png'); ?>" class="wbw-tooltip">
@@ -95,7 +96,7 @@ $fields = $this->props['fields'];
 			?>
 	</div>
 </div>
-<div class="wbw-settings-form wbw-settings-sub row<?php echo esc_attr($hidden); ?>" data-parent-select="resets[<? echo esc_attr($curField); ?>][output]" data-select-value="selected">
+<div class="wbw-settings-form wbw-settings-sub row<?php echo esc_attr($hidden); ?>" data-parent-select="resets[<?php echo esc_attr($curField); ?>][output]" data-select-value="selected">
 	<div class="wbw-settings-label col-2"></div>
 	<div class="wbw-settings-fields col-10">
 		<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info_leer.png'); ?>" class="wbw-tooltip">
@@ -111,3 +112,5 @@ $fields = $this->props['fields'];
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

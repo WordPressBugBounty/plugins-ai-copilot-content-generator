@@ -208,7 +208,7 @@ class WaicWorkflowView extends WaicView {
 		}
 
 		if (empty($html)) {
-			$html = '<div class="waic-log-error">' . __('No logs found', '') . '</div>';
+			$html = '<div class="waic-log-error">' . __('No logs found', 'ai-copilot-content-generator') . '</div>';
 		} else {
 			$html .= '</div>';
 		}

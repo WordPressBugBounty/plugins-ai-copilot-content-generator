@@ -98,7 +98,7 @@ class WaicTrigger_sy_url_visited extends WaicTrigger {
 	public function controlRun( $args = array() ) {
 		$url = $args;
 		$params = $this->getParam('params');
-		$query = parse_url($url, PHP_URL_QUERY);
+		$query = wp_parse_url($url, PHP_URL_QUERY);
 		parse_str($query, $queryParams);
 
 		if (!empty($params)) {
@@ -135,7 +135,7 @@ class WaicTrigger_sy_url_visited extends WaicTrigger {
 			}
 		}
 		
-		$result = array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'query_url' => $url);
+		$result = array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'query_url' => $url);
 		$fields = WaicUtils::flattenJson($queryParams);
 		
 		$result = $this->getFieldsArray($fields, 'query_param', $result);

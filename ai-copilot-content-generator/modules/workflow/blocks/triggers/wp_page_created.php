@@ -110,7 +110,7 @@ class WaicTrigger_wp_page_created extends WaicTrigger {
 				return false;
 			}
 		} 
-		return array('date' => date('Y-m-d'), 'time' => date('H:i:s'), 'waic_page_id' => $postId, 'obj_id' => $postId);
+		return array('date' => date_i18n('Y-m-d'), 'time' => date_i18n('H:i:s'), 'waic_page_id' => $postId, 'obj_id' => $postId);
 	}
 	
 }

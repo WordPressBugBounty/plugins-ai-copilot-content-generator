@@ -131,7 +131,7 @@ class WaicLogic_un_delay extends WaicLogic {
 				$dayOfWeek = $this->getParam('week_day');
 				$timeOfDay = $this->getParam('week_time');
 
-				if (strtolower(date('l', $now)) === strtolower($dayOfWeek) && $now < strtotime("today $timeOfDay")) {
+				if (strtolower(date_i18n('l', $now)) === strtolower($dayOfWeek) && $now < strtotime("today $timeOfDay")) {
 					$waiting = strtotime("this $dayOfWeek $timeOfDay");
 				} else {
 					$waiting = strtotime("next $dayOfWeek $timeOfDay");

@@ -34,6 +34,7 @@ abstract class WaicAction extends WaicBuilderBlock {
 		$imageType = end($array);
 		$uniqName = md5($imageUrl);
 		$fileName = $uniqName . '.' . $imageType;
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$checkExist = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->postmeta} WHERE meta_value LIKE %s", '%/' . $wpdb->esc_like($fileName)));
 		if ($checkExist) {
 			$attId = $checkExist->post_id;

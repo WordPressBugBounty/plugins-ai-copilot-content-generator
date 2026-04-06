@@ -25,7 +25,7 @@ class WaicUtils {
 	public static function serialize( $data ) {
 		return serialize($data);
 	}
-	public static function createDir( $path, $params = array('chmod' => null, 'httpProtect' => false) ) {
+	/*public static function createDir( $path, $params = array('chmod' => null, 'httpProtect' => false) ) {
 		if (@mkdir($path)) {
 			if (!is_null($params['chmod'])) {
 				@chmod($path, $params['chmod']);
@@ -36,7 +36,7 @@ class WaicUtils {
 			return true;
 		}
 		return false;
-	}
+	}*/
 	public static function httpProtectDir( $path ) {
 		$content = 'DENY FROM ALL';
 		if (strrpos($path, WAIC_DS) != strlen($path)) {
@@ -53,7 +53,7 @@ class WaicUtils {
 	 * @param string $source path to source directory
 	 * @params string $destination path to destination directory
 	 */
-	public static function copyDirectories( $source, $destination ) {
+	/*public static function copyDirectories( $source, $destination ) {
 		if (is_dir($source)) {
 			@mkdir($destination);
 			$directory = dir($source);
@@ -72,25 +72,25 @@ class WaicUtils {
 		} else {
 			copy( $source, $destination );
 		}
-	}
+	}*/
 	public static function getIP() {
 		$res = '';
 		if (!isset($_SERVER['HTTP_CLIENT_IP']) || empty($_SERVER['HTTP_CLIENT_IP'])) {
 			if (!isset($_SERVER['HTTP_X_REAL_IP']) || empty($_SERVER['HTTP_X_REAL_IP'])) {
 				if (!isset($_SERVER['HTTP_X_SUCURI_CLIENTIP']) || empty($_SERVER['HTTP_X_SUCURI_CLIENTIP'])) {
 					if (!isset($_SERVER['HTTP_X_FORWARDED_FOR']) || empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-						$res = empty($_SERVER['REMOTE_ADDR']) ? '' : sanitize_text_field($_SERVER['REMOTE_ADDR']);
+						$res = empty($_SERVER['REMOTE_ADDR']) ? '' : sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 					} else {
-						$res = sanitize_text_field($_SERVER['HTTP_X_FORWARDED_FOR']);
+						$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
 					}
 				} else {
-					$res = sanitize_text_field($_SERVER['HTTP_X_SUCURI_CLIENTIP']);
+					$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_SUCURI_CLIENTIP']));
 				}
 			} else {
-				$res = sanitize_text_field($_SERVER['HTTP_X_REAL_IP']);
+				$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_REAL_IP']));
 			}
 		} else {
-			$res = sanitize_text_field($_SERVER['HTTP_CLIENT_IP']);
+			$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
 		}
 		
 		return $res;
@@ -129,9 +129,9 @@ class WaicUtils {
 		return $arr;
 	}
 	public static function deleteFile( $str ) {
-		return @unlink($str);
+		return wp_delete_file($str);
 	}
-	public static function deleteDir( $str ) {
+	/*public static function deleteDir( $str ) {
 		if (is_file($str)) {
 			return self::deleteFile($str);
 		} elseif (is_dir($str)) {
@@ -141,7 +141,7 @@ class WaicUtils {
 			}
 			return @rmdir($str);
 		}
-	}
+	}*/
 	/**
 	 * Retrives list of directories ()
 	 */
@@ -311,7 +311,7 @@ class WaicUtils {
 			$allowedChars = strtolower($allowedChars);
 		}
 		while (strlen($result) < $length) {
-			$result .= substr($allowedChars, rand(0, $allowedCharsLen), 1);
+			$result .= substr($allowedChars, wp_rand(0, $allowedCharsLen), 1);
 		}
 
 		return $result;
@@ -322,7 +322,7 @@ class WaicUtils {
 	 * @return string host string
 	 */
 	public static function getHost() {
-		return empty($_SERVER['HTTP_HOST']) ? '' : sanitize_text_field($_SERVER['HTTP_HOST']);
+		return empty($_SERVER['HTTP_HOST']) ? '' : sanitize_text_field(wp_unslash($_SERVER['HTTP_HOST']));
 	}
 	/**
 	 * Check if device is mobile
@@ -372,7 +372,7 @@ class WaicUtils {
 			add_action('activated_plugin', array(WaicFrame::_(), 'savePluginActivationErrors'));
 		}
 		if (function_exists('is_multisite') && is_multisite() && $networkwide) {
-			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			foreach ($blog_id as $id) {
 				if (switch_to_blog($id)) {
 					WaicInstaller::init();
@@ -393,7 +393,7 @@ class WaicUtils {
 	public static function deletePlugin() {
 		global $wpdb;
 		if (function_exists('is_multisite') && is_multisite()) {
-			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			foreach ($blog_id as $id) {
 				if (switch_to_blog($id)) {
 					WaicInstaller::delete();
@@ -408,7 +408,7 @@ class WaicUtils {
 	public static function deactivatePlugin( $networkwide ) {
 		global $wpdb;
 		if (function_exists('is_multisite') && is_multisite() && $networkwide) {
-			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
+			$blog_id = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs"); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			foreach ($blog_id as $id) {
 				if (switch_to_blog($id)) {
 					WaicInstaller::deactivate();
@@ -420,9 +420,9 @@ class WaicUtils {
 			WaicInstaller::deactivate();
 		}
 	}
-	public static function isWritable( $filename ) {
+	/*public static function isWritable( $filename ) {
 		return is_writable($filename);
-	}
+	}*/
 	
 	public static function isReadable( $filename ) {
 		return is_readable($filename);
@@ -529,7 +529,7 @@ class WaicUtils {
 		}
 	}
 	public static function getUserBrowserString() {
-		return isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field($_SERVER['HTTP_USER_AGENT']) : false;
+		return isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field(wp_unslash($_SERVER['HTTP_USER_AGENT'])) : false;
 	}
 	public static function getBrowser() {
 		$u_agent = self::getUserBrowserString();
@@ -612,7 +612,7 @@ class WaicUtils {
 	}
 	public static function getBrowserLangCode() {
 		return isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) && !empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])
-			? strtolower(substr(sanitize_text_field($_SERVER['HTTP_ACCEPT_LANGUAGE']), 0, 2))
+			? strtolower(substr(sanitize_text_field(wp_unslash($_SERVER['HTTP_ACCEPT_LANGUAGE'])), 0, 2))
 			: self::getLangCode2Letter();
 	}
 	public static function getTimeRange() {
@@ -667,7 +667,7 @@ class WaicUtils {
 	public static function getReferalHost() {
 		$refUrl = self::getReferalUrl();
 		if (!empty($refUrl)) {
-			$refer = parse_url( $refUrl );
+			$refer = wp_parse_url( $refUrl );
 			if ($refer && isset($refer['host']) && !empty($refer['host'])) {
 				return $refer['host'];
 			}
@@ -1000,13 +1000,13 @@ class WaicUtils {
 	}
 	public static function getRealUserIp() {
 		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-			$ip = $_SERVER['HTTP_CLIENT_IP'];
+			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
 		} elseif (!empty($_SERVER['HTTP_X_GT_VIEWER_IP'])) {
-			$ip = $_SERVER['HTTP_X_GT_VIEWER_IP'];
+			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_GT_VIEWER_IP']));
 		} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
 		} elseif (!empty($_SERVER['REMOTE_ADDR'])) {
-			$ip = $_SERVER['REMOTE_ADDR'];
+			$ip = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
 		} else {
 			 $ip = '127.0.0.1';
 		}
@@ -1024,7 +1024,7 @@ class WaicUtils {
 		return array_merge($start, array($key => $val), $end);
 	}
 	public static function getCountWords( $text ) {
-		$text = trim(strip_tags(html_entity_decode($text, ENT_QUOTES)));
+		$text = trim(wp_strip_all_tags(html_entity_decode($text, ENT_QUOTES)));
 		$text = preg_replace('/[\n]+/', ' ', $text);
 		$text = preg_replace('/[\s]+/', '@SEPARATOR@', $text);
 		$text_array = explode('@SEPARATOR@', $text);
@@ -1129,8 +1129,8 @@ class WaicUtils {
 		return $list;
 	}
 	public static function markdownToHtml( $content ) {
-		waicImportClass('Parsedown', WAIC_HELPERS_DIR . 'parsedown.php');
-		$Parsedown = new Parsedown();
+		waicImportClass('WaicParsedown', WAIC_HELPERS_DIR . 'parsedown.php');
+		$Parsedown = new WaicParsedown();
 		$content = $Parsedown->text( $content );
 		return $content;
 	}

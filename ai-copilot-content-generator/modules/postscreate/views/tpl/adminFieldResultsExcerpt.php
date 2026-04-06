@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <div class="wbw-settings-form wbw-settings-top row waic-field-block" data-block="excerpt">
 	<div class="wbw-settings-label col-2"><?php echo esc_html($fields[$field]['label']); ?></div>
@@ -11,7 +10,7 @@ $props = $this->props;
 		<div class="wbw-settings-field">
 		<?php 
 			WaicHtml::textarea('excerpt', array(
-				'value' => empty($data['s']) ? $props['loading_text'] : ( 2 == $data['s'] ? WaicUtils::getArrayValue($data, 'm', $props['error_text']) : WaicUtils::getArrayValue($data, 'r', $props['loading_text']) ),
+				'value' => empty($data['s']) ? $this->props['loading_text'] : ( 2 == $data['s'] ? WaicUtils::getArrayValue($data, 'm', $this->props['error_text']) : WaicUtils::getArrayValue($data, 'r', $this->props['loading_text']) ),
 				'attrs' => 'class="waic-results-' . $data['s'] . '"',
 				'rows' => 4,
 			));

@@ -2,8 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
-$imgPath = $props['img_path'];
+$imgPath = $this->props['img_path']; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 ?>
 <section class="waic-content-ad">
 	<div class="waic-ad-header-block">

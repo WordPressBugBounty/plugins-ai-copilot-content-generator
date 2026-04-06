@@ -2,7 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
+$props = $this->props; // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 ?>
 <div class="wbw-wrap">
 	<div class="wbw-plugin wbw-main">
@@ -17,14 +17,14 @@ $props = $this->props;
 					</a>
 					<nav class="wbw-navigation">
 						<ul>
-							<?php foreach ($props['tabs'] as $tabKey => $t) { ?>
+							<?php foreach ($props['tabs'] as $waicTabKey => $waicTab) { ?>
 								<?php 
-								if (isset($t['hidden']) && $t['hidden']) {
+								if (isset($waicTab['hidden']) && $waicTab['hidden']) {
 									continue;
 								}
 								?>
-								<li class="wbw-tab-nav <?php echo ( $props['activeTab'] == $tabKey ? 'active' : '' ); ?>">
-									<a href="<?php echo esc_url($t['url']); ?>"><?php echo esc_html($t['label']); ?></a>
+								<li class="wbw-tab-nav <?php echo ( $props['activeTab'] == $waicTabKey ? 'active' : '' ); ?>">
+									<a href="<?php echo esc_url($waicTab['url']); ?>"><?php echo esc_html($waicTab['label']); ?></a>
 								</li>
 							<?php } ?>
 							

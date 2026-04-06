@@ -2,12 +2,9 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
-//var_dump($fields);
 $customSlug = str_replace($field . '-', '', $block);
-//var_dump($field);
-//var_dump($block);
-//var_dump($customSlug);
 ?>
 <div class="wbw-settings-form row waic-field-block" data-block="<?php echo esc_attr($block); ?>">
 	<div class="wbw-settings-label col-2"><?php echo esc_html($fields[$field]['taxonomies'][$customSlug]); ?></div>
@@ -22,8 +19,6 @@ $customSlug = str_replace($field . '-', '', $block);
 					'orderby' => 'name',
 					'order' => 'asc',
 				);
-				//$customSlug = str_replace($field . '_', '', $block);
-				//var_dump($customSlug);
 				$terms = WaicFrame::_()->getModule('workspace')->getTaxonomyHierarchy($customSlug, $args);
 				WaicHtml::selectlist($block, array(
 					'options' => $terms,
@@ -40,3 +35,5 @@ $customSlug = str_replace($field . '-', '', $block);
 		</div>
 	</div>
 </div>
+<?php 
+// phpcs:enable

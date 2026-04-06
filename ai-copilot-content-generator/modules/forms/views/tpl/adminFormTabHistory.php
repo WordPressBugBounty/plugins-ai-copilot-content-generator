@@ -1,3 +1,8 @@
+<?php 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <section class="wbw-body-history">
 	<div class="wbw-table-list mt-3">
 		<table id="waicHistoryTable">

@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-$props = $this->props;
 ?>
 <div class="waic-gopro-parag">
 	<?php esc_html_e('Have questions or need help choosing the right option? Contact us using the form below — we’ll get back to you shortly.', 'ai-copilot-content-generator'); ?>

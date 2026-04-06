@@ -355,12 +355,65 @@ abstract class WaicBuilderBlock extends WaicBaseObject {
 		}
 		return $list;
 	}
-	public function calcExpression( $e ) {
+	/*public function calcExpression( $e ) {
 		if (preg_match('/^[0-9\.\+\-\*\/\(\) ]+$/', $e)) {
 			$result = eval("return $e;");
 			return $result;
 		} 
 		return false;
+	}*/
+	public function calcExpression( $expr ) {
+		$expr = str_replace(',', '.', $expr);
+		$expr = preg_replace('/\s+/', '', $expr);
+		if (!preg_match('/^[0-9\+\-\*\/\(\)\.]+$/', $expr)) {
+			return false;
+		}
+		$output = [];
+		$stack  = [];
+		$tokens = preg_split('/(\d+(?:\.\d+)?|[\+\-\*\/\(\)])/', $expr, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+		
+		if (false === $tokens || !is_array($tokens)) {
+			return false;
+		}
+		$precedence = ['+' => 1, '-' => 1, '*' => 2, '/' => 2];
+
+		foreach ($tokens as $t) {
+			if (is_numeric($t)) {
+				$output[] = $t;
+			} else if (isset($precedence[$t])) {
+				while (!empty($stack) && isset($precedence[end($stack)]) && $precedence[end($stack)] >= $precedence[$t]) {
+					$output[] = array_pop($stack);
+				}
+				$stack[] = $t;
+			} else if ($t === '(') {
+				$stack[] = $t;
+			} else if ($t === ')') {
+				while (!empty($stack) && end($stack) !== '(') {
+					$output[] = array_pop($stack);
+				}
+				array_pop($stack);
+			}
+		}
+		while (!empty($stack)) {
+			$output[] = array_pop($stack);
+		}
+		$calc = [];
+		foreach ($output as $t) {
+			if (is_numeric($t)) {
+				$calc[] = $t;
+			} else {
+				$b = array_pop($calc);
+				$a = array_pop($calc);
+				switch ($t) {
+					case '+': $calc[] = $a + $b; break;
+					case '-': $calc[] = $a - $b; break;
+					case '*': $calc[] = $a * $b; break;
+					case '/': $calc[] = $b != 0 ? $a / $b : false; break;
+				}
+			}
+		}
+		$result = array_pop($calc);
+		return $result;
 	}
 	public static function getOrderStatuses() {
 		$cleaned = array();

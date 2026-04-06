@@ -121,7 +121,7 @@ class WaicIntegration_mysql extends WaicIntegration {
 			//mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 			try {
-				$connection = new mysqli($host, $username, $password, $database, $port);
+				$connection = new mysqli($host, $username, $password, $database, $port); // phpcs:ignore WordPress.DB.RestrictedClasses.mysql__mysqli
 
 				if ($connection->connect_error) {
 					return 'Connection failed: ' . $connection->connect_error;
@@ -175,7 +175,7 @@ class WaicIntegration_mysql extends WaicIntegration {
 		$results = array();
 		$queryType = $this->getQueryType($query);
 		if ('SELECT' === $queryType) {
-			$result = $wpdb->get_results($query, ARRAY_A);
+			$result = $wpdb->get_results($query, ARRAY_A); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter
 			if ($wpdb->last_error) {
 				return array(
 					'success' => false,
@@ -190,7 +190,7 @@ class WaicIntegration_mysql extends WaicIntegration {
 				);
 			}
 		} else {
-			$result = $wpdb->query($query);
+			$result = $wpdb->query($query); // phpcs:ignore WordPress.DB, PluginCheck.Security.DirectDB.UnescapedDBParameter
 			if ($wpdb->last_error) {
 				return array(
 					'success' => false,

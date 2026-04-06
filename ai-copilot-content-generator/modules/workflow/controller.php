@@ -20,6 +20,7 @@ class WaicWorkflowController extends WaicController {
 						<a href="#" class="waic-action-template wbw-tooltip" title="' . esc_html__('Save as template', 'ai-copilot-content-generator'). '"><i class="fa fa-clipboard"></i></a>
 						<a href="#" class="waic-action-export wbw-tooltip" title="' . esc_html__('Export JSON', 'ai-copilot-content-generator'). '"><i class="fa fa-download"></i></a>
 					</div>';
+		$params['exclude'] = false;
 		$result = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getHistory($params);
 		
 		if ($result) {

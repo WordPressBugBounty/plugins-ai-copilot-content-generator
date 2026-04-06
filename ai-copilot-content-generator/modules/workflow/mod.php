@@ -27,14 +27,15 @@ class WaicWorkflow extends WaicModule {
 		$integ = WaicReq::getVar('cur');
 
 		header('Content-Type: text/html; charset=utf-8');
-    		echo "<script>
-			window.opener.postMessage({type: 'oauth_code', code: '$code'}, '*');
+    		echo '<script>
+			window.opener.postMessage({type: "oauth_code", code: "' . esc_js($code) . '"}, "*");
 			window.close();
-		</script>";
+		</script>';
 	}
 
 	public function controlUrlTrigger() {
-		$url = $_SERVER['REQUEST_URI'];
+		$url = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
+		//$url = $_SERVER['REQUEST_URI'];
 		if (
 			is_admin() ||
 			wp_doing_ajax() ||
@@ -110,9 +111,9 @@ class WaicWorkflow extends WaicModule {
 		$taskId = $this->getModel()->createWorkflowByTemplate($taskId);
 		$url = WaicFrame::_()->getModule('workspace')->getTaskUrl($taskId, 'builder');
 		if (headers_sent()) {
-			echo '<script type="text/javascript"> document.location.href="' . $url . '"; </script>';
+			echo '<script type="text/javascript"> document.location.href="' . esc_url($url) . '"; </script>';
 		} else {
-			wp_redirect($url);
+			wp_safe_redirect($url);
 		}
 		
 		exit;

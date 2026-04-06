@@ -2,6 +2,7 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+// phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 $props = $this->props;
 $apiOptions = WaicUtils::getArrayValue($props, 'options', array(), 2);
 $apiVariations = WaicUtils::getArrayValue($props, 'variations', array(), 2);
@@ -600,6 +601,7 @@ $loadTexts = array(
 	__('Setting up personalization... 🎯 Making it perfect!', 'ai-copilot-content-generator'),
 	__('Finalizing your AI assistant... 🎉 Ready in seconds!', 'ai-copilot-content-generator'),
 );
+// phpcs:enable
 ?>
 	<div id="waicWaitingPopup" class="waic-setup-popup-overlay wbw-hidden">
 		<div class="waic-setup-popup-body">

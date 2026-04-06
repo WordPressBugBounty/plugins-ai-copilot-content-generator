@@ -1,4 +1,7 @@
 <?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 class WaicPromoModel extends WaicModel {
 	private $_apiUrl = '';
 	private $_endGuideStep = -99;
@@ -72,6 +75,9 @@ class WaicPromoModel extends WaicModel {
 		}
 	}
 	public function getGuideSteps( $s = false, $url = false ) {
+		
+		/* translators: %1$s: plugin link, %2$s - contacts link */
+		$contacts = sprintf(__('Each tool is designed to save you time and maximize efficiency. If you need guidance on using these features, check out our %1$s or %2$s for support.', 'ai-copilot-content-generator'), '<a href="https://aiwuplugin.com/knowledge-base/">' . esc_html__('Knowledge Base', 'ai-copilot-content-generator') . '</a>', '<a href="https://aiwuplugin.com/contact/">' . esc_html__('Contact Us', 'ai-copilot-content-generator') . '</a>');
 		$steps = array(
 			array(
 				'title' => __('Welcome to AIWU plugin', 'ai-copilot-content-generator'),
@@ -98,7 +104,7 @@ class WaicPromoModel extends WaicModel {
 					'<li>' . __('Automate your blog & social media with an RSS-based AI workflow', 'ai-copilot-content-generator') . '</li>' .
 					'<li>' . __('Crosslink existing content or build new SEO content clusters', 'ai-copilot-content-generator') . '</li>' .
 					'<li>' . __('Enhance your website with AI chatbots', 'ai-copilot-content-generator') . '</li></ul>' .
-					sprintf(__('Each tool is designed to save you time and maximize efficiency. If you need guidance on using these features, check out our %1$s or %2$s for support.', 'ai-copilot-content-generator'), '<a href="https://aiwuplugin.com/knowledge-base/">' . esc_html__('Knowledge Base', 'ai-copilot-content-generator') . '</a>', '<a href="https://aiwuplugin.com/contact/">' . esc_html__('Contact Us', 'ai-copilot-content-generator') . '</a>'),
+					$contacts,
 				'next' => true,
 				'back' => true,
 				'tab' => 'workspace',
@@ -203,12 +209,12 @@ class WaicPromoModel extends WaicModel {
 		}
 		return $data;
 	}
-	public function overviewHttpRequestTimeout( $handle ) {
+	/*public function overviewHttpRequestTimeout( $handle ) {
 		curl_setopt( $handle, CURLOPT_CONNECTTIMEOUT, 30 );
 		curl_setopt( $handle, CURLOPT_TIMEOUT, 30 );
-	}
+	}*/
 	private function _req( $action, $data = array(), $mod = '' ) {
-		add_filter('http_api_curl', array($this, 'overviewHttpRequestTimeout'), 100, 1);
+		//add_filter('http_api_curl', array($this, 'overviewHttpRequestTimeout'), 100, 1);
 		
 		$data = array_merge($data, array(
 			'mod' => empty($mod) ? 'stats' : $mod,
@@ -220,7 +226,7 @@ class WaicPromoModel extends WaicModel {
 			'timeout' => 30,
 		));
 
-		remove_filter('http_api_curl', array($this, 'overviewHttpRequestTimeout'));
+		//remove_filter('http_api_curl', array($this, 'overviewHttpRequestTimeout'));
 		if (!is_wp_error($response)) {
 			$code = wp_remote_retrieve_response_code($response);
 			if (200 === $code) {

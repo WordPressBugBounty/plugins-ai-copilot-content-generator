@@ -29,7 +29,7 @@ class WaicDispatcher {
 		 * 
 		 * @since 1.0
 		*/
-		return do_action($t);
+		return do_action($t); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 	}
 	public static function addFilter( $tag, $function_to_add, $priority = 10, $accepted_args = 1 ) {
 		$t = $tag;
@@ -55,7 +55,7 @@ class WaicDispatcher {
 			* 
 			* @since 1.0
 			*/
-			return apply_filters( $t, $value );
+			return apply_filters( $t, $value ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.DynamicHooknameFound
 		}
 	}
 }

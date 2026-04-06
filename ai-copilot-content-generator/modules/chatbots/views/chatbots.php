@@ -341,7 +341,7 @@ class WaicChatbotsView extends WaicView {
 			$aware = WaicUtils::getArrayValue($context, 'aware_selectors', array('body'), 2);
 		}
 		
-		$viewId = $taskId . '-' . mt_rand(0, 999999);
+		$viewId = $taskId . '-' . wp_rand(0, 999999);
 		$class = 'waic-' . $viewId;
 		$classes = array(
 			'widget' => array($class),
