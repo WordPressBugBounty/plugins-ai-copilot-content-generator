@@ -920,7 +920,7 @@ class WaicChatbotsModel extends WaicModel {
 				$rows[] = array(
 					WaicUtils::convertDateFormat($dd, 'Y-m-d', $dFormat),
 					( empty($uId) ? $guest : $log['user_login'] ),
-					$ip,
+					esc_html($ip),
 					$modes[$mode],
 					$log['sum_tokens'],
 					$log['duration'],

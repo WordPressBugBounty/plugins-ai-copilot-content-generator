@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: AI Copilot - Content Generator
+ * Plugin Name: AI Chatbot & Workflow Automation by AIWU 
  * Description: AI Copilot for WordPress saves time and boosts your website's performance with human-like content with GPT, Internal AI and more.
- * Version: 1.4.14
+ * Version: 1.4.15
  * Author: AIWU
  * Author URI: https://aiwuplugin.com/
  * Text Domain: ai-copilot-content-generator
