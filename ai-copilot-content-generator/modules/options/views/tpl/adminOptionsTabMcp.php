@@ -7,6 +7,12 @@ $props = $this->props;
 $options = WaicUtils::getArrayValue($props['options'], 'mcp', array(), 2);
 $variations = WaicUtils::getArrayValue($props['variations'], 'mcp', array(), 2);
 $defaults = WaicUtils::getArrayValue($props['defaults'], 'mcp', array(), 2);
+
+// Shared MCP URL variables — declared once, used across all tabs (Url for connectors / Claude / ChatGPT).
+// Declared at the top so no tab has an implicit dependency on another tab's rendering order.
+$mcpToken    = WaicUtils::getArrayValue($options, 'mcp_token', '');
+$mcpHasToken = !empty($mcpToken);
+$mcpBaseUrl  = home_url() . '/wp-json/mcp/v1/sse';
 ?>
 <section class="wbw-body-options-api">
 	<div class="wbw-group-title">
@@ -57,44 +63,31 @@ $defaults = WaicUtils::getArrayValue($props['defaults'], 'mcp', array(), 2);
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Url for connectors', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
-			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Copy this base URL and append your Access Token as ?token=YOUR_TOKEN when adding a connector (e.g. ChatGPT Developer Mode). For Claude.ai with OAuth 2.1 enabled, use the OAuth Url field below instead — no token needed.', 'ai-copilot-content-generator')); ?>">
+			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Copy this URL and paste it into your AI connector settings. It already includes your Access Token. For Claude.ai with OAuth 2.1 enabled, the token acts as a fallback if OAuth discovery fails.', 'ai-copilot-content-generator')); ?>">
 			<div class="wbw-settings-field">
 			<?php
-				$mcpToken = WaicUtils::getArrayValue($options, 'mcp_token', '');
-				$tokenSuffix = !empty($mcpToken) ? '?token=' . $mcpToken : '?token=GENERATE_TOKEN_ABOVE';
+				$tokenSuffix = $mcpHasToken ? '?token=' . $mcpToken : '?token=GENERATE_TOKEN_ABOVE';
+				$mainClasses = 'waic-mcp-url-field wbw-fullwidth-max' . ($mcpHasToken ? ' waic-fake-password' : '');
 				WaicHtml::text('', array(
-					'value' => home_url() . '/wp-json/mcp/v1/sse' . $tokenSuffix,
-					'attrs' => 'readonly id="waicMCPUrl" class="wbw-fullwidth-max"',
+					'value' => $mcpBaseUrl . $tokenSuffix,
+					'attrs' => 'readonly id="waicMCPUrl" class="' . esc_attr($mainClasses) . '" data-mcp-base-url="' . esc_attr($mcpBaseUrl) . '"',
 				));
 				?>
 			</div>
+			<button type="button" id="waicCopyMCPUrl" class="wbw-button wbw-button-small waic-copy-btn" data-target="#waicMCPUrl"><?php esc_html_e('Copy', 'ai-copilot-content-generator'); ?></button>
+			<?php if ($mcpHasToken) : ?>
+			<button type="button" id="waicViewMCPUrl" class="wbw-button wbw-button-small m-0 waic-view-btn" data-target="#waicMCPUrl"><?php esc_html_e('View', 'ai-copilot-content-generator'); ?></button>
+			<?php endif; ?>
 		</div>
 	</div>
-<?php 
-$mcpOAuth = WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1);
-?>
 	<div class="wbw-settings-form row">
 		<div class="wbw-settings-label col-2"><?php esc_html_e('Enable OAuth 2.1', 'ai-copilot-content-generator'); ?></div>
 		<div class="wbw-settings-fields col-10">
 			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Enable OAuth 2.1 authentication for MCP connectors. Required for Claude.ai integration. When enabled, the plugin acts as both an OAuth Authorization Server and Resource Server, providing /.well-known discovery endpoints, PKCE authorization flow, and Dynamic Client Registration.', 'ai-copilot-content-generator')); ?>">
 			<div class="wbw-settings-field">
-			<?php 
+			<?php
 				WaicHtml::checkbox('mcp[mcp_oauth]', array(
-					'checked' => $mcpOAuth,
-				));
-				?>
-			</div>
-		</div>
-	</div>
-	<div class="wbw-settings-form row<?php echo empty($mcpOAuth) ? ' wbw-hidden' : ''; ?>" data-parent-check="mcp[mcp_oauth]">
-		<div class="wbw-settings-label col-2"><?php esc_html_e('OAuth Url (for Claude.ai)', 'ai-copilot-content-generator'); ?></div>
-		<div class="wbw-settings-fields col-10">
-			<img src="<?php echo esc_url(WAIC_IMG_PATH . '/info.png'); ?>" class="wbw-tooltip" title="<?php echo esc_attr(__('Use this URL when adding a connector in Claude.ai → Settings → Connectors. Claude will discover the OAuth endpoints automatically via /.well-known metadata. No token parameter needed in the URL.', 'ai-copilot-content-generator')); ?>">
-			<div class="wbw-settings-field">
-			<?php 
-				WaicHtml::text('', array(
-					'value' => home_url() . '/wp-json/mcp/v1/sse',
-					'attrs' => 'readonly class="wbw-fullwidth-max"',
+					'checked' => WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1),
 				));
 				?>
 			</div>
@@ -128,14 +121,21 @@ $mcpOAuth = WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1);
 				</div>
 				<div class="wbw-instrs-block">
 					<div class="wbw-instrs-title"><div class="wbw-instrs-icon">3</div><?php esc_html_e('Add Custom Connector', 'ai-copilot-content-generator'); ?></div>
-					<div class="wbw-instrs-info"><?php esc_html_e('Click "Add custom connector" and enter your MCP endpoint URL (without token parameter):', 'ai-copilot-content-generator'); ?>
-					<?php 
+					<div class="wbw-instrs-info"><?php esc_html_e('Click "Add custom connector" and paste this URL:', 'ai-copilot-content-generator'); ?>
+					<?php
+						$claudeConnectorUrl = $mcpHasToken ? $mcpBaseUrl . '?token=' . $mcpToken : $mcpBaseUrl;
+						$claudeClasses = 'waic-mcp-url-field wbw-fullwidth-max' . ($mcpHasToken ? ' waic-fake-password' : '');
 						WaicHtml::text('', array(
-						'value' => home_url() . '/wp-json/mcp/v1/sse',
-						'attrs' => 'readonly',
+						'value' => $claudeConnectorUrl,
+						'attrs' => 'readonly id="waicClaudeMCPUrl" class="' . esc_attr($claudeClasses) . '" data-mcp-base-url="' . esc_attr($mcpBaseUrl) . '"',
 						));
 						?>
-					<br><small><?php esc_html_e('Claude will automatically discover OAuth endpoints and show an authorization page.', 'ai-copilot-content-generator'); ?></small>
+					<button type="button" id="waicCopyClaudeMCPUrl" class="wbw-button wbw-button-small waic-copy-btn" data-target="#waicClaudeMCPUrl"><?php esc_html_e('Copy', 'ai-copilot-content-generator'); ?></button>
+					<?php if ($mcpHasToken) : ?>
+					<button type="button" id="waicViewClaudeMCPUrl" class="wbw-button wbw-button-small m-0 waic-view-btn" data-target="#waicClaudeMCPUrl"><?php esc_html_e('View', 'ai-copilot-content-generator'); ?></button>
+					<br><small class="waic-secret-warning">⚠ <?php esc_html_e('This URL contains your Access Token. Do not share it publicly or in screenshots.', 'ai-copilot-content-generator'); ?></small>
+					<?php endif; ?>
+					<br><small><?php esc_html_e('With OAuth 2.1 enabled, Claude discovers OAuth endpoints automatically and shows an authorization page. The token in the URL acts as a fallback if /.well-known/ endpoints are blocked by the server (e.g. by nginx or a security plugin).', 'ai-copilot-content-generator'); ?></small>
 					</div>
 				</div>
 				<div class="wbw-instrs-block">
@@ -165,12 +165,18 @@ $mcpOAuth = WaicUtils::getArrayValue($options, 'mcp_oauth', 0, 1);
 					<div class="wbw-instrs-info"><?php esc_html_e('ChatGPT → Settings → Connectors → Create New Connector', 'ai-copilot-content-generator'); ?>
 					<ul>
 						<li>URL:
-						<?php 
+						<?php
+							$chatgptConnectorUrl = $mcpBaseUrl . '?token=' . ($mcpHasToken ? $mcpToken : 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
+							$chatgptClasses = 'waic-mcp-url-field wbw-fullwidth-max' . ($mcpHasToken ? ' waic-fake-password' : '');
 							WaicHtml::text('', array(
-							'value' => home_url() . '/wp-json/mcp/v1/sse?token=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-							'attrs' => 'readonly',
+							'value' => $chatgptConnectorUrl,
+							'attrs' => 'readonly id="waicChatgptMCPUrl" class="' . esc_attr($chatgptClasses) . '" data-mcp-base-url="' . esc_attr($mcpBaseUrl) . '"',
 							));
 							?>
+						<button type="button" id="waicCopyChatgptMCPUrl" class="wbw-button wbw-button-small waic-copy-btn" data-target="#waicChatgptMCPUrl"><?php esc_html_e('Copy', 'ai-copilot-content-generator'); ?></button>
+						<?php if ($mcpHasToken) : ?>
+						<button type="button" id="waicViewChatgptMCPUrl" class="wbw-button wbw-button-small m-0 waic-view-btn" data-target="#waicChatgptMCPUrl"><?php esc_html_e('View', 'ai-copilot-content-generator'); ?></button>
+						<?php endif; ?>
 						</li>
 						<li>Authentication: "No Authentication"</li>
 						<li>Click "Create"</li>

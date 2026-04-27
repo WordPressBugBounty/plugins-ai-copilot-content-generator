@@ -68,6 +68,16 @@ class WaicMcp extends WaicModule {
 			return;
 		}
 		$uri = rtrim( $uri, '/' );
+		$homePath = wp_parse_url(home_url(), PHP_URL_PATH);
+		if (!empty($homePath) && '/' !== $homePath) {
+			$homePath = '/' . trim($homePath, '/');
+			if (0 === strpos($uri, $homePath . '/') || $uri === $homePath) {
+				$uri = substr($uri, strlen($homePath));
+				if ('' === $uri) {
+					$uri = '/';
+				}
+			}
+		}
 
 		if ( '/.well-known/oauth-protected-resource' === $uri ) {
 			$this->serveProtectedResourceMetadata();

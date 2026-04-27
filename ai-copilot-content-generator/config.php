@@ -46,7 +46,7 @@ define('WAIC_MAIN_FILE', 'ai-copilot-content-generator.php');
 
 define('WAIC_DEFAULT', 'default');
 
-define('WAIC_VERSION', '1.4.15');
+define('WAIC_VERSION', '1.4.17');
 
 define('WAIC_CLASS_PREFIX', 'waicc');
 define('WAIC_TEST_MODE', true);
@@ -64,7 +64,7 @@ define('WAIC_CODE', 'waic');
 /**
  * Plugin name
  */
-define('WAIC_WP_PLUGIN_NAME', 'AI Chatbot & Workflow Automation by AIWU ');
+define('WAIC_WP_PLUGIN_NAME', 'AI Copilot - Content Generator');
 /**
  * Custom defined for plugin
  */

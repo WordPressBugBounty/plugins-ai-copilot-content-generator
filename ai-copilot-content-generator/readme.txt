@@ -1,10 +1,10 @@
-=== AI Chatbot & Workflow Automation by AIWU  ===
+=== AI Copilot - Content Generator ===
 Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
 Tested up to: 6.9
-Stable tag: 1.4.15
+Stable tag: 1.4.17
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -199,6 +199,9 @@ Yes. AIWU combines AI chatbot, workflow automation, content generation, SEO auto
 No. Most features are no-code and work through visual builders and templates. Developers can extend everything using APIs if needed.
 
 == Changelog ==
+
+1.4.17 (27/04/2026)
+- Minor bugs
 
 1.4.11 (11/03/2026)
 - Security fix

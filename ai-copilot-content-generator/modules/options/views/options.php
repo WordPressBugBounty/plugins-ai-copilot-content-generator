@@ -21,6 +21,9 @@ class WaicOptionsView extends WaicView {
 			'confirm-restore' => esc_html__('Do you really want to restore the settings to their default values?', 'ai-copilot-content-generator'),
 			'btn-view' => esc_html__('View', 'ai-copilot-content-generator'),
 			'btn-hide' => esc_html__('Hide', 'ai-copilot-content-generator'),
+			'btn-copy' => esc_html__('Copy', 'ai-copilot-content-generator'),
+			'btn-copied' => esc_html__('Copied!', 'ai-copilot-content-generator'),
+			'btn-copy-fail' => esc_html__('Copy failed', 'ai-copilot-content-generator'),
 		);
 		$curTab = WaicReq::getVar('cur');
 		

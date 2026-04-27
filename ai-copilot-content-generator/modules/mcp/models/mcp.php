@@ -558,7 +558,7 @@ class WaicMcpModel extends WaicModel {
 	}
 	public function dispatchTool( string $tool, array $a, int $id ): array {
 		$r = array('jsonrpc' => '2.0', 'id' => $id);
-
+		$a = wp_slash($a);
 		switch ($tool) {
 			case 'mcp_ping':
 				$pingData = array(
@@ -871,7 +871,7 @@ class WaicMcpModel extends WaicModel {
 				} else {
 					if (empty($ins['meta_input']) && !empty($a['meta_input']) && is_array($a['meta_input'])) {
 						foreach ($a['meta_input'] as $k => $v) {
-							update_post_meta($new, sanitize_key($k), maybe_serialize($v));
+							update_post_meta($new, sanitize_key($k), $v);
 						}
 					}
 					$this->addResultText($r, 'Post created ID ' . $new);
@@ -895,7 +895,7 @@ class WaicMcpModel extends WaicModel {
 				}
 				if (!empty($a['meta_input']) && is_array($a['meta_input'])) {
 					foreach ($a['meta_input'] as $k => $v) {
-						update_post_meta($u, sanitize_key($k), maybe_serialize($v));
+						update_post_meta($u, sanitize_key($k), $v);
 					}
 				}
 				$this->addResultText($r, 'Post #' . $u . ' updated');
@@ -929,10 +929,10 @@ class WaicMcpModel extends WaicModel {
 				$pid = intval($a['ID']);
 				if (!empty($a['meta']) && is_array($a['meta'])) {
 					foreach ($a['meta'] as $k => $v) {
-						update_post_meta($pid, sanitize_key($k), maybe_serialize($v));
+						update_post_meta($pid, sanitize_key($k), $v);
 					}
 				} elseif (isset($a['key'], $a['value'])) {
-					update_post_meta($pid, sanitize_key($a['key']), maybe_serialize($a['value']));
+					update_post_meta($pid, sanitize_key($a['key']), $a['value']);
 				} else {
 					$r['error'] = array('code' => -42602, 'message' => 'meta array or key/value required');
 					break;

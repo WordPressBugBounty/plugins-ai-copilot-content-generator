@@ -874,6 +874,16 @@ a.waic-get-social {
 .waic-fake-password {
 	-webkit-text-security: disc;
 }
+.waic-secret-warning {
+	display: inline-block;
+	margin-top: 6px;
+	padding: 4px 10px;
+	color: #8a4a00;
+	background-color: #fff3cd;
+	border-left: 3px solid #f0a500;
+	border-radius: 3px;
+	font-size: 12px;
+}
 .waic-start-guide {
 	width: 30px;
 	height: 30px;
