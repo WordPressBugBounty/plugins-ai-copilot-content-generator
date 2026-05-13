@@ -3,11 +3,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicFormsController extends WaicController {
-
 	protected $_code = 'forms';
 
-	public function getNoncedMethods() {
-		return array('saveForm', 'sendForm', 'getHistoryPage');
+	public function getFrontMethods() {
+		return array('sendForm');
 	}
 	public function saveForm() {
 		$res = new WaicResponse();

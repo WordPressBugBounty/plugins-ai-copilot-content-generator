@@ -94,14 +94,6 @@ abstract class WaicController {
 			$view->display();
 		}
 	}
-	public function __call( $name, $arguments ) {
-		$model = $this->getModel();
-		if (method_exists($model, $name)) {
-			return $model->$name($arguments[0]);
-		} else {
-			return false;
-		}
-	}
 	/**
 	 * Retrive permissions for controller methods if exist.
 	 * If need - should be redefined in each controller where it required.
@@ -118,7 +110,13 @@ abstract class WaicController {
 	 *
 	 * @return array
 	 */
-	public function getNoncedMethods() {
+	public function getNotNoncedMethods() {
+		return array();
+	}
+	/**
+	 * Methods that do not require user rights control
+	 */
+	public function getFrontMethods() {
 		return array();
 	}
 	public function getModule() {
@@ -130,24 +128,7 @@ abstract class WaicController {
 	protected function _prepareModelBeforeListSelect( $model ) {
 		return $model->setSelectFields('*');
 	}
-	public function removeGroup() {
-		$res = new WaicResponse();
-		if ($this->getModel()->removeGroup(WaicReq::getVar('ids', 'post'))) {
-			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
-		} else {
-			$res->pushError($this->getModel()->getErrors());
-		}
-		$res->ajaxExec();
-	}
-	public function clear() {
-		$res = new WaicResponse();
-		if ($this->getModel()->clear()) {
-			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
-		} else {
-			$res->pushError($this->getModel()->getErrors());
-		}
-		$res->ajaxExec();
-	}
+
 	protected function _prepareListForTbl( $data ) {
 		return $data;
 	}

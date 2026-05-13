@@ -3,12 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicPostscreateController extends WaicController {
-
 	protected $_code = 'postscreate';
-
-	public function getNoncedMethods() {
-		return array('startGeneration');
-	}
 	public function startGeneration() {
 		$res = new WaicResponse();
 		$params = WaicReq::getVar('params', 'post');

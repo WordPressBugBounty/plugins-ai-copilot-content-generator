@@ -164,7 +164,9 @@ class WaicFrame extends WaicBaseObject {
 		$res = true;
 		$mod = $this->getModule($code);
 		$action = strtolower($action);
-		if ($mod) {
+		if (!$mod || !method_exists($mod->getController(), $action)) {
+			return false;
+		} else {
 			$permissions = $mod->getController()->getPermissions();
 			if (!empty($permissions)) {  // Special permissions
 				$user = new WaicUser();
@@ -208,13 +210,25 @@ class WaicFrame extends WaicBaseObject {
 					}
 				}
 			}
-			if ($res) { // Additional check for nonces
-				$noncedMethods = $mod->getController()->getNoncedMethods();
-				if (!empty($noncedMethods)) {
-					$noncedMethods = array_map('strtolower', $noncedMethods);
-					if (in_array($action, $noncedMethods)) {
-						check_ajax_referer('waic-nonce', 'waicNonce');
+			if ($res) {
+				$frontMethods = $mod->getController()->getFrontMethods();
+				if (!empty($frontMethods)) {
+					$frontMethods = array_map('strtolower', $frontMethods);
+				}
+				if (empty($frontMethods) || !in_array($action, $frontMethods)) {
+					$user = new WaicUser();
+					if (!$user->isAdmin()) {
+						$res = false;
 					}
+				}
+			}
+			if ($res) { // Additional check for nonces
+				$notNoncedMethods = $mod->getController()->getNotNoncedMethods();
+				if (empty($notNoncedMethods) || !in_array($action, $notNoncedMethods)) {
+					if (!function_exists('check_ajax_referer')) {
+						$this->loadPlugins();
+					}
+					check_ajax_referer('waic-nonce', 'waicNonce');
 				}
 			}
 		}
@@ -249,7 +263,7 @@ class WaicFrame extends WaicBaseObject {
 				}
 			}
 			
-			if (!$res) {
+			/*if (!$res) {
 				$noncedMethods = $mod->getController()->getNoncedMethods();
 				if (!empty($noncedMethods)) {
 					$noncedMethods = array_map('strtolower', $noncedMethods);
@@ -257,7 +271,7 @@ class WaicFrame extends WaicBaseObject {
 						$res = true;
 					}
 				}
-			}
+			}*/
 		}
 		return $res;
 	}

@@ -3,12 +3,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicWorkflowController extends WaicController {
-
 	protected $_code = 'workflow';
-
-	public function getNoncedMethods() {
-		return array('saveWorkflow', 'stopWorkflow', 'runWorkflow', 'getLogData', 'getHistoryList', 'saveIntegration', 'createTemplate', 'deleteTemplate', 'getJSON', 'importTemplate');
-	}
 	public function getHistoryList() {
 		$res = new WaicResponse();
 		$res->ignoreShellData();

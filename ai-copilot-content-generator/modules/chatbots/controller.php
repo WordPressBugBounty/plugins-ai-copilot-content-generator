@@ -6,8 +6,8 @@ class WaicChatbotsController extends WaicController {
 
 	protected $_code = 'chatbots';
 
-	public function getNoncedMethods() {
-		return array('saveChatbot', 'launchChatbot', 'getLaunchPercent', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
+	public function getFrontMethods() {
+		return array('resetChatbotFront', 'sendMessage', 'sendFile');
 	}
 	
 	public function getHistoryPage() {
