@@ -924,7 +924,7 @@ class WaicMcp extends WaicModule {
 
 		// Check if user submitted the approval form
 		$approved = sanitize_text_field( $request->get_param( 'approved' ) );
-		$formNonce = sanitize_text_field( $request->get_param( '_wpnonce' ) );
+		$formNonce = sanitize_text_field( $request->get_param( 'aiwu_oauth_nonce' ) );
 
 		if ( '1' === $approved && wp_verify_nonce( $formNonce, 'aiwu_mcp_oauth_approve' ) ) {
 			// Generate authorization code
@@ -1019,7 +1019,7 @@ class WaicMcp extends WaicModule {
 				echo '<input type="hidden" name="' . esc_attr( $k ) . '" value="' . esc_attr( $v ) . '">';
 			}
 		}
-		echo '<input type="hidden" name="_wpnonce" value="' . esc_attr( $nonce ) . '">';
+		echo '<input type="hidden" name="aiwu_oauth_nonce" value="' . esc_attr( $nonce ) . '">';
 		echo '<input type="hidden" name="approved" value="1">';
 		echo '<div class="actions">';
 		echo '<button type="submit" class="btn btn-primary">' . esc_html__( 'Authorize', 'ai-copilot-content-generator' ) . '</button>';
