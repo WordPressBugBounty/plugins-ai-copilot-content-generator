@@ -3,8 +3,8 @@ Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
-Tested up to: 6.9
-Stable tag: 1.4.20
+Tested up to: 7.0
+Stable tag: 1.4.21
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
