@@ -3,6 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicPromoController extends WaicController {
+	public function getNoncedMethods() {
+		return array('sendDeactivationReason', 'nextGuide', 'skipGuide', 'endGuide', 'backGuide', 'startGuide', 'contactForm');
+	}
 	public function sendDeactivationReason() {
 		$res = new WaicResponse();
 		$isPro = WaicReq::getVar('plugin', 'post') == 'pro';

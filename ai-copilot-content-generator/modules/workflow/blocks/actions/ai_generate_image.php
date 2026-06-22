@@ -81,6 +81,7 @@ class WaicAction_ai_generate_image extends WaicAction {
 			'size' => $this->getParam('orientation'),
 		);
 
+		$this->setAiProviderSessionId($aiProvider, $taskId, $variables, $step);
 		$result = $aiProvider->getImage($opts);
 		$error = $result['error'];
 		$attId = 0;

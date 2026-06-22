@@ -19,6 +19,10 @@ class WaicPerplexityModel extends WaicModel implements WaicAIProviderInterface {
 	private $apiUrl = 'https://api.perplexity.ai';
 	private $apiVersion = '';
 	
+	public static function parseUsage( $raw ) {
+		return WaicAiproviderModel::parseProviderUsage('perplexity', $raw);
+	}
+
 	public function getEngine() {
 		return $this->engine;
 	}
@@ -206,7 +210,15 @@ class WaicPerplexityModel extends WaicModel implements WaicAIProviderInterface {
 			$fields = empty($params['body']) ? json_encode($params) : $params['body'];
 			$options['body'] = $fields;
 		}
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => $method,
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'stream' => $stream ? 1 : 0,
+				'body_bytes' => isset($options['body']) ? strlen((string) $options['body']) : 0,
+			),
+		));
 		$pause = time() - $this->lastTime;
 		if ($pause < $this->sleep) {
 			sleep($this->sleep - $pause);
@@ -222,9 +234,10 @@ class WaicPerplexityModel extends WaicModel implements WaicAIProviderInterface {
 			$data = wp_remote_retrieve_body($response);
 		}
 		$this->lastTime = time();
-		WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('body_bytes' => is_string($data) ? strlen($data) : 0)));
 		$results = array('error' => 1, 'his_id' => 0, 'tokens' => 0, 'length' => 0, 'data' => '');
 		$data = json_decode( $data );
+		$results['usage'] = self::parseUsage($data);
 		if (isset($data->usage) && isset($data->usage->total_tokens)) {
 			$results['tokens'] = $data->usage->total_tokens;
 		}

@@ -247,9 +247,11 @@ class WaicFormsModel extends WaicModel {
 			return false;
 		}
 		$aiProvider->init( $taskId, $userId, $ip, 0, false );
+		$aiProvider->setSessionId('form-' . (int) $taskId . '-' . substr(md5($userId . '|' . $ip . '|' . $prompt), 0, 16));
 		$history = array(
 			'task_id' => $taskId,
 			'user_id' => $userId,
+			'session_id' => 'form-' . (int) $taskId . '-' . substr(md5($userId . '|' . $ip . '|' . $prompt), 0, 16),
 			'ip' => $ip,
 			'mode' => 0,
 			'status' => 2,
@@ -363,7 +365,7 @@ class WaicFormsModel extends WaicModel {
 					'<div class="waic-log-id" data-value="' . $log['id'] . '">' . $log['id'] . '</div>',
 					'<div class="waic-log-dd" data-value="' . $log['dd'] . '">' . $log['dd'] . '</div>',
 					'<div class="waic-log-user" data-value="' . $log['user_id'] . '">' . ( empty($log['user_id']) ? $guest : $log['user_login'] ) . '</div>',
-					'<div class="waic-log-ip" data-value="' . esc_attr($log['ip']) . '">' . esc_html($log['ip']) . '</div>',
+					'<div class="waic-log-ip" data-value="' . $log['ip'] . '">' . $log['ip'] . '</div>',
 					'<div class="waic-log-tokens" data-value="' . $log['tokens'] . '">' . $log['tokens'] . '</div>',
 					'<div class="waic-log-question" data-value="' . $log['question'] . '">' . WaicUtils::mbsubstr($log['question'], 0, 50) . '...</div>',
 					'<div class="waic-log-answer" data-value="' . $log['answer'] . '">' . WaicUtils::mbsubstr($log['answer'], 0, 50) . '...</div>',

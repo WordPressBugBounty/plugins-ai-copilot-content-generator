@@ -1018,6 +1018,7 @@ class WaicPostscreateModel extends WaicModel {
 						foreach ($r as $i => $d) {
 							if (!WaicUtils::getArrayValue($d, 's', 0, 1)) {
 								$opts['prompt'] = $this->getFieldPrompt($promptField, $field, $params, $results, $i);
+								$this->aiProvider->setSessionId('post-' . (int) $taskId . '-' . (int) $id . '-' . sanitize_key($field) . '-' . (int) $i);
 								$d = $this->generateResults( $d, $opts, $field);
 								if (2 == $d['s']) {
 									$error = true;
@@ -1043,6 +1044,7 @@ class WaicPostscreateModel extends WaicModel {
 							$opts['gemini_size'] = WaicUtils::getArrayValue($params, 'gemini_image_orientation');
 						}
 						
+						$this->aiProvider->setSessionId('post-' . (int) $taskId . '-' . (int) $id . '-' . sanitize_key($field));
 						$data = $this->generateResults($data, $opts, $field);
 						$results[$field] = $data;
 						if (2 == $data['s']) {

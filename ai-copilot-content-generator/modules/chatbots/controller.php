@@ -6,8 +6,11 @@ class WaicChatbotsController extends WaicController {
 
 	protected $_code = 'chatbots';
 
-	public function getFrontMethods() {
-		return array('resetChatbotFront', 'sendMessage', 'sendFile');
+	public function getNoncedMethods() {
+		return array('saveChatbot', 'launchChatbot', 'getLaunchPercent', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
+	}
+	public function allowNoprivAjax( $action ) {
+		return in_array(strtolower($action), array('sendmessage', 'sendfile', 'resetchatbotfront'), true);
 	}
 	
 	public function getHistoryPage() {
@@ -125,7 +128,7 @@ class WaicChatbotsController extends WaicController {
 		$mode = WaicReq::getVar('mode', 'post');
 		$message = WaicReq::getVar('message', 'post');
 		$files = WaicReq::get('files');
-		$log = $this->getModel()->sendMessage($message, $taskId, $mode, WaicReq::getVar('aware', 'post'), $files);
+		$log = $this->getModel()->sendMessage($message, $taskId, $mode, WaicReq::getVar('aware', 'post'), $files, array('chat_id' => WaicReq::getVar('chat_id', 'post')));
 		
 		if (empty($log)) {
 			$res->pushError(WaicFrame::_()->getErrors());
@@ -157,7 +160,7 @@ class WaicChatbotsController extends WaicController {
 			if ('human' == $request) {
 				$log = $this->getModel()->humanRequest($taskId);
 			} else {
-				$log = $this->getModel()->sendMessage($message, $taskId, $mode, WaicReq::getVar('aware', 'post'));
+				$log = $this->getModel()->sendMessage($message, $taskId, $mode, WaicReq::getVar('aware', 'post'), false, array('chat_id' => WaicReq::getVar('chat_id', 'post')));
 			}
 		}
 		if (empty($log)) {

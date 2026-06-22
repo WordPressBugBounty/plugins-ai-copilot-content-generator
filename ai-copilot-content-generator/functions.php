@@ -283,6 +283,7 @@ if (!function_exists('aiwuSimpleTextQuery')) {
 		}
 		$aiProvider->init();
 		$aiProvider->setSaveError(false);
+		$aiProvider->setSessionId('api-' . substr(md5($prompt), 0, 16));
 
 		if ($aiProvider->setApiOptions($apiOptions)) {
 			$opts = array('prompt' => $prompt);

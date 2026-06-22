@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: AI Chatbot & Workflow Automation by AIWU
+ * Plugin Name: AI Copilot - Content Generator
  * Description: AI Copilot for WordPress saves time and boosts your website's performance with human-like content with GPT, Internal AI and more.
- * Version: 1.4.21
+ * Version: 1.5.4
  * Author: AIWU
  * Author URI: https://aiwuplugin.com/
  * Text Domain: ai-copilot-content-generator
@@ -61,6 +61,7 @@ waicImportClass('WaicIntegration');
  * Check plugin version - maybe we need to update database, and check global errors in request
  */
 WaicInstaller::update();
+add_action('admin_init', array('WaicInstaller', 'maybeBindExistingMcpTokenToCurrentAdmin'));
 WaicErrors::init();
 /**
  * Start application

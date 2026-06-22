@@ -214,6 +214,7 @@ class WaicMagictextModel extends WaicModel {
 			$task = $this->getTask();
 
 			$aiProvider->init( $task['id'], $userId, $ip, 0, false );
+			$aiProvider->setSessionId('magic-' . (int) $task['id'] . '-' . (int) $userId);
 
 			if ($aiProvider->setApiOptions($apiOptions)) {
 				$opts = array('messages' => $instructions);

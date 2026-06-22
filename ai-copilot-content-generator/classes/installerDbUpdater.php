@@ -3,6 +3,28 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicInstallerDbUpdater {
+	const INSIGHTS_360_SCHEMA = 2;
+
+	public static function isInsightsPhase1SchemaInstalled() {
+		return WaicDb::existsTableColumn( '@__history', 'cost_micro_usd' )
+			&& WaicDb::existsTableColumn( '@__history', 'tool_calls_count' )
+			&& WaicDb::exist( '@__history_daily' )
+			&& WaicDb::exist( '@__sessions_daily' )
+			&& WaicDb::exist( '@__pricing_versions' )
+			&& false !== get_option( 'waic_pricing_display_currency', false )
+			&& false !== get_option( 'waic_pricing_auto_sync_enabled', false )
+			&& false !== get_option( 'waic_pricing_custom_url', false );
+	}
+
+	public static function isInsights360SchemaInstalled() {
+		return WaicDb::exist( '@__insight_events' )
+			&& WaicDb::exist( '@__conversation_outcomes' )
+			&& WaicDb::exist( '@__kb_attribution' )
+			&& WaicDb::exist( '@__mcp_audit' )
+			&& WaicDb::exist( '@__insight_state' )
+			&& (int) get_option( 'waic_insights_360_schema_version', 0 ) >= self::INSIGHTS_360_SCHEMA;
+	}
+
 	public static function runUpdate( $current_version ) {
 		if ($current_version && version_compare($current_version, '1.1.1', '<')) {
 			WaicDb::query( "ALTER TABLE `@__tasks` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
@@ -14,6 +36,9 @@ class WaicInstallerDbUpdater {
 		}
 		if ( WaicDb::get( "SELECT 1 FROM `@__modules` WHERE code='chatbots'", 'one' ) != 1 ) {
 			WaicDb::query( "INSERT INTO `@__modules` (id, code, active, type_id, label) VALUES (NULL, 'chatbots', 1, 1, 'Chatbots');" );
+		}
+		if ( WaicDb::get( "SELECT 1 FROM `@__modules` WHERE code='insights'", 'one' ) != 1 ) {
+			WaicDb::query( "INSERT INTO `@__modules` (id, code, active, type_id, label) VALUES (NULL, 'insights', 1, 1, 'Insights');" );
 		}
 		if ( WaicDb::get( "SELECT 1 FROM `@__modules` WHERE code='promo'", 'one' ) != 1 ) {
 			WaicDb::query( "INSERT INTO `@__modules` (id, code, active, type_id, label) VALUES (NULL, 'promo', 1, 1, 'Promo');" );
@@ -87,5 +112,397 @@ class WaicInstallerDbUpdater {
 			$json = '{"nodes":[{"id":"1","type":"trigger","position":{"x":350,"y":200},"data":{"dragged":true,"type":"trigger","category":"wc","error":false,"code":"wc_new_order","label":"New Order Created","settings":{"status":["completed"],"total":"","customer":"first","products":"","categories":"","tags":""}}},{"id":"3","type":"action","position":{"x":530,"y":200},"data":{"dragged":true,"type":"action","category":"wp","error":false,"code":"wp_send_email","label":"Send Email","settings":{"to":"{{node#1.user_email}}","from":"max@aiwuplugin.com","from_name":"Max from AIWU","subject":"Thank you for your first order! 🎉","body":"Hey {{node#1.billing_first_name}} 👋\\n\\nWe&#039;re absolutely thrilled to have you as a customer! Your order has been confirmed and is on its way.\\n\\n🎁 As a thank you for choosing us, here&#039;s a special gift: use code WELCOME15 on your next purchase for 15% off!\\n\\n📦 Order Details:\\n{{node#1.order_ID}}\\n\\nBest Regards,\\nAdmin"}}}],"edges":[{"id":"2","source":"1","target":"3","sourceHandle":"output-right","targetHandle":"input-left","type":"default"}],"viewport":{"x":-99.940278981879,"y":-73.739280322291,"zoom":1.5},"settings":"","version":"1.0.0"}';
 			WaicDb::query( "INSERT INTO `@__tasks` (id, feature, title, mode, message, params) VALUES (NULL, 'template', 'Thank You Email – First Time Customer', 5, 'Automate thank you emails for first-time WooCommerce customers. Include order details and welcome discount to boost repeat purchases.','" . addslashes($json) . "');");
 		}
+
+		self::ensureInsightsPhase1Schema();
+		self::ensureInsights360Schema();
+	}
+
+	private static function ensureInsightsPhase1Schema() {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		self::ensureHistoryColumn( 'operation', "`operation` VARCHAR(24) NOT NULL DEFAULT 'chat' AFTER `feature`" );
+		self::ensureHistoryColumn( 'session_id', "`session_id` VARCHAR(64) NULL DEFAULT NULL AFTER `user_id`" );
+		self::ensureHistoryColumn( 'duration_ms', "`duration_ms` INT UNSIGNED NULL DEFAULT NULL AFTER `status`" );
+		self::ensureHistoryColumn( 'input_tokens', "`input_tokens` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `tokens`" );
+		self::ensureHistoryColumn( 'output_tokens', "`output_tokens` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `input_tokens`" );
+		self::ensureHistoryColumn( 'reasoning_tokens', "`reasoning_tokens` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `output_tokens`" );
+		self::ensureHistoryColumn( 'cached_tokens', "`cached_tokens` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `reasoning_tokens`" );
+		self::ensureHistoryColumn( 'cache_write_tokens', "`cache_write_tokens` INT UNSIGNED NOT NULL DEFAULT 0 AFTER `cached_tokens`" );
+		self::ensureHistoryColumn( 'cost_micro_usd', "`cost_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0 AFTER `cost`" );
+		self::ensureHistoryColumn( 'est_flags', "`est_flags` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `cost_micro_usd`" );
+		self::ensureHistoryColumn( 'meta', "`meta` TEXT NULL AFTER `est_flags`" );
+		self::ensureHistoryColumn( 'best_score_x1000', "`best_score_x1000` SMALLINT UNSIGNED NULL DEFAULT NULL AFTER `meta`" );
+		self::ensureHistoryColumn( 'tool_calls_count', "`tool_calls_count` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `best_score_x1000`" );
+		self::ensureColumnDefinition( '@__history', 'model', 'ALTER TABLE `@__history` MODIFY COLUMN `model` VARCHAR(160) DEFAULT \'\'' );
+
+		self::ensureIndex( '@__history', 'idx_created_feature', 'ALTER TABLE `@__history` ADD INDEX `idx_created_feature` (`created`, `feature`)' );
+		self::ensureIndex( '@__history', 'idx_operation', 'ALTER TABLE `@__history` ADD INDEX `idx_operation` (`operation`)' );
+		self::ensureIndex( '@__history', 'idx_session', 'ALTER TABLE `@__history` ADD INDEX `idx_session` (`session_id`)' );
+		self::ensureIndex( '@__history', 'idx_engine_model', 'ALTER TABLE `@__history` ADD INDEX `idx_engine_model` (`engine`, `model`)' );
+		self::ensureIndex( '@__history', 'idx_best_score', 'ALTER TABLE `@__history` ADD INDEX `idx_best_score` (`best_score_x1000`)' );
+
+		if ( ! WaicDb::exist( '@__history_daily' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__history_daily` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`day` DATE NOT NULL,
+				`feature` VARCHAR(24) NOT NULL,
+				`operation` VARCHAR(24) NOT NULL,
+				`engine` VARCHAR(20) NOT NULL,
+				`model` VARCHAR(160) NOT NULL,
+				`mode` TINYINT(1) NOT NULL DEFAULT 0,
+				`events_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`errors_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`tokens_est_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`cost_est_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`aborted_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`low_conf_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`tool_calls_steps_sum` INT UNSIGNED NOT NULL DEFAULT 0,
+				`input_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`output_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`reasoning_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`cached_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`cache_write_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`total_tokens` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`cost_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`cost` DECIMAL(14,6) NOT NULL DEFAULT 0,
+				`duration_ms_sum` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_day_dims` (`day`, `feature`, `operation`, `engine`, `model`, `mode`),
+				KEY `idx_day` (`day`),
+				KEY `idx_feature_day` (`feature`, `day`),
+				KEY `idx_engine_model_day` (`engine`, `model`, `day`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		} else {
+			self::ensureColumnDefinition( '@__history_daily', 'model', 'ALTER TABLE `@__history_daily` MODIFY COLUMN `model` VARCHAR(160) NOT NULL' );
+		}
+
+		if ( ! WaicDb::exist( '@__sessions_daily' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__sessions_daily` (
+				`day` DATE NOT NULL,
+				`feature` VARCHAR(24) NOT NULL,
+				`session_id` VARCHAR(64) NOT NULL,
+				`first_seen` DATETIME NOT NULL,
+				`last_seen` DATETIME NOT NULL,
+				`messages_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`cost_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`cost` DECIMAL(14,6) NOT NULL DEFAULT 0,
+				PRIMARY KEY (`day`, `feature`, `session_id`),
+				KEY `idx_day_feature` (`day`, `feature`),
+				KEY `idx_session` (`session_id`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		if ( ! WaicDb::exist( '@__pricing_versions' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__pricing_versions` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`version` INT UNSIGNED NOT NULL,
+				`applied_at` DATETIME NOT NULL,
+				`source` VARCHAR(32) NOT NULL,
+				`snapshot` LONGTEXT NOT NULL,
+				`diff_summary` TEXT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_version` (`version`),
+				KEY `idx_applied` (`applied_at`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		if ( WaicDb::get( "SELECT 1 FROM `@__tasks` WHERE feature='system'", 'one' ) != 1 ) {
+			WaicDb::query( "INSERT INTO `@__tasks` (id, feature, title, author, status, message) VALUES (NULL, 'system', 'System Operations', 0, 4, 'System Operations');" );
+		}
+
+		$legacy_sync_enabled = (int) get_option( 'waic_pricing_sync_enabled', 0 );
+		self::ensureOption( 'waic_pricing_sync_enabled', 0 );
+		self::ensureOption( 'waic_pricing_auto_sync_enabled', 0 );
+		self::ensureOption( 'waic_pricing_display_currency', 'USD' );
+		self::ensureOption( 'waic_pricing_source', 'bundled' );
+		self::ensureOption( 'waic_pricing_custom_url', '' );
+		self::ensureOption( 'waic_pricing_last_sync_at', '' );
+		self::ensureOption( 'waic_pricing_last_sync_success_at', '' );
+		self::ensureOption( 'waic_pricing_last_sync_status', 'not_run' );
+		self::ensureOption( 'waic_pricing_last_sync_message', esc_html__( 'Pricing sync has not run yet.', 'ai-copilot-content-generator' ) );
+		self::ensureOption( 'waic_pricing_last_import_at', '' );
+		self::ensureOption( 'waic_pricing_migration_version', 0 );
+		self::migratePricingOptions( $legacy_sync_enabled );
+
+		if ( false === get_option( 'waic_history_retention_days', false ) ) {
+			add_option( 'waic_history_retention_days', 30, '', false );
+		}
+		if ( false === get_option( 'waic_daily_retention_days', false ) ) {
+			add_option( 'waic_daily_retention_days', 0, '', false );
+		}
+
+		self::ensureBundledPricing();
+	}
+
+	private static function ensureInsights360Schema() {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		if ( ! WaicDb::exist( '@__insight_events' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__insight_events` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`his_id` BIGINT UNSIGNED NOT NULL,
+				`created` DATETIME NOT NULL,
+				`day` DATE NOT NULL,
+				`feature` VARCHAR(24) NOT NULL DEFAULT '',
+				`operation` VARCHAR(24) NOT NULL DEFAULT '',
+				`task_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`session_id` VARCHAR(64) NOT NULL DEFAULT '',
+				`engine` VARCHAR(20) NOT NULL DEFAULT '',
+				`model` VARCHAR(160) NOT NULL DEFAULT '',
+				`mode` TINYINT(1) NOT NULL DEFAULT 0,
+				`status` TINYINT(1) NOT NULL DEFAULT 0,
+				`best_score_x1000` SMALLINT UNSIGNED NULL,
+				`tool_calls_count` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+				`cost_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`est_flags` INT UNSIGNED NOT NULL DEFAULT 0,
+				`signal_mask` INT UNSIGNED NOT NULL DEFAULT 0,
+				`problem_code` VARCHAR(32) NOT NULL DEFAULT '',
+				`kb_used` TINYINT(1) NOT NULL DEFAULT 0,
+				`commerce_flag` TINYINT(1) NOT NULL DEFAULT 0,
+				`cluster_hash` CHAR(40) NOT NULL DEFAULT '',
+				`updated_at` DATETIME NOT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_his` (`his_id`),
+				KEY `idx_day` (`day`),
+				KEY `idx_feature_day` (`feature`, `day`),
+				KEY `idx_task_day` (`task_id`, `day`),
+				KEY `idx_problem_day` (`problem_code`, `day`),
+				KEY `idx_cluster` (`cluster_hash`),
+				KEY `idx_session` (`session_id`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		if ( ! WaicDb::exist( '@__conversation_outcomes' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__conversation_outcomes` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`feature` VARCHAR(24) NOT NULL DEFAULT '',
+				`session_id` VARCHAR(64) NOT NULL DEFAULT '',
+				`task_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`first_seen` DATETIME NOT NULL,
+				`last_seen` DATETIME NOT NULL,
+				`day` DATE NOT NULL,
+				`messages_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`events_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`outcome` VARCHAR(20) NOT NULL DEFAULT 'unknown',
+				`severity` TINYINT(1) NOT NULL DEFAULT 0,
+				`signal_mask` INT UNSIGNED NOT NULL DEFAULT 0,
+				`reask_count` SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+				`min_best_score_x1000` SMALLINT UNSIGNED NULL,
+				`had_error` TINYINT(1) NOT NULL DEFAULT 0,
+				`had_handoff` TINYINT(1) NOT NULL DEFAULT 0,
+				`had_commerce` TINYINT(1) NOT NULL DEFAULT 0,
+				`cost_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`wasted_micro_usd` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`updated_at` DATETIME NOT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_conv` (`feature`, `session_id`),
+				KEY `idx_day` (`day`),
+				KEY `idx_outcome_day` (`outcome`, `day`),
+				KEY `idx_task_day` (`task_id`, `day`),
+				KEY `idx_severity` (`severity`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		if ( ! WaicDb::exist( '@__kb_attribution' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__kb_attribution` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`day` DATE NOT NULL,
+				`object_type` VARCHAR(24) NOT NULL DEFAULT 'kb',
+				`object_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`chunk_ref` VARCHAR(64) NOT NULL DEFAULT '',
+				`task_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`retrieved_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`used_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`reask_after_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`resolved_after_count` INT UNSIGNED NOT NULL DEFAULT 0,
+				`score_sum_x1000` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`score_samples` INT UNSIGNED NOT NULL DEFAULT 0,
+				`health` VARCHAR(16) NOT NULL DEFAULT 'unknown',
+				`updated_at` DATETIME NOT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_obj_day` (`object_type`, `object_id`, `chunk_ref`, `day`),
+				KEY `idx_day` (`day`),
+				KEY `idx_object` (`object_type`, `object_id`),
+				KEY `idx_health` (`health`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+		self::ensureKbAttributionChunkIndex();
+
+		if ( ! WaicDb::exist( '@__mcp_audit' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__mcp_audit` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`created` DATETIME NOT NULL,
+				`day` DATE NOT NULL,
+				`his_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`client_hash` CHAR(40) NOT NULL DEFAULT '',
+				`client_label` VARCHAR(64) NOT NULL DEFAULT '',
+				`tool` VARCHAR(96) NOT NULL DEFAULT '',
+				`tool_class` VARCHAR(16) NOT NULL DEFAULT 'read',
+				`target_type` VARCHAR(24) NOT NULL DEFAULT '',
+				`target_id` VARCHAR(64) NOT NULL DEFAULT '',
+				`args_summary` VARCHAR(255) NOT NULL DEFAULT '',
+				`status` TINYINT(1) NOT NULL DEFAULT 1,
+				`acting_user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`duration_ms` INT UNSIGNED NOT NULL DEFAULT 0,
+				`risk` VARCHAR(8) NOT NULL DEFAULT 'low',
+				`updated_at` DATETIME NOT NULL,
+				PRIMARY KEY (`id`),
+				KEY `idx_day` (`day`),
+				KEY `idx_class_day` (`tool_class`, `day`),
+				KEY `idx_risk_day` (`risk`, `day`),
+				KEY `idx_client` (`client_hash`),
+				KEY `idx_tool` (`tool`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		if ( ! WaicDb::exist( '@__insight_state' ) ) {
+			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__insight_state` (
+				`id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+				`entity_type` VARCHAR(16) NOT NULL DEFAULT 'cluster',
+				`entity_hash` CHAR(40) NOT NULL DEFAULT '',
+				`state` VARCHAR(16) NOT NULL DEFAULT 'new',
+				`note` VARCHAR(255) NOT NULL DEFAULT '',
+				`updated_by` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+				`updated_at` DATETIME NOT NULL,
+				PRIMARY KEY (`id`),
+				UNIQUE KEY `uq_entity` (`entity_type`, `entity_hash`),
+				KEY `idx_state` (`state`)
+			) DEFAULT CHARSET=utf8mb4;"));
+		}
+
+		update_option( 'waic_insights_360_schema_version', self::INSIGHTS_360_SCHEMA, false );
+		self::ensureOption( 'waic_insights_360_backfill_done', 0 );
+		self::ensureOption( 'waic_insights_360_backfill_cursor', 0 );
+		self::ensureOption( 'waic_insights_360_cache_ver', 1 );
+		self::ensureOption( 'waic_insights_360_last_rollup_at', '' );
+		self::ensureOption( 'waic_insights_360_data_through', '' );
+		self::ensureOption( 'waic_insights_analytics_enabled', 1 );
+		self::ensureOption( 'waic_insights_mcp_audit_source', 'auto' );
+	}
+
+	private static function ensureHistoryColumn( $column, $definition ) {
+		if ( ! WaicDb::existsTableColumn( '@__history', $column ) ) {
+			WaicDb::query( 'ALTER TABLE `@__history` ADD COLUMN ' . $definition );
+		}
+	}
+
+	private static function ensureIndex( $table, $index, $sql ) {
+		$tableName = WaicDb::controlTableName( $table );
+		$exists = WaicDb::get( "SHOW INDEX FROM `{$tableName}` WHERE Key_name=%s", 'one', ARRAY_A, array( $index ) );
+		if ( empty( $exists ) ) {
+			WaicDb::query( $sql );
+		}
+	}
+
+	private static function ensureKbAttributionChunkIndex() {
+		if ( ! WaicDb::exist( '@__kb_attribution' ) ) {
+			return;
+		}
+		$tableName = WaicDb::controlTableName( '@__kb_attribution' );
+		$columns = WaicDb::get(
+			"SHOW INDEX FROM `{$tableName}` WHERE Key_name='uq_obj_day'",
+			'all',
+			ARRAY_A
+		);
+		$columns = (array) $columns;
+		usort(
+			$columns,
+			function ( $left, $right ) {
+				return (int) $left['Seq_in_index'] - (int) $right['Seq_in_index'];
+			}
+		);
+		$names = array();
+		foreach ( (array) $columns as $column ) {
+			if ( ! empty( $column['Column_name'] ) ) {
+				$names[] = (string) $column['Column_name'];
+			}
+		}
+		if ( array( 'object_type', 'object_id', 'chunk_ref', 'day' ) === $names ) {
+			return;
+		}
+		if ( ! empty( $columns ) ) {
+			WaicDb::query( "ALTER TABLE `{$tableName}` DROP INDEX `uq_obj_day`" );
+		}
+		WaicDb::query( "ALTER TABLE `{$tableName}` ADD UNIQUE KEY `uq_obj_day` (`object_type`, `object_id`, `chunk_ref`, `day`)" );
+	}
+
+	private static function ensureColumnDefinition( $table, $column, $sql ) {
+		if ( WaicDb::existsTableColumn( $table, $column ) ) {
+			WaicDb::query( $sql );
+		}
+	}
+
+	private static function ensureOption( $option, $default ) {
+		if ( false === get_option( $option, false ) ) {
+			add_option( $option, $default, '', false );
+		}
+	}
+
+	private static function ensureBundledPricing() {
+		$path = WAIC_MODULES_DIR . 'insights' . WAIC_DS . 'data' . WAIC_DS . 'pricing-bundled.json';
+		if ( ! is_readable( $path ) ) {
+			return;
+		}
+
+		$raw = file_get_contents( $path );
+		$data = json_decode( $raw, true );
+		if ( empty( $data ) || ! is_array( $data ) ) {
+			return;
+		}
+		$current = get_option( 'waic_pricing', false );
+		if ( is_array( $current ) ) {
+			$current_source = isset( $current['source'] ) ? sanitize_key( $current['source'] ) : 'bundled';
+			$current_version = isset( $current['version'] ) ? (int) $current['version'] : 0;
+			$bundled_version = isset( $data['version'] ) ? (int) $data['version'] : 0;
+			if ( in_array( $current_source, array( 'imported', 'custom_url' ), true ) || $current_version >= $bundled_version ) {
+				return;
+			}
+		}
+
+		update_option( 'waic_pricing', $data, false );
+		update_option( 'waic_pricing_source', 'bundled', false );
+		if ( WaicDb::exist( '@__pricing_versions' ) && isset( $data['version'] ) ) {
+			$version = (int) $data['version'];
+			if ( WaicDb::get( 'SELECT 1 FROM `@__pricing_versions` WHERE version=%d', 'one', ARRAY_A, array( $version ) ) != 1 ) {
+				global $wpdb;
+				$wpdb->insert(
+					$wpdb->prefix . WAIC_DB_PREF . 'pricing_versions',
+					array(
+						'version'      => $version,
+						'applied_at'   => gmdate( 'Y-m-d H:i:s' ),
+						'source'       => 'bundled',
+						'snapshot'     => wp_json_encode( $data ),
+						'diff_summary' => 'Initial bundled pricing snapshot.',
+					),
+					array( '%d', '%s', '%s', '%s', '%s' )
+				);
+			}
+		}
+	}
+
+	private static function migratePricingOptions( $legacy_sync_enabled ) {
+		if ( (int) get_option( 'waic_pricing_migration_version', 0 ) >= 1 ) {
+			return;
+		}
+		$source = sanitize_key( (string) get_option( 'waic_pricing_source', 'bundled' ) );
+		if ( 'remote' === $source ) {
+			$current = get_option( 'waic_pricing', array() );
+			if ( is_array( $current ) ) {
+				$current['source'] = 'imported';
+				update_option( 'waic_pricing', $current, false );
+				update_option( 'waic_pricing_source', 'imported', false );
+			} else {
+				update_option( 'waic_pricing_source', 'bundled', false );
+			}
+			if ( $legacy_sync_enabled ) {
+				update_option( 'waic_pricing_last_sync_status', 'disabled', false );
+				update_option( 'waic_pricing_last_sync_message', esc_html__( 'Previous vendor pricing sync was disabled. Last valid pricing remains active.', 'ai-copilot-content-generator' ), false );
+			}
+		} elseif ( ! in_array( $source, array( 'bundled', 'imported', 'custom_url' ), true ) ) {
+			update_option( 'waic_pricing_source', 'bundled', false );
+		}
+		update_option( 'waic_pricing_auto_sync_enabled', 0, false );
+		update_option( 'waic_pricing_sync_enabled', 0, false );
+		update_option( 'waic_pricing_migration_version', 1, false );
 	}
 }

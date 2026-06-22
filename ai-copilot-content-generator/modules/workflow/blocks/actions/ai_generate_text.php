@@ -83,6 +83,7 @@ class WaicAction_ai_generate_text extends WaicAction {
 			return false;
 		}
 		$prompt = $this->replaceVariables($this->getParam('prompt'), $variables);
+		$this->setAiProviderSessionId($aiProvider, $taskId, $variables, $step);
 		$result = $aiProvider->getText(array('prompt' => $prompt));
 		$error = $result['error'];
 		$this->_results = array(

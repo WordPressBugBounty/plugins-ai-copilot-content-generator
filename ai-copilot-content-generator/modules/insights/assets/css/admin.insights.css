@@ -1,0 +1,262 @@
+.aiwu-insights {
+	max-width: 1400px;
+}
+.aiwu-insights .hidden {
+	display: none !important;
+}
+.aiwu-insights-notice {
+	margin: 0 0 14px;
+}
+.aiwu-pricing-settings {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 14px;
+	margin: 0 0 14px;
+	padding: 14px;
+}
+.aiwu-pricing-status {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px 18px;
+	color: #50575e;
+}
+.aiwu-pricing-form {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+}
+.aiwu-pricing-form label,
+.aiwu-pricing-import-form label,
+.aiwu-pricing-source-field {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	font-weight: 600;
+}
+.aiwu-pricing-source-field {
+	flex-wrap: wrap;
+	gap: 10px 14px;
+}
+.aiwu-pricing-url-panel {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+	align-items: center;
+}
+.aiwu-pricing-form select,
+.aiwu-pricing-form input[type="url"] {
+	min-width: 92px;
+}
+.aiwu-pricing-form input[type="url"] {
+	width: min(380px, 100%);
+}
+.aiwu-pricing-inline-check {
+	white-space: nowrap;
+}
+.aiwu-pricing-import-form {
+	display: grid;
+	grid-template-columns: minmax(260px, 1fr) minmax(180px, 260px) auto;
+	gap: 10px;
+	align-items: end;
+}
+.aiwu-pricing-import-form label {
+	align-items: stretch;
+	flex-direction: column;
+}
+.aiwu-pricing-import-form textarea {
+	width: 100%;
+	min-height: 96px;
+	font-family: Consolas, Monaco, monospace;
+	resize: vertical;
+}
+.aiwu-insights-shell {
+	padding: 0;
+}
+.aiwu-insights-panels {
+	padding-top: 16px;
+}
+.aiwu-insights-filters {
+	display: grid;
+	grid-template-columns: minmax(180px, 1.4fr) repeat(4, minmax(140px, 1fr)) auto;
+	gap: 12px;
+	align-items: end;
+	margin-bottom: 16px;
+}
+.aiwu-insights-filters label {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	font-weight: 600;
+}
+.aiwu-insights-filters input,
+.aiwu-insights-filters select {
+	width: 100%;
+	min-height: 34px;
+}
+.aiwu-insights-loading {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 12px 0;
+}
+.aiwu-insights-loading .waic-loader {
+	width: 46px;
+	height: 22px;
+}
+.aiwu-insights-state {
+	padding: 12px 14px;
+	margin: 12px 0;
+	background: #f6f7f7;
+	border-left: 4px solid #2271b1;
+}
+.aiwu-insights-error {
+	border-left-color: #b32d2e;
+}
+.aiwu-insights-empty {
+	border-left-color: #646970;
+}
+.aiwu-insights-kpis {
+	display: grid;
+	grid-template-columns: repeat(4, minmax(130px, 1fr));
+	gap: 12px;
+	margin: 16px 0;
+}
+.aiwu-insights-kpi {
+	border: 1px solid #dcdcde;
+	background: #fff;
+	border-radius: 6px;
+	padding: 12px;
+	min-height: 76px;
+}
+.aiwu-insights-kpi span {
+	display: block;
+	color: #646970;
+	margin-bottom: 8px;
+}
+.aiwu-insights-kpi strong {
+	display: block;
+	font-size: 22px;
+	line-height: 1.2;
+}
+.aiwu-insights-breakdowns {
+	margin: 16px 0;
+}
+.aiwu-insights-chart-wrap,
+.aiwu-insights-breakdowns,
+.aiwu-insights-attention,
+.aiwu-usage-table-wrap {
+	border: 1px solid #dcdcde;
+	background: #fff;
+	border-radius: 6px;
+	padding: 14px;
+	margin: 16px 0;
+}
+.aiwu-insights-breakdowns section,
+.aiwu-insights-conversations {
+	border: 1px solid #dcdcde;
+	background: #fff;
+	border-radius: 6px;
+	padding: 14px;
+}
+.aiwu-insights h3 {
+	margin: 0 0 12px;
+	font-size: 16px;
+}
+.aiwu-insights table.dataTable {
+	width: 100%;
+	border-collapse: collapse;
+}
+.aiwu-insights table.dataTable th,
+.aiwu-insights table.dataTable td {
+	padding: 9px 8px;
+	border-bottom: 1px solid #e7e7e7;
+	text-align: left;
+	vertical-align: top;
+}
+.aiwu-pii-badge {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 2px 6px;
+	border-radius: 6px;
+	background: #e5f5ec;
+	color: #0a6847;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+.aiwu-insights-pagination {
+	padding-top: 12px;
+	color: #646970;
+}
+.aiwu-insights-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	background: rgba(30, 30, 30, 0.46);
+}
+.aiwu-insights-modal-panel {
+	width: min(760px, 100%);
+	max-height: 84vh;
+	overflow: auto;
+	background: #fff;
+	border-radius: 8px;
+	box-shadow: 0 18px 46px rgba(0, 0, 0, 0.26);
+}
+.aiwu-insights-modal-head {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 18px;
+	border-bottom: 1px solid #dcdcde;
+}
+.aiwu-insights-modal-close {
+	border: 0;
+	background: transparent;
+	font-size: 28px;
+	line-height: 1;
+	cursor: pointer;
+}
+.aiwu-insights-modal-meta {
+	padding: 12px 18px;
+	color: #646970;
+	border-bottom: 1px solid #f0f0f1;
+}
+.aiwu-insights-modal-messages {
+	padding: 18px;
+}
+.aiwu-insights-message {
+	max-width: 86%;
+	margin-bottom: 12px;
+	padding: 10px 12px;
+	border-radius: 8px;
+	background: #f6f7f7;
+}
+.aiwu-insights-message.is-assistant {
+	margin-left: auto;
+	background: #edf5fb;
+}
+@media (max-width: 1100px) {
+	.aiwu-insights-filters,
+	.aiwu-insights-kpis,
+	.aiwu-insights-breakdowns {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (max-width: 720px) {
+	.aiwu-pricing-settings,
+	.aiwu-pricing-import-form,
+	.aiwu-insights-filters,
+	.aiwu-insights-kpis,
+	.aiwu-insights-breakdowns {
+		grid-template-columns: 1fr;
+	}
+	.aiwu-insights-message {
+		max-width: 100%;
+	}
+}

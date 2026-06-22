@@ -41,6 +41,14 @@ class WaicDb {
 		}
 		return $res;
 	}
+	public static function placeholders( $values, $type = '%d' ) {
+		$count = is_array($values) ? count($values) : (int) $values;
+		if ($count <= 0) {
+			return '';
+		}
+		$type = in_array($type, array('%d', '%s', '%f'), true) ? $type : '%d';
+		return implode(',', array_fill(0, $count, $type));
+	}
 	/**
 	 * Execute one query
 	 *

@@ -556,9 +556,84 @@ class WaicMcpModel extends WaicModel {
 	private function postExcerpt( WP_Post $p ): string {
 		return wp_trim_words( wp_strip_all_tags( isset($p->post_excerpt) && !empty($p->post_excerpt) ? $p->post_excerpt : $p->post_content ), 55 );
 	}
+	private function toolCapability( string $tool, array $args ) {
+		switch ($tool) {
+			case 'mcp_ping':
+			case 'search':
+			case 'fetch':
+				return '';
+			case 'wp_get_users':
+				return 'list_users';
+			case 'wp_create_user':
+				return 'create_users';
+			case 'wp_update_user':
+				return 'edit_users';
+			case 'wp_get_comments':
+			case 'wp_create_comment':
+			case 'wp_update_comment':
+			case 'wp_delete_comment':
+				return 'moderate_comments';
+			case 'wp_get_option':
+			case 'wp_update_option':
+			case 'wp_list_plugins':
+				return 'manage_options';
+			case 'wp_get_media':
+			case 'wp_count_media':
+			case 'wp_upload_media':
+			case 'aiwu_image':
+				return 'upload_files';
+			case 'wp_update_media':
+				return array('edit_post', intval(WaicUtils::getArrayValue($args, 'ID', 0, 1)));
+			case 'wp_delete_media':
+				return array('delete_post', intval(WaicUtils::getArrayValue($args, 'ID', 0, 1)));
+			case 'wp_update_post':
+			case 'wp_get_post_meta':
+			case 'wp_update_post_meta':
+			case 'wp_delete_post_meta':
+				return array('edit_post', intval(WaicUtils::getArrayValue($args, 'ID', 0, 1)));
+			case 'wp_delete_post':
+				return array('delete_post', intval(WaicUtils::getArrayValue($args, 'ID', 0, 1)));
+			case 'wp_create_term':
+			case 'wp_update_term':
+			case 'wp_delete_term':
+				return 'manage_categories';
+			case 'wp_get_post':
+			case 'wp_get_posts':
+			case 'wp_count_posts':
+			case 'wp_get_post_types':
+			case 'wp_count_terms':
+			case 'wp_get_taxonomies':
+			case 'wp_get_terms':
+			case 'wp_get_post_terms':
+			case 'wp_add_post_terms':
+			case 'wp_create_post':
+			case 'wp_set_featured_image':
+				return 'edit_posts';
+		}
+		return 'manage_options';
+	}
+	private function canUseTool( string $tool, array $args ) {
+		$capability = WaicDispatcher::applyFilters('mcp_tool_capability', $this->toolCapability($tool, $args), $tool, $args);
+		if (empty($capability)) {
+			return true;
+		}
+		if (is_array($capability)) {
+			$cap = array_shift($capability);
+			if (empty($cap)) {
+				return true;
+			}
+			array_unshift($capability, $cap);
+			return call_user_func_array('current_user_can', $capability);
+		}
+		return current_user_can($capability);
+	}
 	public function dispatchTool( string $tool, array $a, int $id ): array {
 		$r = array('jsonrpc' => '2.0', 'id' => $id);
-		$a = wp_slash($a);
+		if (!$this->canUseTool($tool, $a)) {
+			$r['error'] = array('code' => -42610, 'message' => 'Current user is not allowed to use this MCP tool');
+			return $r;
+		}
+
 		switch ($tool) {
 			case 'mcp_ping':
 				$pingData = array(
@@ -871,7 +946,7 @@ class WaicMcpModel extends WaicModel {
 				} else {
 					if (empty($ins['meta_input']) && !empty($a['meta_input']) && is_array($a['meta_input'])) {
 						foreach ($a['meta_input'] as $k => $v) {
-							update_post_meta($new, sanitize_key($k), $v);
+							update_post_meta($new, sanitize_key($k), maybe_serialize($v));
 						}
 					}
 					$this->addResultText($r, 'Post created ID ' . $new);
@@ -895,7 +970,7 @@ class WaicMcpModel extends WaicModel {
 				}
 				if (!empty($a['meta_input']) && is_array($a['meta_input'])) {
 					foreach ($a['meta_input'] as $k => $v) {
-						update_post_meta($u, sanitize_key($k), $v);
+						update_post_meta($u, sanitize_key($k), maybe_serialize($v));
 					}
 				}
 				$this->addResultText($r, 'Post #' . $u . ' updated');
@@ -929,10 +1004,10 @@ class WaicMcpModel extends WaicModel {
 				$pid = intval($a['ID']);
 				if (!empty($a['meta']) && is_array($a['meta'])) {
 					foreach ($a['meta'] as $k => $v) {
-						update_post_meta($pid, sanitize_key($k), $v);
+						update_post_meta($pid, sanitize_key($k), maybe_serialize($v));
 					}
 				} elseif (isset($a['key'], $a['value'])) {
-					update_post_meta($pid, sanitize_key($a['key']), $a['value']);
+					update_post_meta($pid, sanitize_key($a['key']), maybe_serialize($a['value']));
 				} else {
 					$r['error'] = array('code' => -42602, 'message' => 'meta array or key/value required');
 					break;
@@ -1195,6 +1270,7 @@ class WaicMcpModel extends WaicModel {
 				}
 				$aiProvider->init();
 				$aiProvider->setSaveError(false);
+				$aiProvider->setSessionId('mcp-' . substr(md5($a['message']), 0, 16));
 				$mid = 0;
 				if ($aiProvider->setApiOptions(array())) {
 					$opts = array('prompt' => $a['message']);

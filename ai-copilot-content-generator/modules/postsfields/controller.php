@@ -3,7 +3,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicPostsfieldsController extends WaicController {
+
 	protected $_code = 'postsfields';
+
+	public function getNoncedMethods() {
+		return array('startGeneration', 'getPostsResultsBulk', 'doActionTask', 'searchPostsList');
+	}
 	
 	public function searchPostsList() {
 		$res = new WaicResponse();

@@ -86,6 +86,7 @@ class WaicAction_ai_openrouter_generate_image extends WaicAction {
 			'gemini_size' => $this->getParam('orientation'),
 		);
 
+		$this->setAiProviderSessionId($aiProvider, $taskId, $variables, $step);
 		$result = $aiProvider->getImage($opts);
 		$error = $result['error'];
 		$attId = 0;

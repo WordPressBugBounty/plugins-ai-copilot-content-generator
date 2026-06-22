@@ -13,6 +13,10 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 	private $headers;
 	public $response;
 	
+	public static function parseUsage( $raw ) {
+		return WaicAiproviderModel::parseProviderUsage('deep-seek', $raw);
+	}
+
 	public function getEngine() {
 		return $this->engine;
 	}
@@ -125,7 +129,6 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 	}
 
 	private function sendRequest( $url, $method, $params = array(), $type = '' ) {
-		//WaicFrame::_()->saveDebugLogging(array('Send request' => $params));
 		$fields = empty($params['body']) ? json_encode($params) : $params['body'];
 
 		$stream = false;
@@ -140,7 +143,15 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 			'body' => $fields,
 			'stream' => $stream,
 		);
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => $method,
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'stream' => $stream ? 1 : 0,
+				'body_bytes' => isset($options['body']) ? strlen((string) $options['body']) : 0,
+			),
+		));
 		$pause = time() - $this->lastTime;
 		if ($pause < $this->sleep) {
 			sleep($this->sleep - $pause);
@@ -158,9 +169,10 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 			$data = wp_remote_retrieve_body($response);
 		}
 		$this->lastTime = time();
-		WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('body_bytes' => is_string($data) ? strlen($data) : 0)));
 		$results = array('error' => 1, 'his_id' => 0, 'tokens' => 0, 'length' => 0, 'data' => '');
 		$data = json_decode( $data );
+		$results['usage'] = self::parseUsage($data);
 
 		if (isset($data->error)) {
 			$results['msg'] = trim($data->error->message);
@@ -169,7 +181,7 @@ class WaicDeepseekModel extends WaicModel implements WaicAIProviderInterface {
 			}
 		} else if (isset($data->choices) && is_array($data->choices)) {
 			$results['error'] = 0;
-			$results['tokens'] = $data->usage->total_tokens;
+			$results['tokens'] = isset($data->usage->total_tokens) ? (int) $data->usage->total_tokens : 0;
 			if (!empty($data->choices[0]->message->tool_calls)) {
 				$results['tools'] = $data->choices[0]->message->tool_calls;
 				$results['tools_message'] = array('role' => 'assistant', 'content' => '', 'tool_calls' => $data->choices[0]->message->tool_calls);

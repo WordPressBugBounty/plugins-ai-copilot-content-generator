@@ -413,6 +413,8 @@ class WaicChatbotsModel extends WaicModel {
 		$userId = $user ? $user->ID : 0;
 		$isGuest = empty($userId);
 		$ip = isset($options['ip']) ? $options['ip'] : WaicUtils::getRealUserIp();
+		$chatId = sanitize_key((string) WaicUtils::getArrayValue($options, 'chat_id'));
+		$sessionId = empty($chatId) ? 'chat-' . (int) $taskId . '-' . substr(md5($userId . '|' . $ip . '|' . (int) $mode), 0, 16) : 'chat-' . (int) $taskId . '-' . $chatId;
 		
 		$hisModel = $workspace->getModel('history');
 	
@@ -700,6 +702,7 @@ class WaicChatbotsModel extends WaicModel {
 		$history = array(
 			'task_id' => $taskId,
 			'user_id' => $userId,
+			'session_id' => $sessionId,
 			'ip' => $ip,
 			'mode' => $mode,
 			'status' => 2,
@@ -714,6 +717,7 @@ class WaicChatbotsModel extends WaicModel {
 			);
 		} else {
 			$aiProvider->init( $taskId, $userId, $ip, $mode, false );
+			$aiProvider->setSessionId($sessionId);
 
 			if ($aiProvider->setApiOptions($apiOptions)) {
 				$opts = array('messages' => $prompt);
@@ -920,7 +924,7 @@ class WaicChatbotsModel extends WaicModel {
 				$rows[] = array(
 					WaicUtils::convertDateFormat($dd, 'Y-m-d', $dFormat),
 					( empty($uId) ? $guest : $log['user_login'] ),
-					esc_html($ip),
+					$ip,
 					$modes[$mode],
 					$log['sum_tokens'],
 					$log['duration'],
@@ -1224,6 +1228,7 @@ class WaicChatbotsModel extends WaicModel {
 			'Write the final system prompt in ' . $language . PHP_EOL . 
 			'Be specific, practical, and tailored to this website. ' . PHP_EOL .
 			'You must respond with exactly the system prompt text only. Do NOT include any headings, labels, explanations, code fences, markdown, or extra text. Return a single paragraph of 3-5 sentences tailored to the website. Nothing else.';
+		$aiProvider->setSessionId('chat-wizard-' . substr(md5($summary . '|' . $lang), 0, 16));
 		$result = $aiProvider->getText(array('prompt' => $prompt));
 		
 		
@@ -1288,6 +1293,7 @@ class WaicChatbotsModel extends WaicModel {
 				' OUTPUT JSON SCHEMA (keys must match exactly): ' . PHP_EOL .
 				'{"welcome_message": "","human_assistance_request": "","predefined_message_for_user": "","loader_text": "","placeholder_text": "","file_loader_text": "","predefined_error_message": "","placeholder_for_email": "","invalid_email_message": "","thank_you_message": "","pop_up_welcome_message": ""}' . PHP_EOL . PHP_EOL .
 				'Return only valid JSON — no markdown, no code fences, no extra text. Now produce the final JSON in ' . $language . '.';
+			$aiProvider->setSessionId('chat-wizard-locale-' . substr(md5($summary . '|' . $lang), 0, 16));
 			$result = $aiProvider->getText(array('prompt' => $prompt));
 		
 			if ($result['error']) {

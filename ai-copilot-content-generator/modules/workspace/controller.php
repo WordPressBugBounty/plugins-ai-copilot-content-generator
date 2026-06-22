@@ -3,7 +3,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicWorkspaceController extends WaicController {
+
 	protected $_code = 'workspace';
+
+	public function getNoncedMethods() {
+		return array('doActionTask', 'getCurrentTaskData', 'getHistoryList', 'deleteTasks', 'editTaskName', 'dismissNotice');
+	}
 	
 	public function getHistoryList() {
 		$res = new WaicResponse();

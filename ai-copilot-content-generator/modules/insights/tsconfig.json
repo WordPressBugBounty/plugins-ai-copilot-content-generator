@@ -1,0 +1,12 @@
+{
+	"compilerOptions": {
+		"target": "ES5",
+		"lib": ["DOM", "ES2015"],
+		"module": "none",
+		"outFile": "assets/js/admin.insights.js",
+		"strict": true,
+		"noImplicitReturns": true,
+		"removeComments": false
+	},
+	"files": ["assets/ts/admin.insights.ts"]
+}

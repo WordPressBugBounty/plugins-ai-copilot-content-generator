@@ -19,6 +19,10 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 	private $apiUrl = 'https://openrouter.ai/api';
 	private $apiVersion = 'v1';
 	
+	public static function parseUsage( $raw ) {
+		return WaicAiproviderModel::parseProviderUsage('openrouter', $raw);
+	}
+
 	public function getEngine() {
 		return $this->engine;
 	}
@@ -27,13 +31,13 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 	}
 	
 	public function getApiChatCompletionsUrl() {
-		return $this->apiUrl . '/' . $this->apiVersion . '/chat/completions';
+		return $this->apiUrl . '/' . $this->apiVersion . '/chat/completions?include=cost';
 	}
 	public function getApiModelsUrl() {
 		return $this->apiUrl . '/' . $this->apiVersion . '/models';
 	}
 	public function getApiImageUrl() {
-		return $this->apiUrl . '/' . $this->apiVersion . '/chat/completions';
+		return $this->apiUrl . '/' . $this->apiVersion . '/chat/completions?include=cost';
 	}
 
 	public function init() {
@@ -95,7 +99,14 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 			'headers' => $this->headers,
 			'timeout' => $this->timeout,
 		);
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => 'GET',
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'body_bytes' => 0,
+			),
+		));
 		
 		$response = wp_remote_get($url, $options);
 
@@ -104,7 +115,7 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 			return false;
 		}
 		$data = wp_remote_retrieve_body($response);
-		WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('body_bytes' => is_string($data) ? strlen($data) : 0)));
 		$models = array();
 		$images = array();
 		$tokens = array();
@@ -243,8 +254,6 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 		if (isset($params['gemini_size'])) {
 			unset($params['gemini_size']);
 		}
-		//WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $params));
-
 		$stream = false;
 		if (array_key_exists('stream', $params) && $params['stream']) {
 			$stream = true;
@@ -261,7 +270,15 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 			$fields = empty($params['body']) ? json_encode($params) : $params['body'];
 			$options['body'] = $fields;
 		}
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => $method,
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'stream' => $stream ? 1 : 0,
+				'body_bytes' => isset($options['body']) ? strlen((string) $options['body']) : 0,
+			),
+		));
 		$pause = time() - $this->lastTime;
 		if ($pause < $this->sleep) {
 			sleep($this->sleep - $pause);
@@ -277,10 +294,10 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 			$data = wp_remote_retrieve_body($response);
 		}
 		$this->lastTime = time();
-		//WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
 		$results = array('error' => 1, 'his_id' => 0, 'tokens' => 0, 'length' => 0, 'data' => '');
 		$data = json_decode( $data );
-		WaicFrame::_()->saveDebugLogging(array('Result from API2' => $data));
+		$results['usage'] = self::parseUsage($data);
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('decoded' => is_object($data) ? 'object' : gettype($data))));
 		if (isset($data->usage) && isset($data->usage->total_tokens)) {
 			$results['tokens'] = $data->usage->total_tokens;
 		}
@@ -292,7 +309,7 @@ class WaicOpenrouterModel extends WaicModel implements WaicAIProviderInterface {
 			return array('results' => $results, 'params' => $params);
 		} else if (isset($data->choices) && is_array($data->choices)) {
 			$results['error'] = 0;
-			$results['tokens'] = $data->usage->total_tokens;
+			$results['tokens'] = isset($data->usage->total_tokens) ? (int) $data->usage->total_tokens : 0;
 			if ('image' === $type) {
 				if (isset($data->choices[0]->images) && isset($data->choices[0]->images[0]->image_url->url)) {
 					$imgUrl = $data->choices[0]->images[0]->image_url->url;

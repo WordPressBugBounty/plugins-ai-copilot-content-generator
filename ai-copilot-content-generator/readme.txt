@@ -1,10 +1,10 @@
-=== AI Chatbot & Workflow Automation by AIWU ===
+=== AI Copilot - Content Generator ===
 Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
 Tested up to: 7.0
-Stable tag: 1.4.21
+Stable tag: 1.5.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -200,14 +200,13 @@ No. Most features are no-code and work through visual builders and templates. De
 
 == Changelog ==
 
-1.4.20 (13/05/2026)
-- MCP authorisation fix
-
-1.4.19 (09/05/2026)
-- Security issue fixed  Missing Authorization to Unauthenticated Arbitrary Data Deletion via AJAX Actions 'removeGroup' and 'clear'
-
-1.4.17 (27/04/2026)
-- Minor bugs
+1.5.4 (20/06/2026)
+- Security: Hardened MCP OAuth consent so authorization codes can only be issued by an authenticated WordPress user with the required capability.
+- Security: Bound OAuth authorization codes, access tokens and refresh tokens to the approving user and registered client; legacy unbound OAuth transients are invalidated during upgrade.
+- Security: Replaced MCP admin impersonation with direct-token owner binding and user-bound OAuth restoration.
+- Security: Added MCP tool capability guardrails for users, options, plugins, posts, terms, comments and media actions.
+- OAuth: Fixed the consent nonce field name and added strict client_id, redirect_uri, scope and PKCE validation.
+- Chatbot Insights Added
 
 1.4.11 (11/03/2026)
 - Security fix

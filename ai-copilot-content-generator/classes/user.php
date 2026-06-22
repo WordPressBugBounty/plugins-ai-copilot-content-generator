@@ -16,7 +16,7 @@ class WaicUser {
 		if (!function_exists('wp_get_current_user')) {
 			WaicFrame::_()->loadPlugins();
 		}
-		return current_user_can('manage_options');
+		return current_user_can( WaicFrame::_()->getModule('adminmenu')->getMainCap() );
 	}
 	public function getCurrentUserPosition() {
 		if ($this->isAdmin()) {

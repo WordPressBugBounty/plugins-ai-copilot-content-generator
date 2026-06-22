@@ -19,6 +19,10 @@ class WaicGeminiModel extends WaicModel implements WaicAIProviderInterface {
 
 	private $geminiParams = array();
 
+	public static function parseUsage( $raw ) {
+		return WaicAiproviderModel::parseProviderUsage('gemini', $raw);
+	}
+
 	private function getApiChatCompletionsUrl() {
 		return $this->apiUrl . '/models/' . $this->model . ':generateContent?key=' . $this->apiKey;
 	}
@@ -178,7 +182,6 @@ class WaicGeminiModel extends WaicModel implements WaicAIProviderInterface {
 	}
 
 	private function sendRequest( $url, $method = 'POST', $params = array(), $type = '' ) {
-		//WaicFrame::_()->saveDebugLogging(array('Send request' => $this->geminiParams));
 		$fields = json_encode($this->geminiParams);
 
 		$options = array(
@@ -187,7 +190,14 @@ class WaicGeminiModel extends WaicModel implements WaicAIProviderInterface {
 			'method' => $method,
 			'body' => $fields,
 		);
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => $method,
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'body_bytes' => isset($options['body']) ? strlen((string) $options['body']) : 0,
+			),
+		));
 
 		$pause = time() - $this->lastTime;
 		if ($pause < $this->sleep) {
@@ -202,9 +212,10 @@ class WaicGeminiModel extends WaicModel implements WaicAIProviderInterface {
 
 		$data = wp_remote_retrieve_body($response);
 
-		WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('body_bytes' => is_string($data) ? strlen($data) : 0)));
 		$results = array('error' => 1, 'msg' => '', 'his_id' => 0, 'tokens' => 0, 'length' => 0, 'data' => '');
 		$data = json_decode($data);
+		$results['usage'] = self::parseUsage($data);
 
 		if (isset($data->error->message)) {
 			$results['msg'] = $data->error->message;

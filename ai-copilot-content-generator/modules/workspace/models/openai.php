@@ -19,6 +19,10 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 	private $apiUrl = 'https://api.openai.com';
 	private $apiVersion = 'v1';
 	
+	public static function parseUsage( $raw ) {
+		return WaicAiproviderModel::parseProviderUsage('open-ai', $raw);
+	}
+
 	public function getEngine() {
 		return $this->engine;
 	}
@@ -223,8 +227,6 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 		if (isset($params['gemini_size'])) {
 			unset($params['gemini_size']);
 		}
-		//WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $params));
-
 		$stream = false;
 		if (array_key_exists('stream', $params) && $params['stream']) {
 			$stream = true;
@@ -237,13 +239,19 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 			//'body' => $fields,
 			'stream' => $stream,
 		);
-		$forLog = $options;
 		if ('POST' == $method) {
-			$forLog['body'] = empty($params['body']) ? $params : $params['body'];
 			$fields = empty($params['body']) ? json_encode($params) : $params['body'];
 			$options['body'] = $fields;
 		} 
-		WaicFrame::_()->saveDebugLogging(array('endpoint' => $url, 'Send request' => $options));
+		WaicFrame::_()->saveDebugLogging(array(
+			'endpoint' => preg_replace('/([?&]key=)[^&]+/i', '$1[redacted]', $url),
+			'Send request' => array(
+				'method' => $method,
+				'timeout' => WaicUtils::getArrayValue($options, 'timeout', 0, 1),
+				'stream' => $stream ? 1 : 0,
+				'body_bytes' => isset($options['body']) ? strlen((string) $options['body']) : 0,
+			),
+		));
 		$pause = time() - $this->lastTime;
 		if ($pause < $this->sleep) {
 			sleep($this->sleep - $pause);
@@ -259,9 +267,10 @@ class WaicOpenaiModel extends WaicModel implements WaicAIProviderInterface {
 			$data = wp_remote_retrieve_body($response);
 		}
 		$this->lastTime = time();
-		WaicFrame::_()->saveDebugLogging(array('Result from API' => $data));
+		WaicFrame::_()->saveDebugLogging(array('Result from API' => array('body_bytes' => is_string($data) ? strlen($data) : 0)));
 		$results = array('error' => 1, 'his_id' => 0, 'tokens' => 0, 'length' => 0, 'data' => '');
 		$data = json_decode( $data );
+		$results['usage'] = self::parseUsage($data);
 		if (isset($data->usage) && isset($data->usage->total_tokens)) {
 			$results['tokens'] = $data->usage->total_tokens;
 		}

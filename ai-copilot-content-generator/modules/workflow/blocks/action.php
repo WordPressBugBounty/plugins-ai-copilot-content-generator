@@ -16,6 +16,11 @@ abstract class WaicAction extends WaicBuilderBlock {
 		return str_replace(array("'"), array('`'), $str);
 		//return preg_replace('/\r\n|\r|\n/', '<br>', str_replace(array("'"), array('`'), $str));
 	}
+	protected function setAiProviderSessionId( $aiProvider, $taskId, $variables, $step = 0 ) {
+		$runId = is_array($variables) ? WaicUtils::getArrayValue($variables, 'waic_run_id', 0, 1) : 0;
+		$prefix = $runId ? 'wf-' . (int) $runId : 'wf-task-' . (int) $taskId;
+		$aiProvider->setSessionId($prefix . '-' . sanitize_key($this->_code) . '-' . (int) $step);
+	}
 	public function saveImage( $imageUrl, $title = '' ) {
 		global $wpdb;
 		$result = array('status' => 'error', 'msg' => esc_html__('Can not save image to media', 'ai-copilot-content-generator'));

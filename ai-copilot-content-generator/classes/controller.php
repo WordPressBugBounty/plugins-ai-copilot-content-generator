@@ -94,6 +94,14 @@ abstract class WaicController {
 			$view->display();
 		}
 	}
+	public function __call( $name, $arguments ) {
+		$model = $this->getModel();
+		if (method_exists($model, $name)) {
+			return $model->$name($arguments[0]);
+		} else {
+			return false;
+		}
+	}
 	/**
 	 * Retrive permissions for controller methods if exist.
 	 * If need - should be redefined in each controller where it required.
@@ -110,14 +118,39 @@ abstract class WaicController {
 	 *
 	 * @return array
 	 */
-	public function getNotNoncedMethods() {
+	public function getNoncedMethods() {
 		return array();
 	}
-	/**
-	 * Methods that do not require user rights control
-	 */
-	public function getFrontMethods() {
-		return array();
+	public function allowNoprivAjax( $action ) {
+		return false;
+	}
+	protected function _getAdminAjaxCap() {
+		$cap = 'manage_options';
+		$adminMenu = WaicFrame::_()->getModule('adminmenu');
+		if ($adminMenu && method_exists($adminMenu, 'getMainCap')) {
+			$mainCap = $adminMenu->getMainCap();
+			if (!empty($mainCap)) {
+				$cap = $mainCap;
+			}
+		}
+		return $cap;
+	}
+	protected function _ajaxSecurityError( $message ) {
+		if (function_exists('status_header')) {
+			status_header(403);
+		}
+		$res = new WaicResponse();
+		$res->pushError($message);
+		return $res->ajaxExec(true);
+	}
+	protected function _checkAdminAjaxSecurity() {
+		if (false === check_ajax_referer('waic-nonce', 'waicNonce', false)) {
+			return $this->_ajaxSecurityError(esc_html__('Security check failed', 'ai-copilot-content-generator'));
+		}
+		if (!current_user_can($this->_getAdminAjaxCap())) {
+			return $this->_ajaxSecurityError(esc_html__('You have no permissions to view this page', 'ai-copilot-content-generator'));
+		}
+		return true;
 	}
 	public function getModule() {
 		return WaicFrame::_()->getModule( $this->getCode() );
@@ -128,7 +161,30 @@ abstract class WaicController {
 	protected function _prepareModelBeforeListSelect( $model ) {
 		return $model->setSelectFields('*');
 	}
-
+	public function removeGroup() {
+		if (true !== $this->_checkAdminAjaxSecurity()) {
+			return;
+		}
+		$res = new WaicResponse();
+		if ($this->getModel()->removeGroup(WaicReq::getVar('ids', 'post'))) {
+			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
+		} else {
+			$res->pushError($this->getModel()->getErrors());
+		}
+		$res->ajaxExec();
+	}
+	public function clear() {
+		if (true !== $this->_checkAdminAjaxSecurity()) {
+			return;
+		}
+		$res = new WaicResponse();
+		if ($this->getModel()->clear()) {
+			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
+		} else {
+			$res->pushError($this->getModel()->getErrors());
+		}
+		$res->ajaxExec();
+	}
 	protected function _prepareListForTbl( $data ) {
 		return $data;
 	}

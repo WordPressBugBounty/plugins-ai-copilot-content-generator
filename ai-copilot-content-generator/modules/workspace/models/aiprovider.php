@@ -4,6 +4,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
+	const EST_FLAG_TOKENS = 1;
+	const EST_FLAG_COST = 2;
+	const EST_FLAG_ABORTED = 4;
+	const EST_FLAG_CACHE_MAJ = 8;
+	const EST_FLAG_FINE_TUNED_BASE_PRICING = 16;
+	const EST_FLAG_PRICING_UNKNOWN = 32;
 
 	private $provider = null;
 	private $imageProvider = null;
@@ -13,6 +19,8 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	private $userIP;
 	private $genMode;
 	private $saveError = true;
+	private $sessionId = null;
+	private $lastDurationMs = null;
 	
 	public function getEngine( $type = '' ) {
 		switch ( $type ) {
@@ -70,6 +78,11 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	public function setFeature( $feature ) {
 		$this->feature = $feature;
 	}
+	public function setSessionId( $sessionId ) {
+		$sessionId = trim(sanitize_text_field((string) $sessionId));
+		$this->sessionId = empty($sessionId) ? null : substr($sessionId, 0, 64);
+		return $this;
+	}
 	public function setSaveError( $saveError ) {
 		$this->saveError = $saveError;
 	}
@@ -94,8 +107,10 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	public function getText( $params, $stream = null, $type = '' ) {
 		$step = 0;
 		$isTools = false;
-		$tokens = 0;
 		$maxSteps = 5;
+		$start = microtime(true);
+		$stepUsages = array();
+		$toolNames = array();
 		if (!empty($params['tools'])) {
 			$toolsOptions = $params['tools']['options'];
 			$params['tools'] = $this->getToolsList($params['tools']['functions']);
@@ -111,14 +126,27 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 			if (false === $data) {
 				$results['error'] = 1;
 				$results['msg'] = WaicFrame::_()->getLastError();
+				$this->lastDurationMs = $this->elapsedMs($start);
+				$usage = self::aggregateUsages($stepUsages);
+				if (empty($usage['total_tokens']) && empty($usage['input_tokens']) && empty($usage['output_tokens'])) {
+					$usage = $this->usageFromResults($results, $params, 'chat');
+				}
+				$usage['est_flags'] |= self::EST_FLAG_ABORTED;
+				$history = $this->getHistory($results, $params, $type, '', $usage, array('steps_count' => $step, 'tool_names' => $toolNames, 'tool_calls_count' => count($toolNames)));
+				$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 				return $results;
 			}
 
 			$results = $data['results'];
 			$params = $data['params'];
+			$usage = $this->usageFromResults($results, $params, 'chat');
+			$stepUsages[] = $usage;
 			if ($isTools && $step < $maxSteps && $results['data'] == 'tool_calls' && !empty($results['tools']) && !empty($results['tools'][0])) {
 				$tool = $results['tools'][0];
 				$name = empty($tool->function->name) ? '' : $tool->function->name;
+				if (!empty($name)) {
+					$toolNames[] = sanitize_key($name);
+				}
 				if (empty($tool->function->arguments)) {
 					$args = array();
 				} else if (is_string($tool->function->arguments)) {
@@ -134,11 +162,16 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 					) : $results['tools_message'];
 					$params['messages'][] = $this->provider->getToolsAnswer($answer, $tool);
 				}
-				$tokens += $results['tokens'];
 				continue;
 			}
-			$results['tokens'] += $tokens;
-			$history = $this->getHistory($results, $params, $type);
+			$this->lastDurationMs = $this->elapsedMs($start);
+			$usage = self::aggregateUsages($stepUsages);
+			$results['tokens'] = (int) $usage['total_tokens'];
+			$history = $this->getHistory($results, $params, $type, '', $usage, array(
+				'steps_count' => $step,
+				'tool_names' => array_values(array_unique($toolNames)),
+				'tool_calls_count' => count($toolNames),
+			));
 			$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 			if ($results['data'] == 'tool_calls') {
 				$results['data'] = __('I couldn\'t find anything matching your query. Could you try rephrasing?', 'ai-copilot-content-generator');
@@ -155,11 +188,15 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 			return false;
 		}
 
+		$start = microtime(true);
 		$data = $this->imageProvider->getImage( $params );
 
 		if (false === $data) {
 			$results['error'] = 1;
 			$results['msg'] = WaicFrame::_()->getLastError();
+			$this->lastDurationMs = $this->elapsedMs($start);
+			$history = $this->getHistory($results, $params, '', 'image');
+			$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 
 			return $results;
 		}
@@ -167,6 +204,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 
 		$results = $data['results'];
 		$params = $data['params'];
+		$this->lastDurationMs = $this->elapsedMs($start);
 
 		$history = $this->getHistory($results, $params, '', 'image');
 
@@ -179,34 +217,91 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		return str_replace('-', '', $engine);
 	}
 
-	private function getHistory( $results, $params, $type = '', $typeProvider = '' ) {
+	private function getHistory( $results, $params, $type = '', $typeProvider = '', $unifiedUsage = null, $meta = array() ) {
+		$engine = $this->getEngine($typeProvider);
+		$model = empty($params['model']) ? $this->getEngineModel($typeProvider) : $params['model'];
+		$operation = $this->getHistoryOperation($type, $typeProvider);
+		if (is_null($unifiedUsage)) {
+			$unifiedUsage = $this->usageFromResults($results, $params, $operation);
+		}
+		$unifiedUsage = self::normalizeUsage($unifiedUsage);
+		if (!empty($unifiedUsage['cached_tokens']) && !empty($unifiedUsage['input_tokens']) && $unifiedUsage['cached_tokens'] > (0.8 * $unifiedUsage['input_tokens'])) {
+			$unifiedUsage['est_flags'] |= self::EST_FLAG_CACHE_MAJ;
+		}
+		$pricing = WaicFrame::_()->getModule('insights')->getModel('pricing')->calculateMicro($engine, $model, $unifiedUsage, $operation);
+		$estFlags = (int) $unifiedUsage['est_flags'] | (int) WaicUtils::getArrayValue($pricing, 'est_flags', 0, 1);
+		$historyMeta = array_merge(array(
+			'steps_count' => 1,
+			'tool_names' => array(),
+		), is_array($meta) ? $meta : array());
+		$historyMeta['tool_names'] = empty($historyMeta['tool_names']) || !is_array($historyMeta['tool_names'])
+			? array()
+			: array_values(array_unique(array_map('sanitize_key', $historyMeta['tool_names'])));
+		$toolCallsCount = isset($historyMeta['tool_calls_count']) ? max(0, (int) $historyMeta['tool_calls_count']) : count($historyMeta['tool_names']);
+		unset($historyMeta['tool_calls_count']);
 		$history = array(
-			'engine' => $this->getEngine($typeProvider),
-			'model' => empty($params['model']) ? $this->getEngineModel($typeProvider) : $params['model'],
+			'engine' => $engine,
+			'model' => $model,
+			'operation' => $operation,
 			'task_id' => $this->taskId,
 			'feature' => $this->feature,
 			'user_id' => $this->userId,
+			'session_id' => $this->sessionId,
 			'ip' => $this->userIP,
 			'mode' => $this->genMode,
+			'duration_ms' => $this->lastDurationMs,
+			'input_tokens' => (int) $unifiedUsage['input_tokens'],
+			'output_tokens' => (int) $unifiedUsage['output_tokens'],
+			'reasoning_tokens' => (int) $unifiedUsage['reasoning_tokens'],
+			'cached_tokens' => (int) $unifiedUsage['cached_tokens'],
+			'cache_write_tokens' => (int) $unifiedUsage['cache_write_tokens'],
+			'tokens' => (int) $unifiedUsage['total_tokens'],
+			'cost_micro_usd' => (int) WaicUtils::getArrayValue($pricing, 'cost_micro_usd', 0, 1),
+			'est_flags' => $estFlags,
+			'tool_calls_count' => $toolCallsCount,
+			'meta' => $historyMeta,
 		);
-		$history['status'] = $results['error'];
-		$history['tokens'] = $results['tokens'];
+		$history['status'] = (int) WaicUtils::getArrayValue($results, 'error', 0, 1);
+		if (isset($results['best_score'])) {
+			$history['best_score_x1000'] = (int) round(max(0, min(1, (float) $results['best_score'])) * 1000);
+		}
+		$history['cost'] = round($history['cost_micro_usd'] / 1000000, 4);
 
 		return $history;
 	}
+	private function getHistoryOperation( $type = '', $typeProvider = '' ) {
+		if ('image' === $typeProvider) {
+			return 'image';
+		}
+		switch ($type) {
+			case 'embeddings':
+				return 'embedding';
+			case 'train':
+				return 'fine_tune_upload';
+			case 'check_train':
+				return 'fine_tune_status';
+			default:
+				return 'chat';
+		}
+	}
 	
 	public function sendFile( $params ) {
+		$start = microtime(true);
 		$data = $this->provider->sendFile( $params );
 
 		if (false === $data) {
 			$results['error'] = 1;
 			$results['msg'] = WaicFrame::_()->getLastError();
+			$this->lastDurationMs = $this->elapsedMs($start);
+			$history = $this->getHistory($results, $params, 'train');
+			$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 
 			return $results;
 		}
 
 		$results = $data['results'];
 		$params = $data['params'];
+		$this->lastDurationMs = $this->elapsedMs($start);
 
 		$history = $this->getHistory($results, $params, 'train');
 
@@ -215,17 +310,22 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		return $results;
 	}
 	public function getFineTunes( $params, $method = 'POST', $job = false ) {
+		$start = microtime(true);
 		$data = $this->provider->getFineTunes( $params, $method, $job );
 
 		if (false === $data) {
 			$results['error'] = 1;
 			$results['msg'] = WaicFrame::_()->getLastError();
+			$this->lastDurationMs = $this->elapsedMs($start);
+			$history = $this->getHistory($results, $params, 'check_train');
+			$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 
 			return $results;
 		}
 
 		$results = $data['results'];
 		$params = $data['params'];
+		$this->lastDurationMs = $this->elapsedMs($start);
 
 		$history = $this->getHistory($results, $params, 'check_train');
 
@@ -234,17 +334,22 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		return $results;
 	}
 	public function sendEmbeddings( $params, $method = 'POST' ) {
+		$start = microtime(true);
 		$data = $this->provider->sendEmbeddings( $params, $method );
 
 		if (false === $data) {
 			$results['error'] = 1;
 			$results['msg'] = WaicFrame::_()->getLastError();
+			$this->lastDurationMs = $this->elapsedMs($start);
+			$history = $this->getHistory($results, $params, 'embeddings');
+			$results['his_id'] = WaicFrame::_()->getModule('workspace')->getModel('history')->saveHistory($history);
 
 			return $results;
 		}
 
 		$results = $data['results'];
 		$params = $data['params'];
+		$this->lastDurationMs = $this->elapsedMs($start);
 
 		$history = $this->getHistory($results, $params, 'embeddings');
 
@@ -252,6 +357,196 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 
 		return $results;
 	}
+	private function elapsedMs( $start ) {
+		return max(0, (int) round((microtime(true) - $start) * 1000));
+	}
+
+	public static function emptyUsage() {
+		return array(
+			'input_tokens' => 0,
+			'output_tokens' => 0,
+			'reasoning_tokens' => 0,
+			'cached_tokens' => 0,
+			'cache_write_tokens' => 0,
+			'total_tokens' => 0,
+			'est_flags' => 0,
+		);
+	}
+
+	public static function normalizeUsage( $usage ) {
+		$base = self::emptyUsage();
+		if (is_array($usage)) {
+			foreach ($base as $key => $value) {
+				if (isset($usage[$key])) {
+					$base[$key] = max(0, (int) $usage[$key]);
+				}
+			}
+			if (isset($usage['_openrouter_cost_micro'])) {
+				$base['_openrouter_cost_micro'] = max(0, (int) $usage['_openrouter_cost_micro']);
+			}
+			if (isset($usage['images_count'])) {
+				$base['images_count'] = max(0, (int) $usage['images_count']);
+			}
+			if (isset($usage['image_count'])) {
+				$base['images_count'] = max((int) WaicUtils::getArrayValue($base, 'images_count', 0, 1), max(0, (int) $usage['image_count']));
+			}
+			foreach (array('size', 'dimensions', 'quality') as $key) {
+				if (isset($usage[$key]) && is_scalar($usage[$key])) {
+					$base[$key] = substr(sanitize_text_field((string) $usage[$key]), 0, 40);
+				}
+			}
+			foreach (array('search_count', 'searches', 'web_search_count', 'num_search_queries') as $key) {
+				if (isset($usage[$key])) {
+					$base['search_count'] = max((int) WaicUtils::getArrayValue($base, 'search_count', 0, 1), max(0, (int) $usage[$key]));
+				}
+			}
+		}
+		$sumTokens = $base['input_tokens'] + $base['output_tokens'] + $base['reasoning_tokens'] + $base['cached_tokens'] + $base['cache_write_tokens'];
+		if (empty($base['total_tokens']) && $sumTokens > 0) {
+			$base['total_tokens'] = $sumTokens;
+		}
+		return $base;
+	}
+
+	public static function aggregateUsages( $stepUsages ) {
+		$total = self::emptyUsage();
+		if (!is_array($stepUsages)) {
+			return $total;
+		}
+		foreach ($stepUsages as $usage) {
+			if (!is_array($usage)) {
+				continue;
+			}
+			$usage = self::normalizeUsage($usage);
+			foreach (array('input_tokens', 'output_tokens', 'reasoning_tokens', 'cached_tokens', 'cache_write_tokens', 'total_tokens') as $key) {
+				$total[$key] += (int) $usage[$key];
+			}
+			$total['est_flags'] |= (int) $usage['est_flags'];
+			if (isset($usage['_openrouter_cost_micro'])) {
+				if (!isset($total['_openrouter_cost_micro'])) {
+					$total['_openrouter_cost_micro'] = 0;
+				}
+				$total['_openrouter_cost_micro'] += (int) $usage['_openrouter_cost_micro'];
+			}
+		}
+		return $total;
+	}
+
+	public static function parseProviderUsage( $engine, $raw ) {
+		$engine = sanitize_key((string) $engine);
+		if (is_object($raw)) {
+			$raw = json_decode(wp_json_encode($raw), true);
+		}
+		$raw = is_array($raw) ? $raw : array();
+		$u = self::emptyUsage();
+		if ('gemini' === $engine) {
+			$usage = WaicUtils::getArrayValue($raw, 'usageMetadata', array(), 2);
+			if (empty($usage)) {
+				$u['est_flags'] |= self::EST_FLAG_TOKENS;
+				return $u;
+			}
+			$u['input_tokens'] = (int) WaicUtils::getArrayValue($usage, 'promptTokenCount', 0, 1);
+			$u['output_tokens'] = (int) WaicUtils::getArrayValue($usage, 'candidatesTokenCount', 0, 1);
+			$u['cached_tokens'] = (int) WaicUtils::getArrayValue($usage, 'cachedContentTokenCount', 0, 1);
+			$u['reasoning_tokens'] = (int) WaicUtils::getArrayValue($usage, 'thoughtsTokenCount', 0, 1);
+			$u['total_tokens'] = (int) WaicUtils::getArrayValue($usage, 'totalTokenCount', 0, 1);
+			$u['input_tokens'] = max(0, $u['input_tokens'] - $u['cached_tokens']);
+			return self::normalizeUsage($u);
+		}
+		$usage = WaicUtils::getArrayValue($raw, 'usage', array(), 2);
+		if (empty($usage)) {
+			$u['est_flags'] |= self::EST_FLAG_TOKENS;
+			return $u;
+		}
+		if ('claude' === $engine) {
+			$u['input_tokens'] = (int) WaicUtils::getArrayValue($usage, 'input_tokens', 0, 1);
+			$u['output_tokens'] = (int) WaicUtils::getArrayValue($usage, 'output_tokens', 0, 1);
+			$u['cached_tokens'] = (int) WaicUtils::getArrayValue($usage, 'cache_read_input_tokens', 0, 1);
+			$u['cache_write_tokens'] = (int) WaicUtils::getArrayValue($usage, 'cache_creation_input_tokens', 0, 1);
+			return self::normalizeUsage($u);
+		}
+		$u['input_tokens'] = (int) WaicUtils::getArrayValue($usage, 'prompt_tokens', 0, 1);
+		$u['output_tokens'] = (int) WaicUtils::getArrayValue($usage, 'completion_tokens', 0, 1);
+		$u['total_tokens'] = (int) WaicUtils::getArrayValue($usage, 'total_tokens', 0, 1);
+		$details = WaicUtils::getArrayValue($usage, 'prompt_tokens_details', array(), 2);
+		$u['cached_tokens'] = (int) WaicUtils::getArrayValue($details, 'cached_tokens', 0, 1);
+		if ('deep-seek' === $engine || 'deepseek' === $engine) {
+			$u['cached_tokens'] = (int) WaicUtils::getArrayValue($usage, 'prompt_cache_hit_tokens', $u['cached_tokens'], 1);
+			$u['reasoning_tokens'] = (int) WaicUtils::getArrayValue($usage, 'reasoning_tokens', 0, 1);
+		} else {
+			$completionDetails = WaicUtils::getArrayValue($usage, 'completion_tokens_details', array(), 2);
+			$u['reasoning_tokens'] = (int) WaicUtils::getArrayValue($completionDetails, 'reasoning_tokens', 0, 1);
+		}
+		$u['input_tokens'] = max(0, $u['input_tokens'] - $u['cached_tokens']);
+		if ('openrouter' === $engine && isset($usage['cost'])) {
+			$u['_openrouter_cost_micro'] = (int) round(((float) $usage['cost']) * 1000000);
+		}
+		if ('perplexity' === $engine) {
+			foreach (array('search_count', 'searches', 'web_search_count', 'num_search_queries') as $key) {
+				if (isset($usage[$key])) {
+					$u['search_count'] = max(0, (int) $usage[$key]);
+					break;
+				}
+			}
+		}
+		return self::normalizeUsage($u);
+	}
+
+	private function usageFromResults( $results, $params, $operation = 'chat' ) {
+		$engine = $this->getEngine('image' === $operation ? 'image' : '');
+		$usage = self::emptyUsage();
+		if (!empty($results['raw_response'])) {
+			$usage = self::parseProviderUsage($engine, $results['raw_response']);
+		} else if (!empty($results['usage']) && is_array($results['usage'])) {
+			$usage = self::normalizeUsage($results['usage']);
+		} else if (!empty($results['tokens'])) {
+			$usage['total_tokens'] = (int) $results['tokens'];
+		} else {
+			$usage['est_flags'] |= self::EST_FLAG_TOKENS;
+		}
+		if ($usage['est_flags'] & self::EST_FLAG_TOKENS) {
+			$promptText = $this->textFromParams($params);
+			$outputText = is_string(WaicUtils::getArrayValue($results, 'data')) ? WaicUtils::getArrayValue($results, 'data') : '';
+			$usage['input_tokens'] = $this->estimateTokensFromText($promptText);
+			$usage['output_tokens'] = $this->estimateTokensFromText($outputText);
+			$usage['total_tokens'] = $usage['input_tokens'] + $usage['output_tokens'];
+		}
+		if ('image' === $operation && empty($usage['total_tokens'])) {
+			$usage['images_count'] = max(1, (int) WaicUtils::getArrayValue($params, 'n', 1, 1));
+			$usage['size'] = WaicUtils::getArrayValue($params, 'size', WaicUtils::getArrayValue($params, 'dimensions', ''));
+			$usage['quality'] = WaicUtils::getArrayValue($params, 'quality', '');
+		}
+		return self::normalizeUsage($usage);
+	}
+
+	private function textFromParams( $params ) {
+		if (isset($params['prompt']) && is_scalar($params['prompt'])) {
+			return (string) $params['prompt'];
+		}
+		$text = '';
+		if (!empty($params['messages']) && is_array($params['messages'])) {
+			foreach ($params['messages'] as $message) {
+				if (is_array($message) && isset($message['content'])) {
+					if (is_scalar($message['content'])) {
+						$text .= ' ' . $message['content'];
+					} else if (is_array($message['content'])) {
+						$text .= ' ' . wp_json_encode($message['content']);
+					}
+				}
+			}
+		}
+		return trim($text);
+	}
+
+	private function estimateTokensFromText( $text ) {
+		$text = trim(wp_strip_all_tags((string) $text));
+		if ('' === $text) {
+			return 0;
+		}
+		$length = function_exists('mb_strlen') ? mb_strlen($text, 'UTF-8') : strlen($text);
+		return max(1, (int) ceil($length / 4));
+	}
+
 	public function addTaxonomiesArgs( $args ) {
 		$args['taxonomies'] = array(
 			'type' => 'array',

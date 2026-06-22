@@ -87,6 +87,9 @@ class WaicOptionsModel extends WaicModel {
 							$needSave = true;
 						}
 					}
+					if ('mcp' == $gr && $this->bindMcpTokenOwner($d)) {
+						$needSave = true;
+					}
 					if ($needSave) {
 						$this->_updateOptsInDb($gr);
 					}
@@ -98,6 +101,23 @@ class WaicOptionsModel extends WaicModel {
 			return false;
 		}
 		return true;
+	}
+	private function bindMcpTokenOwner( $data ) {
+		if (!is_array($data) || !array_key_exists('mcp_token', $data)) {
+			return false;
+		}
+		$newToken = sanitize_text_field($data['mcp_token']);
+		if (empty($newToken)) {
+			return $this->save('mcp', 'mcp_token_user_id', 0, true);
+		}
+		$userId = get_current_user_id();
+		if (!$userId || !current_user_can('manage_options')) {
+			return $this->save('mcp', 'mcp_token_user_id', 0, true);
+		}
+		if (absint($this->get('mcp', 'mcp_token_user_id')) === absint($userId)) {
+			return false;
+		}
+		return $this->save('mcp', 'mcp_token_user_id', absint($userId), true);
 	}
 	public function removeOptions( $gr ) {
 		$tabs = $this->getModule()->getOptionsTabsList();
@@ -167,6 +187,7 @@ class WaicOptionsModel extends WaicModel {
 				'e_mcp' => 0,
 				'mcp_logging' => 0,
 				'mcp_oauth' => 0,
+				'mcp_token_user_id' => 0,
 			),
 			'plugin' => array(
 				'user_statistics' => 1,

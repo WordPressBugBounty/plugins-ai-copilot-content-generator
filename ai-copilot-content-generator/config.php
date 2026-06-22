@@ -46,10 +46,10 @@ define('WAIC_MAIN_FILE', 'ai-copilot-content-generator.php');
 
 define('WAIC_DEFAULT', 'default');
 
-define('WAIC_VERSION', '1.4.21');
+define('WAIC_VERSION', '1.5.4');
 
 define('WAIC_CLASS_PREFIX', 'waicc');
-define('WAIC_TEST_MODE', true);
+define('WAIC_TEST_MODE', false);
 
 define('WAIC_ADMIN', 'admin');
 define('WAIC_LOGGED', 'logged');

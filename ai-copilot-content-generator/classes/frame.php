@@ -164,9 +164,7 @@ class WaicFrame extends WaicBaseObject {
 		$res = true;
 		$mod = $this->getModule($code);
 		$action = strtolower($action);
-		if (!$mod || !method_exists($mod->getController(), $action)) {
-			return false;
-		} else {
+		if ($mod) {
 			$permissions = $mod->getController()->getPermissions();
 			if (!empty($permissions)) {  // Special permissions
 				$user = new WaicUser();
@@ -210,25 +208,13 @@ class WaicFrame extends WaicBaseObject {
 					}
 				}
 			}
-			if ($res) {
-				$frontMethods = $mod->getController()->getFrontMethods();
-				if (!empty($frontMethods)) {
-					$frontMethods = array_map('strtolower', $frontMethods);
-				}
-				if (empty($frontMethods) || !in_array($action, $frontMethods)) {
-					$user = new WaicUser();
-					if (!$user->isAdmin()) {
-						$res = false;
-					}
-				}
-			}
 			if ($res) { // Additional check for nonces
-				$notNoncedMethods = $mod->getController()->getNotNoncedMethods();
-				if (empty($notNoncedMethods) || !in_array($action, $notNoncedMethods)) {
-					if (!function_exists('check_ajax_referer')) {
-						$this->loadPlugins();
+				$noncedMethods = $mod->getController()->getNoncedMethods();
+				if (!empty($noncedMethods)) {
+					$noncedMethods = array_map('strtolower', $noncedMethods);
+					if (in_array($action, $noncedMethods)) {
+						check_ajax_referer('waic-nonce', 'waicNonce');
 					}
-					check_ajax_referer('waic-nonce', 'waicNonce');
 				}
 			}
 		}
@@ -263,7 +249,7 @@ class WaicFrame extends WaicBaseObject {
 				}
 			}
 			
-			/*if (!$res) {
+			if (!$res) {
 				$noncedMethods = $mod->getController()->getNoncedMethods();
 				if (!empty($noncedMethods)) {
 					$noncedMethods = array_map('strtolower', $noncedMethods);
@@ -271,7 +257,7 @@ class WaicFrame extends WaicBaseObject {
 						$res = true;
 					}
 				}
-			}*/
+			}
 		}
 		return $res;
 	}
@@ -293,8 +279,11 @@ class WaicFrame extends WaicBaseObject {
 		if ($mod && $this->checkPermissions($this->_mod, $this->_action)) {
 			switch (WaicReq::getVar('reqType')) {
 				case 'ajax':
-					add_action('wp_ajax_' . $this->_action, array($mod->getController(), $this->_action));
-					add_action('wp_ajax_nopriv_' . $this->_action, array($mod->getController(), $this->_action));
+					$controller = $mod->getController();
+					add_action('wp_ajax_' . $this->_action, array($controller, $this->_action));
+					if (true === $controller->allowNoprivAjax($this->_action)) {
+						add_action('wp_ajax_nopriv_' . $this->_action, array($controller, $this->_action));
+					}
 					break;
 				default:
 					$this->_res = $mod->exec($this->_action);

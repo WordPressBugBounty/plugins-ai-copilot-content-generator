@@ -3,6 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 class WaicOptionsController extends WaicController {
+	public function getNoncedMethods() {
+		return array('saveOptions', 'restoreOptions', 'saveApiKey', 'checkApiModels');
+	}
 	public function saveOptions() {
 		$res = new WaicResponse();
 

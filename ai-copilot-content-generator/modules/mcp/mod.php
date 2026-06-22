@@ -5,6 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WaicMcp extends WaicModule {
 	private $logging = false;
 	private $mcpToken = null;
+	private $mcpTokenUserId = null;
 	private $addedFilter = false;
 	private $namespace = 'mcp/v1';
 	private $sessionID = null;
@@ -47,10 +48,37 @@ class WaicMcp extends WaicModule {
 		}
 		$userAgent = WaicUtils::getUserAgent();
 		$ip = WaicUtils::getIP();
-		$uri = WaicReq::getRequestUri();
+		$uri = $this->sanitizeLogUri(WaicReq::getRequestUri());
 		if ($this->logging) {
 			WaicFrame::_()->saveDebugLogging(array('uri' => $uri, 'agent' => $userAgent, 'ip' => $ip, 'method' => sanitize_text_field(wp_unslash($_SERVER['REQUEST_METHOD']))), false, 'MCP');
 		}
+	}
+
+	private function sanitizeLogUri( $uri ) {
+		$uri = sanitize_text_field((string) $uri);
+		if ('' === $uri || false === strpos($uri, '?')) {
+			return $uri;
+		}
+		$parts = wp_parse_url($uri);
+		if (!is_array($parts) || empty($parts['query'])) {
+			return $uri;
+		}
+		parse_str($parts['query'], $query);
+		$sensitive = array('token', 'access_token', 'refresh_token', 'code', 'client_secret', 'api_key', 'key');
+		foreach ($sensitive as $key) {
+			if (array_key_exists($key, $query)) {
+				$query[$key] = '[REDACTED]';
+			}
+		}
+		$out = isset($parts['path']) ? $parts['path'] : '';
+		$newQuery = http_build_query($query);
+		if ('' !== $newQuery) {
+			$out .= '?' . $newQuery;
+		}
+		if (!empty($parts['fragment'])) {
+			$out .= '#' . rawurlencode($parts['fragment']);
+		}
+		return '' === $out ? $uri : $out;
 	}
 
 	/**
@@ -68,16 +96,6 @@ class WaicMcp extends WaicModule {
 			return;
 		}
 		$uri = rtrim( $uri, '/' );
-		$homePath = wp_parse_url(home_url(), PHP_URL_PATH);
-		if (!empty($homePath) && '/' !== $homePath) {
-			$homePath = '/' . trim($homePath, '/');
-			if (0 === strpos($uri, $homePath . '/') || $uri === $homePath) {
-				$uri = substr($uri, strlen($homePath));
-				if ('' === $uri) {
-					$uri = '/';
-				}
-			}
-		}
 
 		if ( '/.well-known/oauth-protected-resource' === $uri ) {
 			$this->serveProtectedResourceMetadata();
@@ -142,10 +160,12 @@ class WaicMcp extends WaicModule {
 
 	public function restApiInit() {
 		if ($this->mcpToken === null) {
-			$this->mcpToken = WaicFrame::_()->getModule('options')->getModel()->get('mcp', 'mcp_token');
+			$optionsModel = WaicFrame::_()->getModule('options')->getModel();
+			$this->mcpToken = $optionsModel->get('mcp', 'mcp_token');
+			$this->mcpTokenUserId = absint($optionsModel->get('mcp', 'mcp_token_user_id'));
 		}
 
-		if (!empty($this->mcpToken) && !$this->addedFilter) {
+		if ((!empty($this->mcpToken) || $this->oauthEnabled) && !$this->addedFilter) {
 			WaicDispatcher::addFilter('allow_mcp', array($this, 'authViaBeaberToken'), 10, 2);
 			$this->addedFilter = true;
 		}
@@ -179,19 +199,22 @@ class WaicMcp extends WaicModule {
 			register_rest_route($this->namespace, '/oauth/authorize', array(
 				'methods'             => 'GET',
 				'callback'            => array($this, 'oauthAuthorize'),
-				'permission_callback' => '__return_true',
+				'permission_callback' => array($this, 'oauthPublicEndpointPermission'),
 			));
 			register_rest_route($this->namespace, '/oauth/token', array(
 				'methods'             => 'POST',
 				'callback'            => array($this, 'oauthToken'),
-				'permission_callback' => '__return_true',
+				'permission_callback' => array($this, 'oauthPublicEndpointPermission'),
 			));
 			register_rest_route($this->namespace, '/oauth/register', array(
 				'methods'             => 'POST',
 				'callback'            => array($this, 'oauthRegister'),
-				'permission_callback' => '__return_true',
+				'permission_callback' => array($this, 'oauthPublicEndpointPermission'),
 			));
 		}
+	}
+	public function oauthPublicEndpointPermission( $request ) {
+		return (bool) $this->oauthEnabled;
 	}
 	public function canAccessMCP( $request ) {
 		//return true;
@@ -211,60 +234,105 @@ class WaicMcp extends WaicModule {
 	}
 
 	public function authViaBeaberToken($allow, $request) {
-
 		$hdr = $request->get_header('Authorization');
 
-		if (!$hdr && !empty($this->mcpToken)) {
+		if (!$hdr) {
 			$token = sanitize_text_field($request->get_param('token'));
-
-			if ($token && hash_equals($this->mcpToken, $token)) {
-				WaicUtils::setAdminUser();
-				return true;
-			}
-
-			// Check if this is an OAuth-issued access token (in query param)
-			if ( $token && $this->oauthEnabled && $this->validateOAuthAccessToken( $token ) ) {
-				WaicUtils::setAdminUser();
-				return true;
+			if ($token) {
+				return $this->authenticateMcpBearerToken($token, $request, 'query');
 			}
 
 			if ($this->logging) {
 				WaicFrame::_()->saveDebugLogging('No authorization header provided.', false, 'MCP');
 			}
-			return false;
+			return (!empty($this->mcpToken) || $this->oauthEnabled) ? false : $allow;
 		}
 		if ($hdr && preg_match('/Bearer\s+(.+)/i', $hdr, $m)) {
 			$token = trim($m[1]);
-			$result = false;
-
-			// Check direct MCP token
-			if (!empty( $this->mcpToken) && hash_equals($this->mcpToken, $token)) {
-				WaicUtils::setAdminUser();
-				$result = true;
-				if ($this->logging && strpos( $request->get_route(), '/sse' ) !== false ) {
-					WaicFrame::_()->saveDebugLogging('Auth OK (token)', false, 'MCP');
-				}
-				return true;
-			}
-
-			// Check OAuth-issued access token
-			if ( $this->oauthEnabled && $this->validateOAuthAccessToken( $token ) ) {
-				WaicUtils::setAdminUser();
-				if ( $this->logging ) {
-					WaicFrame::_()->saveDebugLogging( 'Auth OK (OAuth)', false, 'MCP' );
-				}
-				return true;
-			}
-
-			if ($this->logging && !$result) {
-				WaicFrame::_()->saveDebugLogging('Bearer token invalid', false, 'MCP');
-			}
-			return false;
+			return $this->authenticateMcpBearerToken($token, $request, 'header');
 		}
-		if (!empty($this->mcpToken)) {
+		if (!empty($this->mcpToken) || $this->oauthEnabled) {
 			return false;
 		}
 		return $allow;
+	}
+
+	private function authenticateMcpBearerToken( $token, $request, $source ) {
+		if (is_string($this->mcpToken) && '' !== $this->mcpToken && hash_equals($this->mcpToken, $token)) {
+			if ($this->restoreDirectMcpTokenUser()) {
+				if ($this->logging && $request && strpos($request->get_route(), '/sse') !== false) {
+					WaicFrame::_()->saveDebugLogging('Auth OK (direct token, ' . $source . ')', false, 'MCP');
+				}
+				return true;
+			}
+			if ($this->logging) {
+				WaicFrame::_()->saveDebugLogging('Direct MCP token rejected: missing or unauthorized owner.', false, 'MCP');
+			}
+			return false;
+		}
+
+		if ($this->oauthEnabled) {
+			$tokenData = $this->validateOAuthAccessToken($token);
+			if ($tokenData && $this->restoreOAuthAccessTokenUser($tokenData)) {
+				if ($this->logging) {
+					WaicFrame::_()->saveDebugLogging('Auth OK (OAuth, ' . $source . ')', false, 'MCP');
+				}
+				return true;
+			}
+		}
+
+		if ($this->logging) {
+			WaicFrame::_()->saveDebugLogging('Bearer token invalid', false, 'MCP');
+		}
+		return false;
+	}
+
+	private function restoreDirectMcpTokenUser() {
+		$userId = absint($this->mcpTokenUserId);
+		if (!$userId) {
+			$optionsModel = WaicFrame::_()->getModule('options')->getModel();
+			$this->mcpTokenUserId = absint($optionsModel->get('mcp', 'mcp_token_user_id'));
+			$userId = absint($this->mcpTokenUserId);
+		}
+		return $this->restoreMcpUser($userId, $this->mcpRequiredCapability());
+	}
+
+	private function restoreOAuthAccessTokenUser( $tokenData ) {
+		$userId = isset($tokenData['user_id']) ? absint($tokenData['user_id']) : 0;
+		return $this->restoreMcpUser($userId, $this->oauthRequiredCapability());
+	}
+
+	private function restoreMcpUser( $userId, $capability ) {
+		if (!$userId) {
+			return false;
+		}
+		$user = get_user_by('id', $userId);
+		if (!$user) {
+			return false;
+		}
+		wp_set_current_user($userId);
+		return current_user_can($capability);
+	}
+
+	private function userCanUseMcp( $userId, $capability ) {
+		if (!$userId) {
+			return false;
+		}
+		$user = get_user_by('id', $userId);
+		if (!$user) {
+			return false;
+		}
+		return user_can($user, $capability);
+	}
+
+	private function mcpRequiredCapability() {
+		$capability = WaicDispatcher::applyFilters('mcp_required_capability', 'manage_options');
+		return is_string($capability) && $capability ? $capability : 'manage_options';
+	}
+
+	private function oauthRequiredCapability() {
+		$capability = WaicDispatcher::applyFilters('mcp_oauth_required_capability', $this->mcpRequiredCapability());
+		return is_string($capability) && $capability ? $capability : 'manage_options';
 	}
 	 private function getSSEid($req) {
 		$last = $req ? $req->get_header('last-event-id') : '';
@@ -782,31 +850,44 @@ class WaicMcp extends WaicModule {
 		if ( ! $data || ! is_array( $data ) ) {
 			return false;
 		}
+		if ( empty( $data['user_id'] ) || empty( $data['client_id'] ) ) {
+			delete_transient( $key );
+			return false;
+		}
 		if ( ! empty( $data['expires'] ) && time() > $data['expires'] ) {
 			delete_transient( $key );
 			return false;
 		}
-		return true;
+		if ( ! $this->userCanUseMcp( absint( $data['user_id'] ), $this->oauthRequiredCapability() ) ) {
+			return false;
+		}
+		return $data;
 	}
 
 	/**
 	 * Store an OAuth access token in transients.
 	 */
-	private function storeOAuthAccessToken( $token, $ttl = 3600 ) {
+	private function storeOAuthAccessToken( $token, $userId, $clientId, $scope, $ttl = 3600 ) {
 		$key = 'aiwu_oauth_at_' . hash( 'sha256', $token );
 		set_transient( $key, array(
-			'created' => time(),
-			'expires' => time() + $ttl,
+			'user_id'   => absint( $userId ),
+			'client_id' => sanitize_text_field( $clientId ),
+			'scope'     => sanitize_text_field( $scope ),
+			'created'   => time(),
+			'expires'   => time() + $ttl,
 		), $ttl + 60 );
 	}
 
 	/**
 	 * Store an OAuth refresh token in transients.
 	 */
-	private function storeOAuthRefreshToken( $refreshToken, $accessToken, $ttl = 86400 ) {
+	private function storeOAuthRefreshToken( $refreshToken, $accessToken, $userId, $clientId, $scope, $ttl = 86400 ) {
 		$key = 'aiwu_oauth_rt_' . hash( 'sha256', $refreshToken );
 		set_transient( $key, array(
 			'access_token' => $accessToken,
+			'user_id'      => absint( $userId ),
+			'client_id'    => sanitize_text_field( $clientId ),
+			'scope'        => sanitize_text_field( $scope ),
 			'created'      => time(),
 			'expires'      => time() + $ttl,
 		), $ttl + 60 );
@@ -819,6 +900,10 @@ class WaicMcp extends WaicModule {
 		$key = 'aiwu_oauth_rt_' . hash( 'sha256', $refreshToken );
 		$data = get_transient( $key );
 		if ( ! $data || ! is_array( $data ) ) {
+			return false;
+		}
+		if ( empty( $data['user_id'] ) || empty( $data['client_id'] ) ) {
+			delete_transient( $key );
 			return false;
 		}
 		if ( ! empty( $data['expires'] ) && time() > $data['expires'] ) {
@@ -845,27 +930,107 @@ class WaicMcp extends WaicModule {
 		return hash_equals( $challenge, $computed );
 	}
 
+	private function getOAuthClientData( $clientId ) {
+		if ( empty( $clientId ) || ! is_string( $clientId ) ) {
+			return false;
+		}
+		$clientData = get_transient( 'aiwu_oauth_client_' . sanitize_text_field( $clientId ) );
+		if ( ! $clientData || ! is_array( $clientData ) ) {
+			return false;
+		}
+		if ( empty( $clientData['client_id'] ) || ! is_string( $clientData['client_id'] ) || ! hash_equals( $clientData['client_id'], $clientId ) ) {
+			return false;
+		}
+		if ( empty( $clientData['redirect_uris'] ) || ! is_array( $clientData['redirect_uris'] ) ) {
+			return false;
+		}
+		return $clientData;
+	}
+
+	private function normalizeOAuthRedirectUri( $uri ) {
+		$clean = esc_url_raw( $uri );
+		if ( empty( $clean ) ) {
+			return '';
+		}
+		$parts = wp_parse_url( $clean );
+		if ( ! is_array( $parts ) || empty( $parts['scheme'] ) || empty( $parts['host'] ) ) {
+			return '';
+		}
+		if ( ! empty( $parts['fragment'] ) || ! empty( $parts['user'] ) || ! empty( $parts['pass'] ) ) {
+			return '';
+		}
+		$scheme = strtolower( $parts['scheme'] );
+		$host   = strtolower( $parts['host'] );
+		if ( 'https' === $scheme ) {
+			return $clean;
+		}
+		if ( 'http' === $scheme && $this->isLoopbackOAuthHost( $host ) ) {
+			return $clean;
+		}
+		return '';
+	}
+
+	private function isLoopbackOAuthHost( $host ) {
+		return in_array( $host, array( 'localhost', '127.0.0.1', '::1' ), true );
+	}
+
+	private function isRegisteredOAuthRedirectUri( $redirectUri, $clientData ) {
+		if ( empty( $redirectUri ) || empty( $clientData['redirect_uris'] ) || ! is_array( $clientData['redirect_uris'] ) ) {
+			return false;
+		}
+		return in_array( $redirectUri, $clientData['redirect_uris'], true );
+	}
+
+	private function normalizeOAuthScope( $scope ) {
+		$scope = trim( (string) $scope );
+		if ( '' === $scope ) {
+			return 'mcp';
+		}
+		$parts = preg_split( '/\s+/', $scope );
+		foreach ( $parts as $part ) {
+			if ( 'mcp' !== $part ) {
+				return false;
+			}
+		}
+		return 'mcp';
+	}
+
+	private function validPKCEVerifier( $verifier ) {
+		return is_string( $verifier ) && preg_match( '/^[A-Za-z0-9._~-]{43,128}$/', $verifier );
+	}
+
 	/**
 	 * POST /oauth/register — Dynamic Client Registration (RFC 7591).
 	 * Claude.ai sends client_name, redirect_uris, etc.
 	 * We issue a client_id (no secret needed for public clients).
 	 */
 	public function oauthRegister( WP_REST_Request $request ) {
+		if ( ! $this->oauthEnabled ) {
+			return new WP_REST_Response( array( 'error' => 'temporarily_unavailable' ), 404 );
+		}
+
 		$body = json_decode( $request->get_body(), true );
 		if ( ! is_array( $body ) ) {
 			return new WP_REST_Response( array( 'error' => 'invalid_request' ), 400 );
 		}
 
 		$clientName = sanitize_text_field( isset( $body['client_name'] ) ? $body['client_name'] : 'MCP Client' );
+		$clientName = $clientName ? substr( $clientName, 0, 120 ) : 'MCP Client';
 		$redirectUris = isset( $body['redirect_uris'] ) && is_array( $body['redirect_uris'] ) ? $body['redirect_uris'] : array();
+		if ( empty( $redirectUris ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_client_metadata', 'error_description' => 'redirect_uris is required' ), 400 );
+		}
 
-		// Sanitize redirect URIs
 		$cleanUris = array();
 		foreach ( $redirectUris as $uri ) {
-			$clean = esc_url_raw( $uri );
+			$clean = $this->normalizeOAuthRedirectUri( $uri );
 			if ( $clean ) {
 				$cleanUris[] = $clean;
 			}
+		}
+		$cleanUris = array_values( array_unique( $cleanUris ) );
+		if ( empty( $cleanUris ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_redirect_uri', 'error_description' => 'At least one valid HTTPS redirect_uri is required' ), 400 );
 		}
 
 		$clientId = 'aiwu_' . $this->generateToken( 24 );
@@ -904,17 +1069,36 @@ class WaicMcp extends WaicModule {
 	 *               code_challenge, code_challenge_method, response_type
 	 */
 	public function oauthAuthorize( WP_REST_Request $request ) {
+		if ( ! $this->oauthEnabled ) {
+			return new WP_REST_Response( array( 'error' => 'temporarily_unavailable' ), 404 );
+		}
+
+		$userId = $this->restoreOAuthBrowserUser();
+		if ( ! $userId ) {
+			$this->redirectToOAuthLogin();
+		}
+		if ( ! current_user_can( $this->oauthRequiredCapability() ) ) {
+			return new WP_REST_Response( array( 'error' => 'access_denied', 'error_description' => 'You are not allowed to authorize MCP OAuth access.' ), 403 );
+		}
+
 		$clientId            = sanitize_text_field( $request->get_param( 'client_id' ) );
-		$redirectUri         = esc_url_raw( $request->get_param( 'redirect_uri' ) );
+		$redirectUri         = $this->normalizeOAuthRedirectUri( $request->get_param( 'redirect_uri' ) );
 		$state               = sanitize_text_field( $request->get_param( 'state' ) );
-		$scope               = sanitize_text_field( $request->get_param( 'scope' ) );
+		$scope               = $this->normalizeOAuthScope( $request->get_param( 'scope' ) );
 		$codeChallenge       = sanitize_text_field( $request->get_param( 'code_challenge' ) );
 		$codeChallengeMethod = sanitize_text_field( $request->get_param( 'code_challenge_method' ) );
 		$responseType        = sanitize_text_field( $request->get_param( 'response_type' ) );
+		$clientData          = $this->getOAuthClientData( $clientId );
 
 		// Validate required params
-		if ( 'code' !== $responseType || empty( $redirectUri ) ) {
-			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'response_type must be "code" and redirect_uri is required' ), 400 );
+		if ( 'code' !== $responseType || empty( $clientId ) || empty( $redirectUri ) || ! $clientData ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'response_type, client_id and a registered redirect_uri are required' ), 400 );
+		}
+		if ( ! $this->isRegisteredOAuthRedirectUri( $redirectUri, $clientData ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'redirect_uri is not registered for this client' ), 400 );
+		}
+		if ( false === $scope ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_scope', 'error_description' => 'Only the mcp scope is supported' ), 400 );
 		}
 
 		// Validate PKCE is present (required for public clients)
@@ -922,11 +1106,15 @@ class WaicMcp extends WaicModule {
 			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'PKCE with S256 is required' ), 400 );
 		}
 
-		// Check if user submitted the approval form
+		// Check if user submitted the approval form.
+		// Nonce parameter is intentionally NOT named `_wpnonce`: WordPress core
+		// (rest_cookie_check_errors) reserves `_wpnonce` for `wp_rest` action and
+		// returns rest_cookie_invalid_nonce 403 before our callback runs.
 		$approved = sanitize_text_field( $request->get_param( 'approved' ) );
 		$formNonce = sanitize_text_field( $request->get_param( 'aiwu_oauth_nonce' ) );
+		$nonceAction = 'aiwu_mcp_oauth_approve_' . $clientId;
 
-		if ( '1' === $approved && wp_verify_nonce( $formNonce, 'aiwu_mcp_oauth_approve' ) ) {
+		if ( '1' === $approved && wp_verify_nonce( $formNonce, $nonceAction ) ) {
 			// Generate authorization code
 			$code = $this->generateToken( 32 );
 
@@ -936,7 +1124,9 @@ class WaicMcp extends WaicModule {
 				'redirect_uri'   => $redirectUri,
 				'code_challenge' => $codeChallenge,
 				'scope'          => $scope,
+				'user_id'        => absint( $userId ),
 				'created'        => time(),
+				'expires'        => time() + ( 5 * MINUTE_IN_SECONDS ),
 			), 5 * MINUTE_IN_SECONDS );
 
 			if ( $this->logging ) {
@@ -949,20 +1139,47 @@ class WaicMcp extends WaicModule {
 				'state' => $state,
 			), $redirectUri );
 
-			header( 'Location: ' . $callbackUrl, true, 302 );
+			wp_redirect( esc_url_raw( $callbackUrl ), 302 );
 			exit;
+		}
+		if ( '1' === $approved ) {
+			return new WP_REST_Response( array( 'error' => 'access_denied', 'error_description' => 'Invalid authorization nonce' ), 403 );
 		}
 
 		// Show consent page
-		$this->renderAuthorizePage( $request, $clientId, $scope );
+		$this->renderAuthorizePage( $request, $clientId, $scope, $clientData );
+	}
+
+	private function restoreOAuthBrowserUser() {
+		if ( is_user_logged_in() ) {
+			return get_current_user_id();
+		}
+		foreach ( array( 'logged_in', 'secure_auth', 'auth' ) as $scheme ) {
+			$userId = wp_validate_auth_cookie( '', $scheme );
+			if ( $userId ) {
+				wp_set_current_user( absint( $userId ) );
+				return absint( $userId );
+			}
+		}
+		return 0;
+	}
+
+	private function redirectToOAuthLogin() {
+		$redirectTo = rest_url( $this->namespace . '/oauth/authorize' );
+		if ( ! empty( $_SERVER['REQUEST_URI'] ) ) {
+			$requestUri = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+			$redirectTo = home_url( $requestUri );
+		}
+		wp_safe_redirect( wp_login_url( $redirectTo ) );
+		exit;
 	}
 
 	/**
 	 * Render the OAuth authorization/consent HTML page.
 	 */
-	private function renderAuthorizePage( $request, $clientId, $scope ) {
+	private function renderAuthorizePage( $request, $clientId, $scope, $clientData ) {
 		$siteName  = get_bloginfo( 'name' );
-		$nonce     = wp_create_nonce( 'aiwu_mcp_oauth_approve' );
+		$nonce     = wp_create_nonce( 'aiwu_mcp_oauth_approve_' . $clientId );
 		$actionUrl = rest_url( $this->namespace . '/oauth/authorize' );
 
 		// Collect all original params for the form
@@ -979,11 +1196,8 @@ class WaicMcp extends WaicModule {
 
 		// Resolve client name
 		$clientName = 'MCP Client';
-		if ( ! empty( $clientId ) ) {
-			$clientData = get_transient( 'aiwu_oauth_client_' . $clientId );
-			if ( $clientData && ! empty( $clientData['client_name'] ) ) {
-				$clientName = esc_html( $clientData['client_name'] );
-			}
+		if ( ! empty( $clientData['client_name'] ) ) {
+			$clientName = esc_html( $clientData['client_name'] );
 		}
 
 		status_header( 200 );
@@ -1038,6 +1252,10 @@ class WaicMcp extends WaicModule {
 	 *   grant_type=refresh_token       → exchange refresh token for new tokens
 	 */
 	public function oauthToken( WP_REST_Request $request ) {
+		if ( ! $this->oauthEnabled ) {
+			return new WP_REST_Response( array( 'error' => 'temporarily_unavailable' ), 404 );
+		}
+
 		$body = $request->get_body_params();
 		if ( empty( $body ) ) {
 			$body = json_decode( $request->get_body(), true );
@@ -1066,11 +1284,15 @@ class WaicMcp extends WaicModule {
 	 */
 	private function oauthTokenFromCode( $body ) {
 		$code         = sanitize_text_field( isset( $body['code'] ) ? $body['code'] : '' );
-		$codeVerifier = isset( $body['code_verifier'] ) ? $body['code_verifier'] : '';
-		$redirectUri  = esc_url_raw( isset( $body['redirect_uri'] ) ? $body['redirect_uri'] : '' );
+		$clientId     = sanitize_text_field( isset( $body['client_id'] ) ? $body['client_id'] : '' );
+		$codeVerifier = sanitize_text_field( isset( $body['code_verifier'] ) ? $body['code_verifier'] : '' );
+		$redirectUri  = $this->normalizeOAuthRedirectUri( isset( $body['redirect_uri'] ) ? $body['redirect_uri'] : '' );
 
-		if ( empty( $code ) || empty( $codeVerifier ) ) {
-			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'code and code_verifier are required' ), 400 );
+		if ( empty( $code ) || empty( $clientId ) || empty( $codeVerifier ) || empty( $redirectUri ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'code, client_id, redirect_uri and code_verifier are required' ), 400 );
+		}
+		if ( ! $this->validPKCEVerifier( $codeVerifier ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'code_verifier is invalid' ), 400 );
 		}
 
 		// Retrieve and delete the authorization code
@@ -1085,8 +1307,20 @@ class WaicMcp extends WaicModule {
 			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Authorization code is invalid or expired' ), 400 );
 		}
 
+		if ( empty( $codeData['user_id'] ) || empty( $codeData['client_id'] ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Authorization code is not user-bound' ), 400 );
+		}
+		if ( ! is_string( $codeData['client_id'] ) || ! hash_equals( $codeData['client_id'], $clientId ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'client_id mismatch' ), 400 );
+		}
+
+		$clientData = $this->getOAuthClientData( $clientId );
+		if ( ! $clientData || ! $this->isRegisteredOAuthRedirectUri( $redirectUri, $clientData ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Client registration is invalid or expired' ), 400 );
+		}
+
 		// Verify redirect_uri matches
-		if ( $redirectUri && $codeData['redirect_uri'] !== $redirectUri ) {
+		if ( $codeData['redirect_uri'] !== $redirectUri ) {
 			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'redirect_uri mismatch' ), 400 );
 		}
 
@@ -1097,14 +1331,17 @@ class WaicMcp extends WaicModule {
 			}
 			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'PKCE verification failed' ), 400 );
 		}
+		if ( ! $this->userCanUseMcp( absint( $codeData['user_id'] ), $this->oauthRequiredCapability() ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'The authorizing user can no longer access MCP' ), 400 );
+		}
 
 		// Issue tokens
 		$accessToken  = $this->generateToken( 48 );
 		$refreshToken = $this->generateToken( 48 );
 		$expiresIn    = 3600; // 1 hour
 
-		$this->storeOAuthAccessToken( $accessToken, $expiresIn );
-		$this->storeOAuthRefreshToken( $refreshToken, $accessToken, 7 * DAY_IN_SECONDS );
+		$this->storeOAuthAccessToken( $accessToken, $codeData['user_id'], $clientId, $codeData['scope'], $expiresIn );
+		$this->storeOAuthRefreshToken( $refreshToken, $accessToken, $codeData['user_id'], $clientId, $codeData['scope'], 7 * DAY_IN_SECONDS );
 
 		if ( $this->logging ) {
 			WaicFrame::_()->saveDebugLogging( 'OAuth: tokens issued for ' . $codeData['client_id'], false, 'MCP' );
@@ -1129,14 +1366,24 @@ class WaicMcp extends WaicModule {
 	 */
 	private function oauthTokenFromRefresh( $body ) {
 		$refreshToken = sanitize_text_field( isset( $body['refresh_token'] ) ? $body['refresh_token'] : '' );
+		$clientId = sanitize_text_field( isset( $body['client_id'] ) ? $body['client_id'] : '' );
 
-		if ( empty( $refreshToken ) ) {
-			return new WP_REST_Response( array( 'error' => 'invalid_request' ), 400 );
+		if ( empty( $refreshToken ) || empty( $clientId ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_request', 'error_description' => 'refresh_token and client_id are required' ), 400 );
 		}
 
 		$data = $this->consumeRefreshToken( $refreshToken );
 		if ( ! $data ) {
 			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Refresh token is invalid or expired' ), 400 );
+		}
+		if ( empty( $data['user_id'] ) || empty( $data['client_id'] ) || ! is_string( $data['client_id'] ) || ! hash_equals( $data['client_id'], $clientId ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Refresh token is not valid for this client' ), 400 );
+		}
+		if ( ! $this->getOAuthClientData( $clientId ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'Client registration is invalid or expired' ), 400 );
+		}
+		if ( ! $this->userCanUseMcp( absint( $data['user_id'] ), $this->oauthRequiredCapability() ) ) {
+			return new WP_REST_Response( array( 'error' => 'invalid_grant', 'error_description' => 'The authorizing user can no longer access MCP' ), 400 );
 		}
 
 		// Revoke old access token
@@ -1148,9 +1395,10 @@ class WaicMcp extends WaicModule {
 		$newAccessToken  = $this->generateToken( 48 );
 		$newRefreshToken = $this->generateToken( 48 );
 		$expiresIn       = 3600;
+		$scope           = isset( $data['scope'] ) ? $data['scope'] : 'mcp';
 
-		$this->storeOAuthAccessToken( $newAccessToken, $expiresIn );
-		$this->storeOAuthRefreshToken( $newRefreshToken, $newAccessToken, 7 * DAY_IN_SECONDS );
+		$this->storeOAuthAccessToken( $newAccessToken, $data['user_id'], $clientId, $scope, $expiresIn );
+		$this->storeOAuthRefreshToken( $newRefreshToken, $newAccessToken, $data['user_id'], $clientId, $scope, 7 * DAY_IN_SECONDS );
 
 		if ( $this->logging ) {
 			WaicFrame::_()->saveDebugLogging( 'OAuth: tokens refreshed', false, 'MCP' );
@@ -1161,7 +1409,7 @@ class WaicMcp extends WaicModule {
 			'token_type'    => 'Bearer',
 			'expires_in'    => $expiresIn,
 			'refresh_token' => $newRefreshToken,
-			'scope'         => 'mcp',
+			'scope'         => $scope,
 		), 200 );
 		$response->set_headers( array(
 			'Cache-Control' => 'no-store',

@@ -341,10 +341,6 @@ abstract class WaicTable {
 	 * @return query result
 	 */
 	public function delete( $where = '' ) {
-		if (empty($where)) {
-			return false;
-		}
-
 		$q = 'DELETE FROM ' . $this->_table;
 		if ($where) {
 			if (is_numeric($where)) {
