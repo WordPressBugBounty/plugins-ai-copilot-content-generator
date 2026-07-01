@@ -74,26 +74,7 @@ class WaicUtils {
 		}
 	}*/
 	public static function getIP() {
-		$res = '';
-		if (!isset($_SERVER['HTTP_CLIENT_IP']) || empty($_SERVER['HTTP_CLIENT_IP'])) {
-			if (!isset($_SERVER['HTTP_X_REAL_IP']) || empty($_SERVER['HTTP_X_REAL_IP'])) {
-				if (!isset($_SERVER['HTTP_X_SUCURI_CLIENTIP']) || empty($_SERVER['HTTP_X_SUCURI_CLIENTIP'])) {
-					if (!isset($_SERVER['HTTP_X_FORWARDED_FOR']) || empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-						$res = empty($_SERVER['REMOTE_ADDR']) ? '' : sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
-					} else {
-						$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
-					}
-				} else {
-					$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_SUCURI_CLIENTIP']));
-				}
-			} else {
-				$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_REAL_IP']));
-			}
-		} else {
-			$res = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
-		}
-		
-		return $res;
+		return self::getRealUserIp();
 	}
 	
 	/**
@@ -999,19 +980,70 @@ class WaicUtils {
 		return function_exists('mb_stripos') ? mb_stripos($h, $n, $o) : stripos($h, $n, $o);
 	}
 	public static function getRealUserIp() {
-		if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
-			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_CLIENT_IP']));
-		} elseif (!empty($_SERVER['HTTP_X_GT_VIEWER_IP'])) {
-			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_GT_VIEWER_IP']));
-		} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-			$ip = sanitize_text_field(wp_unslash($_SERVER['HTTP_X_FORWARDED_FOR']));
-		} elseif (!empty($_SERVER['REMOTE_ADDR'])) {
-			$ip = sanitize_text_field(wp_unslash($_SERVER['REMOTE_ADDR']));
-		} else {
-			 $ip = '127.0.0.1';
+		$ip = self::getServerIp('REMOTE_ADDR');
+		if (self::isTrustedProxyIp($ip)) {
+			$forwarded = self::getTrustedForwardedIp();
+			if (!empty($forwarded)) {
+				$ip = $forwarded;
+			}
 		}
-		$part = explode(':', $ip);
-		return $part[0];
+		$ip = self::normalizeIp($ip);
+		return $ip ? $ip : '127.0.0.1';
+	}
+	public static function normalizeIp( $ip ) {
+		if (!is_scalar($ip)) {
+			return '';
+		}
+		$ip = trim(sanitize_text_field(wp_unslash((string) $ip)));
+		if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+			return '';
+		}
+		return substr($ip, 0, 45);
+	}
+	protected static function getServerIp( $key ) {
+		return empty($_SERVER[$key]) ? '' : sanitize_text_field(wp_unslash($_SERVER[$key]));
+	}
+	protected static function isTrustedProxyIp( $ip ) {
+		$ip = self::normalizeIp($ip);
+		if (!$ip) {
+			return false;
+		}
+		$trusted = apply_filters('waic_trusted_proxy_ips', array());
+		if (!is_array($trusted)) {
+			return false;
+		}
+		$trusted = array_filter(array_map(array(__CLASS__, 'normalizeIp'), $trusted));
+		return in_array($ip, $trusted, true);
+	}
+	protected static function getTrustedForwardedIp() {
+		$headers = apply_filters(
+			'waic_trusted_proxy_headers',
+			array(
+				'HTTP_X_FORWARDED_FOR',
+				'HTTP_X_REAL_IP',
+				'HTTP_CLIENT_IP',
+				'HTTP_X_GT_VIEWER_IP',
+				'HTTP_X_SUCURI_CLIENTIP',
+			)
+		);
+		if (!is_array($headers)) {
+			return '';
+		}
+		foreach ($headers as $header) {
+			$header = sanitize_key($header);
+			$header = strtoupper($header);
+			if (empty($_SERVER[$header])) {
+				continue;
+			}
+			$value = sanitize_text_field(wp_unslash($_SERVER[$header]));
+			foreach (array_map('trim', explode(',', $value)) as $candidate) {
+				$candidate = self::normalizeIp($candidate);
+				if ($candidate) {
+					return $candidate;
+				}
+			}
+		}
+		return '';
 	}
 	public static function insertKeyValuePair( $arr, $key, $val, $after ) {
 		$start = $arr;

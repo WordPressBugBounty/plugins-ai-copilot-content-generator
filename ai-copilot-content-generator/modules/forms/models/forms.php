@@ -304,6 +304,13 @@ class WaicFormsModel extends WaicModel {
 		return str_replace(array("'"), array('`'), $str);
 		//return preg_replace('/\r\n|\r|\n/', '<br>', str_replace(array("'"), array('`'), $str));
 	}
+	private function getHistoryPreview( $value, $length = 50 ) {
+		$value = wp_strip_all_tags((string) $value);
+		if (WaicUtils::mbstrlen($value) <= $length) {
+			return $value;
+		}
+		return WaicUtils::mbsubstr($value, 0, $length) . '...';
+	}
 	public function getHistory( $params ) {
 		$length = WaicUtils::getArrayValue($params, 'length', 10, 1);
 		$start = WaicUtils::getArrayValue($params, 'start', 0, 1);
@@ -361,15 +368,20 @@ class WaicFormsModel extends WaicModel {
 					break;
 				}
 				$log = $logs[$i];
+				$question = (string) $log['question'];
+				$answer = (string) $log['answer'];
+				$questionPreview = $this->getHistoryPreview($question);
+				$answerPreview = $this->getHistoryPreview($answer);
+				$userLabel = empty($log['user_id']) ? $guest : (string) $log['user_login'];
 				$rows[] = array(
-					'<div class="waic-log-id" data-value="' . $log['id'] . '">' . $log['id'] . '</div>',
-					'<div class="waic-log-dd" data-value="' . $log['dd'] . '">' . $log['dd'] . '</div>',
-					'<div class="waic-log-user" data-value="' . $log['user_id'] . '">' . ( empty($log['user_id']) ? $guest : $log['user_login'] ) . '</div>',
-					'<div class="waic-log-ip" data-value="' . $log['ip'] . '">' . $log['ip'] . '</div>',
-					'<div class="waic-log-tokens" data-value="' . $log['tokens'] . '">' . $log['tokens'] . '</div>',
-					'<div class="waic-log-question" data-value="' . $log['question'] . '">' . WaicUtils::mbsubstr($log['question'], 0, 50) . '...</div>',
-					'<div class="waic-log-answer" data-value="' . $log['answer'] . '">' . WaicUtils::mbsubstr($log['answer'], 0, 50) . '...</div>',
-					'<a href="#" class="waic-history-log">' . $view . '</a>',
+					'<div class="waic-log-id" data-value="' . esc_attr($log['id']) . '">' . esc_html($log['id']) . '</div>',
+					'<div class="waic-log-dd" data-value="' . esc_attr($log['dd']) . '">' . esc_html($log['dd']) . '</div>',
+					'<div class="waic-log-user" data-value="' . esc_attr($log['user_id']) . '">' . esc_html($userLabel) . '</div>',
+					'<div class="waic-log-ip" data-value="' . esc_attr($log['ip']) . '">' . esc_html($log['ip']) . '</div>',
+					'<div class="waic-log-tokens" data-value="' . esc_attr($log['tokens']) . '">' . esc_html($log['tokens']) . '</div>',
+					'<div class="waic-log-question" data-value="' . esc_attr($question) . '">' . esc_html($questionPreview) . '</div>',
+					'<div class="waic-log-answer" data-value="' . esc_attr($answer) . '">' . esc_html($answerPreview) . '</div>',
+					'<a href="#" class="waic-history-log">' . esc_html($view) . '</a>',
 				);
 			}
 		}

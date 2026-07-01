@@ -3,8 +3,8 @@ Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
-Tested up to: 7.0
-Stable tag: 1.5.4
+Tested up to: 6.9
+Stable tag: 1.5.5
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -200,13 +200,32 @@ No. Most features are no-code and work through visual builders and templates. De
 
 == Changelog ==
 
+1.5.5 (01/07/2026)
+- Security issues XSS fixed
+
 1.5.4 (20/06/2026)
 - Security: Hardened MCP OAuth consent so authorization codes can only be issued by an authenticated WordPress user with the required capability.
 - Security: Bound OAuth authorization codes, access tokens and refresh tokens to the approving user and registered client; legacy unbound OAuth transients are invalidated during upgrade.
 - Security: Replaced MCP admin impersonation with direct-token owner binding and user-bound OAuth restoration.
 - Security: Added MCP tool capability guardrails for users, options, plugins, posts, terms, comments and media actions.
 - OAuth: Fixed the consent nonce field name and added strict client_id, redirect_uri, scope and PKCE validation.
-- Chatbot Insights Added
+
+1.5.3 (02/05/2026)
+- Pricing Phase 1.1: Added opt-in remote pricing sync from the hardcoded aiwuplugin.com pricing endpoint, with bundled pricing retained as the safe fallback.
+- Pricing Phase 1.1: Added fine-tuned OpenAI model ID resolution, exact overrides and base-model pricing flags when a fine-tuned base can be inferred.
+- Pricing Phase 1.1: Added image size/quality/count pricing, Perplexity per-search pricing from sanitized usage metadata and display-currency formatting while canonical storage remains micro-USD.
+- Hardening: Added sanitized pricing sync status, nonce/capability-checked manual sync, daily WP-Cron sync only when opted in, and update/fresh-install option defaults.
+- Notes: Weekly unknown-pricing digest is left as a Phase 1.2 backlog item. Pro plugin changes are not required for Phase 1.1 because pricing, usage storage and Insights UI live in the free plugin.
+
+1.5.2 (02/05/2026)
+- Insights & Limits Phase 1: Added production-ready usage and cost analytics with v2.1 history schema, daily rollups, session rollups and bundled pricing snapshots.
+- Insights & Limits Phase 1: Added local Chart.js assets and read-only admin endpoints without provider calls or remote pricing sync by default.
+- Insights & Limits Phase 1: Added privacy-safe usage and conversation views that hide raw prompts, provider errors, file payloads, API keys and IP addresses.
+- Pricing: Switched cost totals to micro-USD fields to preserve small token, embedding and image costs.
+- Hardening: Added fresh/update migration coverage for Phase 1 tables, pricing defaults and WAIC_TEST_MODE=false release checks.
+
+1.5.1 (01/05/2026)
+- Chatbot Insights: Added read-only Phase A admin shell with masked reporting endpoints
 
 1.4.11 (11/03/2026)
 - Security fix

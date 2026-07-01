@@ -365,8 +365,8 @@
 				],
 				open: function() {
 					var $row = _this.currentLogRow;
-					_this.logDialogWrapper.find('#waicLogRequest').html($row.find('.waic-log-question').attr('data-value'));
-					_this.logDialogWrapper.find('#waicLogResponse').html($row.find('.waic-log-answer').attr('data-value'));
+					_this.logDialogWrapper.find('#waicLogRequest').text($row.find('.waic-log-question').attr('data-value') || '');
+					_this.logDialogWrapper.find('#waicLogResponse').text($row.find('.waic-log-answer').attr('data-value') || '');
 					_this.logDialogWrapper.parent().find('.ui-dialog-buttonset button').removeClass('ui-button ui-corner-all ui-widget');
 				}
 			});

@@ -60,6 +60,18 @@ class WaicDb {
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $affected ? $wpdb->query($wpdb->waic_prepared_query) : ( $wpdb->query($wpdb->waic_prepared_query) === false ? false : true );
 	}
+	public static function queryPrepared( $query, $args = array(), $affected = false ) {
+		global $wpdb;
+		$prefixArgs = array(1);
+		$query = self::prepareQuery($query, $prefixArgs);
+		if (!empty($args)) {
+			$query = $wpdb->prepare($query, $args); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
+		}
+		self::$query = $query;
+		$wpdb->waic_prepared_query = $query;
+		$result = $wpdb->query($query); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		return $affected ? $result : ( false === $result ? false : true );
+	}
 	/**
 	 * Get last insert ID
 	 *

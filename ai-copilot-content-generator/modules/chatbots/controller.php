@@ -177,11 +177,16 @@ class WaicChatbotsController extends WaicController {
 	public function resetChatbotFront() {
 		$res = new WaicResponse();
 		//$params = WaicReq::getVar('params', 'post');
+		$taskId = absint(WaicReq::getVar('task_id', 'post'));
+		if (!$taskId) {
+			$res->pushError(esc_html__('Invalid request.', 'ai-copilot-content-generator'));
+			return $res->ajaxExec();
+		}
 		$user = wp_get_current_user();
 		$userId = $user ? $user->ID : 0;
 		$ip = WaicUtils::getRealUserIp();
 		
-		$this->getModel()->resetUserChatLog(WaicReq::getVar('task_id', 'post'), $userId, $ip, 0);
+		$this->getModel()->resetUserChatLog($taskId, $userId, $ip, 0);
 
 		return $res->ajaxExec();
 	}

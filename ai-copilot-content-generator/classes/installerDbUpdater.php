@@ -93,6 +93,7 @@ class WaicInstallerDbUpdater {
 		if ( ! WaicDb::existsTableColumn( '@__history', 'engine' ) ) {
 			WaicDb::query( "ALTER TABLE `@__history` ADD COLUMN `engine` VARCHAR(20) DEFAULT '' AFTER `ip`" );
 		}
+		self::ensureColumnDefinition( '@__history', 'ip', "ALTER TABLE `@__history` MODIFY COLUMN `ip` VARCHAR(45) DEFAULT ''" );
 		if ( WaicDb::get( "SELECT 1 FROM `@__tasks` WHERE feature='magictext'", 'one' ) != 1 ) {
 			WaicDb::query( "INSERT INTO `@__tasks` (id, feature, title, author, status) VALUES (NULL, 'magictext', 'Magic Text', 0, 4);");
 		}

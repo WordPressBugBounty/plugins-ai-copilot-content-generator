@@ -118,33 +118,48 @@ class WaicChatbotsModel extends WaicModel {
 		return WaicDispatcher::applyFilters('setChatbotParams', false, $oldTask, $task);
 	}
 	public function isActiveChat( $taskId = 0, $userId = 0, $ip = '', $mode = 0, $lifetime = 0 ) {
-		$query = 'SELECT 1 FROM @__history' .
-			' WHERE task_id=' . ( (int) $taskId ) .
-			' AND mode=' . ( (int) $mode ) . 
-			' AND user_id=' . ( (int) $userId ) .
-			( empty($userId) ? " AND ip='" . $ip . "'" : '' );
+		$query = 'SELECT 1 FROM @__history WHERE task_id=%d AND mode=%d AND user_id=%d';
+		$args = array((int) $taskId, (int) $mode, (int) $userId);
+		if (empty($userId)) {
+			$query .= ' AND ip=%s';
+			$args[] = (string) $ip;
+		}
 		if (!empty($lifetime)) {
-			$now = WaicUtils::getTimestampDB();
-			$query .= " AND created>DATE_SUB('" . $now . "', INTERVAL " . $lifetime . ' MINUTE) ';
+			$query .= ' AND created>DATE_SUB(%s, INTERVAL %d MINUTE)';
+			$args[] = WaicUtils::getTimestampDB();
+			$args[] = (int) $lifetime;
 		}
 		$query .= ' LIMIT 1';
-		return ( WaicDb::get($query, 'one') == 1 );
+		return ( WaicDb::get($query, 'one', ARRAY_A, $args) == 1 );
 	}
 	public function getUserChatLog( $taskId = 0, $userId = 0, $ip = '', $mode = 0, $cnt = 0, $status = 0, $dd = false ) {
-		$forDate = !empty($dd);
+		$forDate = !empty($dd) && WaicUtils::checkDateTime($dd, 'Y-m-d');
 		$query = 'SELECT h.id as his_id, h.created, l.question, l.answer, h.status, l.file' .
 			' FROM @__history as h' .
 			' INNER JOIN @__chatlogs l ON (l.his_id=h.id)' .
-			' WHERE h.task_id=' . ( (int) $taskId ) .
-			( false !== $status ? ' AND h.status= ' . ( (int) $status ) : '' ) .
-			' AND h.mode=' . ( (int) $mode ) .
-			' AND h.user_id=' . ( (int) $userId ) .
-			( false !== $status ? ' AND l.status=0' : '' ) .
-			( empty($userId) || $forDate ? " AND ip='" . $ip . "'" : '' ) .
-			( $forDate ? " AND h.created BETWEEN '" . $dd . " 00:00:00' AND '" . $dd . " 23:59:59'" : '' ) .
-			' ORDER BY h.id' .
-			( empty($cnt) ? '' : ' DESC LIMIT ' . ( (int) $cnt ) ); 
-		$log = WaicDb::get($query);
+			' WHERE h.task_id=%d';
+		$args = array((int) $taskId);
+		if (false !== $status) {
+			$query .= ' AND h.status=%d';
+			$args[] = (int) $status;
+		}
+		$query .= ' AND h.mode=%d AND h.user_id=%d';
+		$args[] = (int) $mode;
+		$args[] = (int) $userId;
+		if (false !== $status) {
+			$query .= ' AND l.status=0';
+		}
+		if (empty($userId) || $forDate) {
+			$query .= ' AND h.ip=%s';
+			$args[] = (string) $ip;
+		}
+		if ($forDate) {
+			$query .= ' AND h.created BETWEEN %s AND %s';
+			$args[] = $dd . ' 00:00:00';
+			$args[] = $dd . ' 23:59:59';
+		}
+		$query .= ' ORDER BY h.id' . ( empty($cnt) ? '' : ' DESC LIMIT ' . ( (int) $cnt ) );
+		$log = WaicDb::get($query, 'all', ARRAY_A, $args);
 		if ($log && !empty($log)) {
 			if (!empty($cnt)) {
 				$log = array_reverse($log);
@@ -157,20 +172,32 @@ class WaicChatbotsModel extends WaicModel {
 	public function deleteUserChatLog( $taskId = 0, $userId = 0, $ip = '', $mode = 0 ) {
 		$query = 'DELETE l FROM @__chatlogs l' .
 			' INNER JOIN @__history h ON (l.his_id=h.id)' .
-			' WHERE h.status=0 AND h.task_id=' . ( (int) $taskId ) .
-			' AND h.mode=' . ( (int) $mode ) .
-			' AND ' . ( empty($userId) ? "ip='" . $ip . "'" : 'h.user_id=' . ( (int) $userId ) ); 
-		WaicDb::query($query);
+			' WHERE h.status=%d AND h.task_id=%d AND h.mode=%d';
+		$args = array(0, (int) $taskId, (int) $mode);
+		if (empty($userId)) {
+			$query .= ' AND h.ip=%s';
+			$args[] = (string) $ip;
+		} else {
+			$query .= ' AND h.user_id=%d';
+			$args[] = (int) $userId;
+		}
+		WaicDb::queryPrepared($query, $args);
 		return true;
 	}
 	public function resetUserChatLog( $taskId = 0, $userId = 0, $ip = '', $mode = 0 ) {
 		$query = 'UPDATE @__chatlogs l' .
 			' INNER JOIN @__history h ON (l.his_id=h.id)' .
-			' SET l.status=9' .
-			' WHERE h.status=0 AND h.task_id=' . ( (int) $taskId ) .
-			' AND h.mode=' . ( (int) $mode ) .
-			' AND ' . ( empty($userId) ? "h.ip='" . $ip . "'" : 'h.user_id=' . ( (int) $userId ) ); 
-		WaicDb::query($query);
+			' SET l.status=%d' .
+			' WHERE h.status=%d AND h.task_id=%d AND h.mode=%d';
+		$args = array(9, 0, (int) $taskId, (int) $mode);
+		if (empty($userId)) {
+			$query .= ' AND h.ip=%s';
+			$args[] = (string) $ip;
+		} else {
+			$query .= ' AND h.user_id=%d';
+			$args[] = (int) $userId;
+		}
+		WaicDb::queryPrepared($query, $args);
 		return true;
 	}
 	public function humanRequest( $taskId ) {
@@ -954,26 +981,43 @@ class WaicChatbotsModel extends WaicModel {
 			$to = false;
 		}
 		
-		if (ob_get_contents()) {
-			ob_end_clean();
+		if (ob_get_level() && ob_get_length()) {
+			ob_clean();
 		}
-		header('Content-Type: application/json; charset=utf-8'); 
-		header('Content-Disposition: attachment; filename="aiwu_export.json"');
-		if (ob_get_contents()) {
-			ob_end_clean();
+		if (!headers_sent()) {
+			header('Content-Type: application/json; charset=utf-8'); 
+			header('Content-Disposition: attachment; filename="aiwu_export.json"');
+		}
+		if (ob_get_level() && ob_get_length()) {
+			ob_clean();
 		}
 		$query = 'SELECT DATE(created) as dd, task_id, user_id, ip, mode, model, sum(tokens) as sum_tokens, min(created) as started' .
 			' FROM @__history' .
-			" WHERE feature='chatbots'" .
-			( empty($taskId) ? '' : ' AND task_id=' . $taskId ) .
-			( 9 == $mode ? '' : ' AND mode=' . $mode ) .
-			( empty($users) ? '' : ' AND user_id' . ( 1 == $users ? '>0' : '=0' ) ) .
-			( $isAll ? '' : ' AND task_id=' . $taskId ) .
-			( $from ? " AND created>='" . $from . " 00:00:00'" : '' ) .
-			( $to ? " AND created<='" . $to . " 23:59:59'" : '' ) .
+			' WHERE feature=%s';
+		$args = array('chatbots');
+		if (!$isAll) {
+			$query .= ' AND task_id=%d';
+			$args[] = (int) $taskId;
+		}
+		if (9 != $mode) {
+			$query .= ' AND mode=%d';
+			$args[] = (int) $mode;
+		}
+		if (!empty($users)) {
+			$query .= ' AND user_id' . ( 1 == $users ? '>0' : '=0' );
+		}
+		if ($from) {
+			$query .= ' AND created>=%s';
+			$args[] = $from . ' 00:00:00';
+		}
+		if ($to) {
+			$query .= ' AND created<=%s';
+			$args[] = $to . ' 23:59:59';
+		}
+		$query .=
 			' GROUP BY DATE(created), task_id, user_id, ip, mode, model';
 		$sessions = array();
-		$history = WaicDb::get($query);
+		$history = WaicDb::get($query, 'all', ARRAY_A, $args);
 		if ($history && !empty($history)) {
 			$chatbots = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTasksList(array('feature' => 'chatbots'));
 			$tools = array('prod' => 'search_products', 'post' => 'search_posts');
@@ -986,14 +1030,19 @@ class WaicChatbotsModel extends WaicModel {
 				$query = "SELECT h.created, l.question, l.answer, IF(l.file='',0,1) as has_file" .
 					' FROM @__history as h' .
 					' INNER JOIN @__chatlogs l ON (l.his_id=h.id)' .
-					' WHERE h.task_id=' . ( (int) $tId ) .
-					" AND h.model='" . $model . "'" .
-					' AND h.mode=' . ( (int) $his['mode'] ) .
-					' AND h.user_id=' . ( (int) $uId ) .
-					" AND ip='" . $ip . "'" .
-					" AND h.created BETWEEN '" . $dd . " 00:00:00' AND '" . $dd . " 23:59:59'" .
+					' WHERE h.task_id=%d' .
+					' AND h.model=%s' .
+					' AND h.mode=%d' .
+					' AND h.user_id=%d' .
+					' AND h.ip=%s' .
+					' AND h.created BETWEEN %s AND %s' .
 					' ORDER BY h.id';
-				$logs = WaicDb::get($query);
+				$logs = WaicDb::get(
+					$query,
+					'all',
+					ARRAY_A,
+					array((int) $tId, (string) $model, (int) $his['mode'], (int) $uId, (string) $ip, $dd . ' 00:00:00', $dd . ' 23:59:59')
+				);
 				if ($logs && !empty($logs)) {
 					$messages = array();
 					foreach ($logs as $log) {

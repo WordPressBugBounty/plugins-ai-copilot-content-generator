@@ -200,7 +200,7 @@ class WaicInstaller {
 				`task_id` INT NOT NULL DEFAULT 0,
 				`feature` VARCHAR(24) NOT NULL,
 				`user_id` INT NOT NULL DEFAULT 0,
-				`ip` VARCHAR(20) DEFAULT '',
+				`ip` VARCHAR(45) DEFAULT '',
 				`engine` VARCHAR(20) DEFAULT '',
 				`model` VARCHAR(160) DEFAULT '',
 				`mode` TINYINT(1) NOT NULL DEFAULT 0,
