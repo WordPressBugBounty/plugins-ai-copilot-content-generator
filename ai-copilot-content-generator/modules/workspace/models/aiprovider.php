@@ -2,6 +2,8 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'providers' . DIRECTORY_SEPARATOR . 'factory.php';
+require_once dirname( dirname( __FILE__ ) ) . DIRECTORY_SEPARATOR . 'providers' . DIRECTORY_SEPARATOR . 'resolver.php';
 
 class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	const EST_FLAG_TOKENS = 1;
@@ -25,36 +27,37 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 	public function getEngine( $type = '' ) {
 		switch ( $type ) {
 			case 'image':
-				return $this->imageProvider->getEngine();
+				return $this->imageProvider ? $this->imageProvider->getEngine() : '';
 			default:
-				return $this->provider->getEngine();
+				return $this->provider ? $this->provider->getEngine() : '';
 		}
 	}
 	public function getEngineModel( $type = '' ) {
 		switch ( $type ) {
 			case 'image':
-				return $this->imageProvider->getEngineModel($type);
+				return $this->imageProvider ? $this->imageProvider->getEngineModel($type) : '';
 			default:
-				return $this->provider->getEngineModel($type);
+				return $this->provider ? $this->provider->getEngineModel($type) : '';
 		}
 	}
 
 	public function getInstance( $params ) {
 		$defaults = WaicFrame::_()->getModule('options')->getModel()->getDefaults('api');
 
-		$engine = $this->getModelName(WaicUtils::getArrayValue($params, 'engine'));
+		$engine = sanitize_key((string) WaicUtils::getArrayValue($params, 'engine'));
 		if (empty($engine)) {
 			WaicFrame::_()->pushError(esc_html__('AI Provider not found.', 'ai-copilot-content-generator'));
 			return false;
 		}
 		
-		$this->provider = $this->getModule()->getModel($engine);
+		$this->provider = $this->getProviderAdapter($engine, $params, 'chat');
 		if ( !$this->provider ) {
 			WaicFrame::_()->pushError(esc_html__('AI Provider not found', 'ai-copilot-content-generator'));
 			return false;
 		}
 		
-		$this->imageProvider = $this->getModule()->getModel($this->getModelName(WaicUtils::getArrayValue($params, 'image_engine', $defaults['image_engine'])));
+		$imageEngine = sanitize_key((string) WaicUtils::getArrayValue($params, 'image_engine', $defaults['image_engine']));
+		$this->imageProvider = empty($imageEngine) ? null : $this->getProviderAdapter($imageEngine, $params, 'image_generate');
 
 		return $this;
 	}
@@ -213,8 +216,27 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		return $results;
 	}
 
-	private function getModelName( $engine ) {
-		return str_replace('-', '', $engine);
+	private function getProviderAdapter( $engine, $params = array(), $operation = 'chat' ) {
+		$optionsModel = WaicFrame::_()->getModule('options')->getModel();
+		$registry = $optionsModel->getModelRegistry()->getRegistry();
+		$manifest = WaicUtils::getArrayValue(WaicUtils::getArrayValue($registry, 'providers', array(), 2), $engine, array(), 2);
+		if (empty($manifest)) {
+			return false;
+		}
+		$profileId = sanitize_text_field((string) WaicUtils::getArrayValue($params, 'provider_profile_id', ''));
+		if ('' !== $profileId) {
+			$resolver = new WaicProviderProfileResolver();
+			$resolved = $resolver->resolve($engine, $operation, WaicUtils::getArrayValue($params, 'model', ''), $profileId, $params, $registry);
+			if (is_array($resolved) && !empty($resolved['adapter'])) {
+				return $resolved['adapter'];
+			}
+			return false;
+		}
+		$adapter = WaicProviderAdapterFactory::getAdapter($engine, '', $manifest);
+		if (!$adapter) {
+			return false;
+		}
+		return $adapter;
 	}
 
 	private function getHistory( $results, $params, $type = '', $typeProvider = '', $unifiedUsage = null, $meta = array() ) {
@@ -241,6 +263,7 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 		unset($historyMeta['tool_calls_count']);
 		$history = array(
 			'engine' => $engine,
+			'profile_id' => substr(sanitize_text_field((string) WaicUtils::getArrayValue($params, 'provider_profile_id', '')), 0, 64),
 			'model' => $model,
 			'operation' => $operation,
 			'task_id' => $this->taskId,

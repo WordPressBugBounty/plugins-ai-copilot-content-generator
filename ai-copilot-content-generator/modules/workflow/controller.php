@@ -6,9 +6,42 @@ class WaicWorkflowController extends WaicController {
 
 	protected $_code = 'workflow';
 
-	public function getNoncedMethods() {
-		return array('saveWorkflow', 'stopWorkflow', 'runWorkflow', 'getLogData', 'getHistoryList', 'saveIntegration', 'createTemplate', 'deleteTemplate', 'getJSON', 'importTemplate');
+	public function getAllowedActionMethods() {
+		return array(
+			'saveWorkflow',
+			'stopWorkflow',
+			'runWorkflow',
+			'getLogData',
+			'getHistoryList',
+			'saveIntegration',
+			'createTemplate',
+			'deleteTemplate',
+			'getJSON',
+			'importTemplate',
+		);
 	}
+
+	public function isActionAllowed( $task ) {
+		if ( ! is_string( $task ) ) {
+			return false;
+		}
+		$operation_id = WaicWorkflowPhase0OperationRegistry::forControllerAction( $task );
+		return in_array( strtolower( $task ), array_map( 'strtolower', $this->getAllowedActionMethods() ), true )
+			&& $operation_id && WaicWorkflowPhase0OperationRegistry::canRegister( $operation_id );
+	}
+
+	public function getPermissions() {
+		return array(
+			WAIC_USERLEVELS => array(
+				WAIC_ADMIN => $this->getAllowedActionMethods(),
+			),
+		);
+	}
+
+	public function getNoncedMethods() {
+		return $this->getAllowedActionMethods();
+	}
+
 	public function getHistoryList() {
 		$res = new WaicResponse();
 		$res->ignoreShellData();
@@ -35,8 +68,17 @@ class WaicWorkflowController extends WaicController {
 		}
 		$res->ajaxExec();
 	}
+
+	private function denyLegacyMutation( $code, $message ) {
+		$res = new WaicResponse();
+		$res->pushError( esc_html( $message ) );
+		$res->addData( 'code', (string) $code );
+		return $res->ajaxExec();
+	}
 	
 	public function saveWorkflow() {
+		return $this->denyLegacyMutation( 'WF-LEGACY-001', __( 'Workflow changes are unavailable until the guarded Phase 0 command handler is enabled.', 'ai-copilot-content-generator' ) );
+		/* Legacy mutation retained below for migration/reference only. */
 		$res = new WaicResponse();
 		$params = json_decode(stripslashes(WaicReq::getVar('flow', 'post', '', true, false)), true);
 		$params['task_title'] = WaicReq::getVar('title', 'post');
@@ -70,21 +112,18 @@ class WaicWorkflowController extends WaicController {
 	}
 	public function saveIntegration() {
 		$res = new WaicResponse();
-		$code = WaicReq::getVar('code', 'post');
-		$accounts = WaicReq::getVar('accounts', 'post');
-		
-		$accounts = $this->getModel('integrations')->saveIntegrations($code, $accounts);
-
-		if (false === $accounts) {
-			$res->pushError(WaicFrame::_()->getErrors());
-		} else {
-			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
-			$res->addData('accounts', $accounts);
-		}
+		$res->pushError( esc_html__( 'Credential changes are unavailable until the Phase 0 credential migration is complete.', 'ai-copilot-content-generator' ) );
+		$res->addData( 'code', 'WF-CRED-001' );
 		return $res->ajaxExec();
 	}
 	public function runWorkflow() {
 		$res = new WaicResponse();
+		$module = $this->getModule();
+		if ( ! $module || ! $module->isPhase0RunnerEnabled() ) {
+			$res->pushError( esc_html__( 'Workflow execution is disabled until the security baseline is enabled.', 'ai-copilot-content-generator' ) );
+			$res->addData( 'code', 'WF-RUN-003' );
+			return $res->ajaxExec();
+		}
 		$status = $this->getModel()->publishResults(WaicReq::getVar('task_id', 'post'), false, true);
 
 		if (empty($status)) {
@@ -118,6 +157,8 @@ class WaicWorkflowController extends WaicController {
 		return $res->ajaxExec();
 	}
 	public function createTemplate() {
+		return $this->denyLegacyMutation( 'WF-LEGACY-001', __( 'Template changes are unavailable until the guarded Phase 0 command handler is enabled.', 'ai-copilot-content-generator' ) );
+		/* Legacy mutation retained below for migration/reference only. */
 		$res = new WaicResponse();
 		$params = WaicReq::getVar('params', 'post');
 		$params = empty($params) ? array() : json_decode(wp_unslash($params), true);
@@ -133,19 +174,13 @@ class WaicWorkflowController extends WaicController {
 	}
 	public function importTemplate() {
 		$res = new WaicResponse();
-		$params = WaicReq::getVar('params', 'post');
-		$params = empty($params) ? array() : json_decode(wp_unslash($params), true);
-
-		$result = $this->getModel()->importTemplate($params);
-
-		if (false === $result) {
-			$res->pushError(WaicFrame::_()->getErrors());
-		} else {
-			$res->addMessage(esc_html__('Done', 'ai-copilot-content-generator'));
-		}
+		$res->pushError( esc_html__( 'Workflow import is unavailable while the security baseline is being installed.', 'ai-copilot-content-generator' ) );
+		$res->addData( 'code', 'WF-IMPORT-001' );
 		return $res->ajaxExec();
 	}
 	public function deleteTemplate() {
+		return $this->denyLegacyMutation( 'WF-LEGACY-001', __( 'Template changes are unavailable until the guarded Phase 0 command handler is enabled.', 'ai-copilot-content-generator' ) );
+		/* Legacy mutation retained below for migration/reference only. */
 		$res = new WaicResponse();
 		$id = WaicReq::getVar('id', 'post');
 		$result = $this->getModel()->deleteTemplate($id);

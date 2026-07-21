@@ -150,7 +150,10 @@ class WaicFrame extends WaicBaseObject {
 		if ($this->havePermissions($code, $action)) {
 			return true;
 		} else {
-			exit(esc_html_e('You have no permissions to view this page', 'ai-copilot-content-generator'));
+			if (function_exists('status_header')) {
+				status_header(403);
+			}
+			exit(esc_html__('You have no permissions to view this page', 'ai-copilot-content-generator'));
 		}
 	}
 	/**
@@ -280,6 +283,9 @@ class WaicFrame extends WaicBaseObject {
 			switch (WaicReq::getVar('reqType')) {
 				case 'ajax':
 					$controller = $mod->getController();
+					if ( ! $controller || ! $controller->isActionAllowed( $this->_action ) ) {
+						break;
+					}
 					add_action('wp_ajax_' . $this->_action, array($controller, $this->_action));
 					if (true === $controller->allowNoprivAjax($this->_action)) {
 						add_action('wp_ajax_nopriv_' . $this->_action, array($controller, $this->_action));

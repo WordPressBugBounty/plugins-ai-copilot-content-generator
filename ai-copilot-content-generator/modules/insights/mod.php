@@ -76,7 +76,7 @@ class WaicInsights extends WaicModule {
 		}
 		wp_add_privacy_policy_content(
 			esc_html__('AIWU Insights 360', 'ai-copilot-content-generator'),
-			wp_kses_post(__('AIWU Insights 360 stores aggregate AI usage, cost and troubleshooting signals. Conversation text and credentials are masked or omitted from reporting surfaces.', 'ai-copilot-content-generator'))
+			wp_kses_post(__('AIWU can send prompts, selected model identifiers and files only to an AI provider explicitly enabled by an administrator. Provider credentials are stored separately from ordinary settings with authenticated encryption and are never displayed after saving. AIWU Insights stores aggregate usage, cost and troubleshooting signals; it does not expose prompts, raw provider errors, credentials, uploaded files or network addresses in reporting surfaces. Consult the provider links shown in AI settings for that service’s Terms and Privacy Policy.', 'ai-copilot-content-generator'))
 		);
 	}
 

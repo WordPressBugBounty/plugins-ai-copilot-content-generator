@@ -9,8 +9,8 @@ class WaicFormsController extends WaicController {
 	public function getNoncedMethods() {
 		return array('saveForm', 'sendForm', 'getHistoryPage');
 	}
-	public function allowNoprivAjax( $action ) {
-		return in_array(strtolower($action), array('sendform'), true);
+	public function getAjaxActions() {
+		return array('sendForm');
 	}
 	public function saveForm() {
 		$res = new WaicResponse();

@@ -9,8 +9,8 @@ class WaicChatbotsController extends WaicController {
 	public function getNoncedMethods() {
 		return array('saveChatbot', 'launchChatbot', 'getLaunchPercent', 'sendMessage', 'sendFile', 'resetChatbotAdmin', 'getHistoryPage', 'getLogData', 'resetChatbotFront', 'exportLog');
 	}
-	public function allowNoprivAjax( $action ) {
-		return in_array(strtolower($action), array('sendmessage', 'sendfile', 'resetchatbotfront'), true);
+	public function getAjaxActions() {
+		return array('sendMessage', 'sendFile', 'resetChatbotFront');
 	}
 	
 	public function getHistoryPage() {

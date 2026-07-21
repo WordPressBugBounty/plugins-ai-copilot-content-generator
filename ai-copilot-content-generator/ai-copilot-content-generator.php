@@ -2,7 +2,7 @@
 /**
  * Plugin Name: AI Copilot - Content Generator
  * Description: AI Copilot for WordPress saves time and boosts your website's performance with human-like content with GPT, Internal AI and more.
- * Version: 1.5.6
+ * Version: 1.5.8
  * Author: AIWU
  * Author URI: https://aiwuplugin.com/
  * Text Domain: ai-copilot-content-generator
@@ -57,15 +57,22 @@ waicImportClass('WaicAssets');
 waicImportClass('WaicUser');
 waicImportClass('WaicBuilderBlock');
 waicImportClass('WaicIntegration');
+waicImportClass('WaicFastPath');
+waicImportClass('WaicFastIndex');
+waicImportClass('WaicFastIndexer');
+waicImportClass('WaicFastSavoryDomainPack');
 /**
  * Check plugin version - maybe we need to update database, and check global errors in request
  */
 WaicInstaller::update();
+WaicFastPath::init();
 add_action('admin_init', array('WaicInstaller', 'maybeBindExistingMcpTokenToCurrentAdmin'));
 WaicErrors::init();
 /**
  * Start application
  */
 WaicFrame::_()->parseRoute();
-WaicFrame::_()->init();
-WaicFrame::_()->exec();
+add_action( 'init', static function () {
+	WaicFrame::_()->init();
+	WaicFrame::_()->exec();
+}, 0 );

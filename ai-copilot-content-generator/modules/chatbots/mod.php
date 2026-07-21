@@ -79,6 +79,11 @@ class WaicChatbots extends WaicModule {
 				'pro' => false,
 				'label' => __('Tools', 'ai-copilot-content-generator'),
 			),
+			'fastpath' => array(
+				'class' => '',
+				'pro' => false,
+				'label' => __('Fast path', 'ai-copilot-content-generator'),
+			),
 			'appearance' => array(
 				'class' => '',
 				'pro' => false,
@@ -168,6 +173,10 @@ class WaicChatbots extends WaicModule {
 		return $this->getView()->renderChatbotHtml($p, $params['id']);
 	}
 	public function addTaskColumns( $columns, $params, $taskId ) {
+		if (isset($params['fast_path'])) {
+			$params['fast_path'] = WaicFastPath::sanitizeConfig($params['fast_path']);
+			$columns['params'] = WaicUtils::jsonEncode($params, true);
+		}
 		if (empty($taskId)) {
 			$columns['status'] = 4;
 		} else {

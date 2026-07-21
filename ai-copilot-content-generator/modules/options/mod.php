@@ -8,6 +8,7 @@ class WaicOptions extends WaicModule {
 
 	public function init() {
 		WaicDispatcher::addFilter('mainAdminTabs', array($this, 'addAdminTab'));
+		$this->getModel()->getModelRegistry()->registerHooks();
 	}
 	public function initAllOptValues() {
 		// Just to make sure - that we loaded all default options values

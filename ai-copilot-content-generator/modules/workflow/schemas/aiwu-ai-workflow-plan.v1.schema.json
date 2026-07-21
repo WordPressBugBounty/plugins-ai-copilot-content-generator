@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:aiwu:schema:ai-workflow-plan:v1",
+  "title": "AIWU AI Plan v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "description", "nodes", "edges"],
+  "properties": {
+    "name": {"type": "string", "maxLength": 200},
+    "description": {"type": "string", "maxLength": 4000},
+    "actual_cost_micro_usd": {"type": "integer", "minimum": 0},
+    "nodes": {
+      "type": "array", "minItems": 1, "maxItems": 10,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["key", "type", "code", "position", "settings"],
+        "properties": {
+          "key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
+          "type": {"enum": ["trigger", "logic", "action"]},
+          "code": {"type": "string", "pattern": "^[a-z0-9_]{2,80}$"},
+          "position": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"type": "number", "minimum": -1000000, "maximum": 1000000}, "y": {"type": "number", "minimum": -1000000, "maximum": 1000000}}},
+          "settings": {"type": "object"}
+        }
+      }
+    },
+    "edges": {
+      "type": "array", "maxItems": 20,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["source_key", "target_key", "source_handle", "target_handle"],
+        "properties": {
+          "source_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
+          "target_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,39}$"},
+          "source_handle": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"},
+          "target_handle": {"type": "string", "pattern": "^[a-z][a-z0-9_.-]{0,63}$"}
+        }
+      }
+    }
+  }
+}

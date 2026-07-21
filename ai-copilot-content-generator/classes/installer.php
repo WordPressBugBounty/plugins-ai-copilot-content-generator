@@ -201,7 +201,7 @@ class WaicInstaller {
 				`feature` VARCHAR(24) NOT NULL,
 				`user_id` INT NOT NULL DEFAULT 0,
 				`ip` VARCHAR(45) DEFAULT '',
-				`engine` VARCHAR(20) DEFAULT '',
+				`engine` VARCHAR(64) DEFAULT '',
 				`model` VARCHAR(160) DEFAULT '',
 				`mode` TINYINT(1) NOT NULL DEFAULT 0,
 				`created` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -227,6 +227,7 @@ class WaicInstaller {
 				INDEX `task_id` (`his_id`)
 			) DEFAULT CHARSET=utf8mb4;"));
 		}
+		WaicFastIndex::installSchema();
 		
 		WaicInstallerDbUpdater::runUpdate($current_version);
 		if ($current_version && !self::$_firstTimeActivated) {
@@ -251,9 +252,15 @@ class WaicInstaller {
 		global $wpdb;
 		$wpPrefix = $wpdb->prefix;
 		$wpdb->query('DROP TABLE IF EXISTS `' . $wpdb->prefix . esc_sql(WAIC_DB_PREF) . 'modules`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$wpdb->query('DROP TABLE IF EXISTS `' . $wpdb->prefix . esc_sql(WAIC_DB_PREF) . 'fast_index`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		foreach (array('history_daily', 'sessions_daily', 'pricing_versions', 'insight_events', 'conversation_outcomes', 'kb_attribution', 'mcp_audit', 'insight_state') as $table) {
 			$wpdb->query('DROP TABLE IF EXISTS `' . $wpdb->prefix . esc_sql(WAIC_DB_PREF . $table) . '`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		}
+		$wpdb->query($wpdb->prepare(
+			"DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
+			$wpdb->esc_like('waic_fast_index_status_') . '%'
+		)); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		delete_option('waic_fast_index_schema_version');
 		delete_option('waic_pricing');
 		delete_option('waic_pricing_sync_enabled');
 		delete_option('waic_pricing_auto_sync_enabled');
@@ -276,6 +283,12 @@ class WaicInstaller {
 		delete_option('waic_insights_360_data_through');
 		delete_option('waic_insights_analytics_enabled');
 		delete_option('waic_insights_mcp_audit_source');
+		delete_option('waic_model_registry_cache');
+		delete_option('waic_model_registry_last_sync');
+		delete_option('waic_model_registry_source_version');
+		delete_option('waic_model_registry_errors');
+		delete_option('waic_model_registry_custom');
+		delete_option('waic_model_registry_settings');
 		delete_option($wpPrefix . WAIC_DB_PREF . 'db_version');
 		delete_option($wpPrefix . WAIC_DB_PREF . 'db_installed');
 	}
@@ -288,13 +301,15 @@ class WaicInstaller {
 		wp_clear_scheduled_hook('waic_cleanup_history');
 		wp_clear_scheduled_hook('waic_pricing_remote_sync');
 		wp_clear_scheduled_hook('waic_pricing_custom_url_sync');
+		wp_clear_scheduled_hook('waic_model_registry_sync');
+		wp_clear_scheduled_hook(WaicFastIndexer::REBUILD_HOOK);
 		WaicFrame::_()->getModule('workspace')->getModel()->setStoppingTaskGeneration();
 	}
 	public static function update() {
 		global $wpdb;
 		$wpPrefix = $wpdb->prefix;
 		$currentVersion = get_option($wpPrefix . WAIC_DB_PREF . 'db_version', 0);
-		if (!$currentVersion || version_compare(WAIC_VERSION, $currentVersion, '>') || !WaicInstallerDbUpdater::isInsightsPhase1SchemaInstalled() || !WaicInstallerDbUpdater::isInsights360SchemaInstalled()) {
+		if (!$currentVersion || version_compare(WAIC_VERSION, $currentVersion, '>') || !WaicInstallerDbUpdater::isInsightsPhase1SchemaInstalled() || !WaicInstallerDbUpdater::isInsights360SchemaInstalled() || !WaicFastIndex::schemaReady()) {
 			if ($currentVersion && version_compare((string) $currentVersion, '1.5.4', '<')) {
 				self::purgeMcpOauthTransients();
 				update_option(WAIC_CODE . '_mcp_owner_binding_required', 1, false);

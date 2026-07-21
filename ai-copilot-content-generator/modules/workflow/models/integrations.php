@@ -37,10 +37,8 @@ class WaicIntegrationsModel extends WaicModel {
 		return $this->_integPath;
 	}
 	public function getCustomPath() {
-		if (is_null($this->_customPath)) {
-			$path = WaicFrame::_()->getModule('options')->get('plugin', 'integ_path');
-			$this->_customPath = ( empty($path) || !is_dir(ABSPATH . $path) ? false : ABSPATH . $path );
-		}
+		// Phase 0 C0a: configuration paths cannot provide executable integrations.
+		$this->_customPath = false;
 		return $this->_customPath;
 	}
 	public function getCategories() {
@@ -97,6 +95,9 @@ class WaicIntegrationsModel extends WaicModel {
 		return class_exists($integClass) ? new $integClass($account) : false;
 	}
 	public function saveIntegrations( $code, $accounts ) {
+		WaicFrame::_()->pushError( esc_html__( 'Credential changes are unavailable until the Phase 0 credential migration is complete.', 'ai-copilot-content-generator' ) );
+		return false;
+		/* Legacy write path retained below for one-way migration inventory only. */
 		$oldAccounts = get_option($this->_integPreVar . $code);
 		$existOld = $oldAccounts && is_array($oldAccounts);
 		$forSave = array();

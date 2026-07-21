@@ -75,6 +75,10 @@ class WaicTasksModel extends WaicModel {
 	}
 	
 	public function saveTask( $feature, $id, $params = array() ) {
+		if ( in_array( (string) $feature, array( 'workflow', 'template' ), true ) ) {
+			WaicFrame::_()->pushError( esc_html__( 'Legacy Workflow task mutations are quarantined by the Phase 0 security boundary.', 'ai-copilot-content-generator' ) );
+			return 0;
+		}
 		// only for new tasts or after canceled
 		$id = (int) $id;
 		$title = sanitize_text_field(WaicUtils::getArrayValue($params, 'task_title'));
@@ -117,6 +121,12 @@ class WaicTasksModel extends WaicModel {
 	}
 	public function updateTask( $id, $params = array() ) {
 		$id = (int) $id;
+		$feature = $this->getTaskFeature( $id );
+		$is_revoke = isset( $params['status'] ) && 6 === (int) $params['status'];
+		if ( in_array( $feature, array( 'workflow', 'template' ), true ) && ! $is_revoke ) {
+			WaicFrame::_()->pushError( esc_html__( 'Legacy Workflow task mutations are quarantined by the Phase 0 security boundary.', 'ai-copilot-content-generator' ) );
+			return 0;
+		}
 		$params['updated'] = WaicUtils::getTimestampDB();
 		if ( isset($params['status']) && ( 4 == $params['status'] || 3 == $params['status'] ) ) {
 			$task = $this->getTask($id);
@@ -130,6 +140,10 @@ class WaicTasksModel extends WaicModel {
 	}
 	public function updateTaskTitle( $id, $title ) {
 		$id = (int) $id;
+		if ( in_array( $this->getTaskFeature( $id ), array( 'workflow', 'template' ), true ) ) {
+			WaicFrame::_()->pushError( esc_html__( 'Legacy Workflow task mutations are quarantined by the Phase 0 security boundary.', 'ai-copilot-content-generator' ) );
+			return false;
+		}
 		$title = wp_strip_all_tags(str_replace(array('"', "'"), array('', ''), stripslashes($title)));
 		$this->updateById(array('title' => $title), $id);
 		
@@ -141,6 +155,10 @@ class WaicTasksModel extends WaicModel {
 	}
 	public function runTask( $id ) {
 		$task = $this->getTask($id);
+		if ( ! empty( $task['feature'] ) && in_array( $task['feature'], array( 'workflow', 'template' ), true ) ) {
+			WaicFrame::_()->pushError( esc_html__( 'Legacy Workflow execution is quarantined by the Phase 0 security boundary.', 'ai-copilot-content-generator' ) );
+			return false;
+		}
 		if (empty($task)) {
 			WaicFrame::_()->pushError(esc_html__('Generation task not found', 'ai-copilot-content-generator'));
 			return false;
@@ -265,6 +283,7 @@ class WaicTasksModel extends WaicModel {
 			$orderBy = WaicUtils::getArrayValue($order[0], 'column', $orderBy, 1);
 			$sortOrder = WaicUtils::getArrayValue($order[0], 'dir', $sortOrder);
 		}
+		$sortOrder = ( is_string( $sortOrder ) && 'DESC' === strtoupper( $sortOrder ) ) ? 'DESC' : 'ASC';
 		$feature = WaicUtils::getArrayValue($params, 'feature');
 		if (!empty($feature)) {
 			$list = WaicFrame::_()->getModule('workspace')->getFeaturesList();

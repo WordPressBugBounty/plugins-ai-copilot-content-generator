@@ -24,6 +24,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 				WaicHtml::hidden('task_title', array('value' => $this->props['task_title'], 'attrs' => 'id="waicTaskTitle"'));
 			?>
 			</form>
+			<?php if (!empty($this->props['task_id']) && !empty($this->props['fast_config']['enabled'])) { ?>
+				<form id="waicFastRebuildForm" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="waic-hidden">
+					<input type="hidden" name="action" value="waic_fast_rebuild">
+					<input type="hidden" name="task_id" value="<?php echo esc_attr(absint($this->props['task_id'])); ?>">
+					<?php wp_nonce_field('waic_fast_rebuild_' . absint($this->props['task_id'])); ?>
+				</form>
+			<?php } ?>
 			<form id="waicUploadForm" class="waic-hidden waic-dataset-upload" method="POST" enctype="multipart/form-data">  
 				<input type="file" accept=".txt, .csv, .json" name="trainingfile">  
 			</form>

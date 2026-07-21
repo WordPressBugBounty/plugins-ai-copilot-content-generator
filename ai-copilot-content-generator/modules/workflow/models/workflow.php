@@ -53,6 +53,9 @@ class WaicWorkflowModel extends WaicModel {
 		return $getStatus ? 6 : false;
 	}
 	public function publishResults( $taskId, $publish = 0, $getStatus = false ) {
+		unset( $taskId, $publish, $getStatus );
+		return false;
+		/* Legacy runtime activation retained below for migration/reference only. */
 		$taskId = (int) $taskId;
 		$taskModel = WaicFrame::_()->getModule('workspace')->getModel('tasks');
 		$task = $taskModel->getById($taskId);
@@ -171,10 +174,8 @@ class WaicWorkflowModel extends WaicModel {
 		return $this->_blocksPath;
 	}
 	public function getCustomBlocksPath() {
-		if (is_null($this->_customPath)) {
-			$path = WaicFrame::_()->getModule('options')->get('plugin', 'blocks_path');
-			$this->_customPath = ( empty($path) || !is_dir(ABSPATH . $path) ? false : ABSPATH . $path );
-		}
+		// Phase 0 C0a: data/configuration paths must never resolve executable PHP.
+		$this->_customPath = false;
 		return $this->_customPath;
 	}
 	private function loadAllBlocks() {
@@ -635,6 +636,11 @@ class WaicWorkflowModel extends WaicModel {
 	}
 	 
 	public function doScheduledFlows( $taskId = 0 ) {
+		unset( $taskId );
+		return false;
+	}
+
+	private function legacyDoScheduledFlows( $taskId = 0 ) {
 
 		$now = WaicUtils::getTimestampDB();
 		$select = 'SELECT id, task_id, tr_type, sch_period, flags FROM `@__workflows`' .
@@ -686,6 +692,10 @@ class WaicWorkflowModel extends WaicModel {
 		return false;
 	}
 	public function doFlowRuns() {
+		return false;
+	}
+
+	private function legacyDoFlowRuns() {
 		$this->workspace = WaicFrame::_()->getModule('workspace')->getModel();
 		$this->runModel = $this->getModule()->getModel('flowruns');
 		
@@ -718,6 +728,11 @@ class WaicWorkflowModel extends WaicModel {
 	}
 	
 	public function doFlowRun( $run ) {
+		unset( $run );
+		return false;
+	}
+
+	private function legacyDoFlowRun( $run ) {
 		$flId = (int) $run['fl_id'];
 		$flow = $this->getFlow($flId);
 		$timeout = (int) $flow['timeout'];
@@ -1012,6 +1027,11 @@ class WaicWorkflowModel extends WaicModel {
 		return $needStop;
 	}
 	public function doHookedFlows( $taskId = 0 ) {
+		unset( $taskId );
+		return false;
+	}
+
+	private function legacyDoHookedFlows( $taskId = 0 ) {
 		$flows = $this->setSelectFields('id, tr_hook')->setWhere(array('status' => 1, 'tr_type' => 2))->getFromTbl();
 		if ($flows) {
 			foreach ( $flows as $flow ) {
@@ -1521,6 +1541,9 @@ class WaicWorkflowModel extends WaicModel {
 		return $list;
 	}
 	public function createWorkflowByTemplate( $tmpId ) {
+		unset( $tmpId );
+		return 0;
+		/* Legacy mutation retained below for migration/reference only. */
 		$taskModel = WaicFrame::_()->getModule('workspace')->getModel('tasks');
 		$template = $taskModel->getTask($tmpId);
 		if ($template && 'template' == $template['feature']) {
@@ -1529,6 +1552,9 @@ class WaicWorkflowModel extends WaicModel {
 		return 0;
 	}
 	public function createTemplate( $params ) {
+		unset( $params );
+		return false;
+		/* Legacy mutation retained below for migration/reference only. */
 		$id = WaicUtils::getArrayValue($params, 'task_id', 0, 1);
 		if (empty($id)) {
 			WaicFrame::_()->pushError('Empty Task ID');
@@ -1552,6 +1578,9 @@ class WaicWorkflowModel extends WaicModel {
 		return true;
 	}
 	public function importTemplate( $params ) {
+		unset( $params );
+		return false;
+		/* Legacy mutation retained below for migration/reference only. */
 		$name = WaicUtils::getArrayValue($params, 'name');
 		if (empty($name)) {
 			WaicFrame::_()->pushError('Template Name is required');
@@ -1616,6 +1645,9 @@ class WaicWorkflowModel extends WaicModel {
 	}
 	
 	public function deleteTemplate( $tmpId ) {
+		unset( $tmpId );
+		return false;
+		/* Legacy mutation retained below for migration/reference only. */
 		$taskModel = WaicFrame::_()->getModule('workspace')->getModel('tasks');
 		$template = $taskModel->getTask($tmpId);
 		if ($template && 'template' == $template['feature'] && empty($template['mode'])) {

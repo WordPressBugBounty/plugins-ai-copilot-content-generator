@@ -11,6 +11,9 @@ class WaicWorkspaceController extends WaicController {
 	}
 	
 	public function getHistoryList() {
+		if (true !== $this->_checkAdminAjaxSecurity()) {
+			return;
+		}
 		$res = new WaicResponse();
 		$res->ignoreShellData();
 

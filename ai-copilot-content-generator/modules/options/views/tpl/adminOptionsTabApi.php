@@ -10,6 +10,12 @@ $variations = WaicUtils::getArrayValue($props['variations'], 'api', array(), 2);
 $defaults = WaicUtils::getArrayValue($props['defaults'], 'api', array(), 2);
 $readOnly = WaicUtils::getArrayValue($props, 'read_only') == 1;
 $tokens = WaicUtils::getArrayValue($variations, 'tokens', array(), 2);
+$registry = WaicUtils::getArrayValue($variations, 'model-registry', array(), 2);
+$registrySettings = WaicUtils::getArrayValue($registry, 'settings', array(), 2);
+$registryGroups = WaicUtils::getArrayValue($registry, 'group_labels', WaicUtils::getArrayValue($variations, 'provider-groups', array(), 2), 2);
+$capabilityFilters = WaicUtils::getArrayValue($registry, 'capability_labels', WaicUtils::getArrayValue($variations, 'capability-filters', array(), 2), 2);
+$modelOptions = WaicUtils::getArrayValue($variations, 'model-options', array(), 2);
+$imageModelOptions = WaicUtils::getArrayValue($variations, 'image-model-options', array(), 2);
 $curModels = array();
 foreach ($variations['engines'] as $m => $v) {
 	$var = $variations['model-fields'][$m];
@@ -22,9 +28,46 @@ $curDeepSeekModel = WaicUtils::getArrayValue($options, 'deep_seek_model', $defau
 $curGeminiModel = WaicUtils::getArrayValue($options, 'gemini_model', $defaults['gemini_model']);*/
 $curEngine = WaicUtils::getArrayValue($options, 'engine', $defaults['engine']);
 $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['image_engine']);
+$providerProfiles = WaicUtils::getArrayValue($props, 'provider_profiles', array(), 2);
+$providerMeta = WaicUtils::getArrayValue($variations, 'provider-meta', array(), 2);
 
 ?>
 <section class="wbw-body-options-api">
+	<div class="wbw-group-title">
+		<?php esc_html_e('Provider profiles', 'ai-copilot-content-generator'); ?>
+	</div>
+	<div class="wbw-settings-form row" id="waicProviderProfileEditor">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('New profile', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<select class="waic-provider-profile-provider">
+					<option value=""><?php esc_html_e('Select provider', 'ai-copilot-content-generator'); ?></option>
+					<?php foreach ($providerMeta as $providerId => $provider) { ?>
+						<option value="<?php echo esc_attr($providerId); ?>" data-credentials="<?php echo esc_attr(wp_json_encode(WaicUtils::getArrayValue($provider, 'credential_fields', array(), 2))); ?>" data-config="<?php echo esc_attr(wp_json_encode(WaicUtils::getArrayValue($provider, 'configuration_schema', array(), 2))); ?>" data-model-field="<?php echo esc_attr(WaicUtils::getArrayValue($provider, 'model_field', '')); ?>"><?php echo esc_html(WaicUtils::getArrayValue($provider, 'label', $providerId)); ?></option>
+					<?php } ?>
+				</select>
+				<input type="text" class="waic-provider-profile-label" placeholder="<?php echo esc_attr__('Profile label', 'ai-copilot-content-generator'); ?>" />
+				<label><input type="checkbox" class="waic-provider-profile-enabled" value="1" /> <?php esc_html_e('Enable this profile', 'ai-copilot-content-generator'); ?></label>
+				<div class="waic-provider-profile-fields"></div>
+				<button type="button" class="wbw-button wbw-button-small waic-provider-profile-save"><?php esc_html_e('Save provider profile', 'ai-copilot-content-generator'); ?></button>
+			</div>
+			<p class="description"><?php esc_html_e('Secrets are write-only. Saved values are shown only as a masked fingerprint.', 'ai-copilot-content-generator'); ?></p>
+		</div>
+	</div>
+	<?php if (!empty($providerProfiles)) { ?>
+		<div class="wbw-settings-form row">
+			<div class="wbw-settings-label col-2"><?php esc_html_e('Saved profiles', 'ai-copilot-content-generator'); ?></div>
+			<div class="wbw-settings-fields col-10"><div class="wbw-settings-field">
+				<?php foreach ($providerProfiles as $profile) { ?>
+					<div class="waic-provider-profile" data-profile-id="<?php echo esc_attr(WaicUtils::getArrayValue($profile, 'id', '')); ?>">
+						<strong><?php echo esc_html(WaicUtils::getArrayValue($profile, 'label', '')); ?></strong>
+						<small><?php echo esc_html(WaicUtils::getArrayValue($profile, 'provider_id', '')); ?> · <?php echo !empty($profile['enabled']) ? esc_html__('enabled', 'ai-copilot-content-generator') : esc_html__('disabled', 'ai-copilot-content-generator'); ?></small>
+						<?php foreach (WaicUtils::getArrayValue($profile, 'credentials', array(), 2) as $field => $masked) { ?><span class="waic-provider-profile-mask"><?php echo esc_html($field . ': ' . $masked); ?></span><?php } ?>
+					</div>
+				<?php } ?>
+			</div></div>
+		</div>
+	<?php } ?>
 	<div class="wbw-group-title">
 		<?php esc_html_e('API keys', 'ai-copilot-content-generator'); ?>
 	</div>
@@ -116,7 +159,111 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 	</div>
 
 	<div class="wbw-group-title">
+		<?php esc_html_e('AI model registry', 'ai-copilot-content-generator'); ?>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Registry status', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<span class="waic-model-registry-status">
+					<?php
+					echo esc_html(sprintf(
+						/* translators: 1: providers count, 2: models count, 3: last sync date */
+						__('Providers: %1$d, models: %2$d. Last sync: %3$s', 'ai-copilot-content-generator'),
+						(int) WaicUtils::getArrayValue($registry, 'providers_count', 0, 1),
+						(int) WaicUtils::getArrayValue($registry, 'models_count', 0, 1),
+						WaicUtils::getArrayValue($registry, 'last_sync', __('never', 'ai-copilot-content-generator'))
+					));
+					?>
+				</span>
+				<button type="button" class="wbw-button wbw-button-small waic-model-registry-refresh"><?php esc_html_e('Refresh AI models', 'ai-copilot-content-generator'); ?></button>
+				<button type="button" class="wbw-button wbw-button-small waic-model-registry-rollback<?php echo empty($registry['has_rollback']) ? ' disabled' : ''; ?>"><?php esc_html_e('Rollback', 'ai-copilot-content-generator'); ?></button>
+			</div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Remote manifest URL', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<?php
+				WaicHtml::text('api[model_registry_remote_url]', array(
+					'value' => WaicUtils::getArrayValue($registrySettings, 'remote_url', ''),
+					'attrs' => 'class="waic-model-registry-remote-url" placeholder="https://"',
+				));
+				?>
+			</div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Registry options', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<?php
+			$registryCheckboxes = array(
+				'model_registry_auto_sync' => __('Auto-sync daily', 'ai-copilot-content-generator'),
+				'model_registry_live_discovery' => __('Provider live discovery', 'ai-copilot-content-generator'),
+				'model_registry_allow_preview' => __('Show preview models', 'ai-copilot-content-generator'),
+				'model_registry_allow_deprecated' => __('Show deprecated models', 'ai-copilot-content-generator'),
+				'model_registry_allow_limited' => __('Show limited models', 'ai-copilot-content-generator'),
+				'model_registry_allow_unverified_live' => __('Show unverified live models', 'ai-copilot-content-generator'),
+			);
+			$registryCheckboxValues = array(
+				'model_registry_auto_sync' => 'auto_sync_enabled',
+				'model_registry_live_discovery' => 'provider_live_enabled',
+				'model_registry_allow_preview' => 'allow_preview',
+				'model_registry_allow_deprecated' => 'allow_deprecated',
+				'model_registry_allow_limited' => 'allow_limited',
+				'model_registry_allow_unverified_live' => 'allow_unverified_live',
+			);
+			foreach ($registryCheckboxes as $field => $label) {
+				?>
+				<div class="wbw-settings-field">
+					<?php
+					WaicHtml::checkbox('api[' . $field . ']', array(
+						'checked' => WaicUtils::getArrayValue($registrySettings, $registryCheckboxValues[$field], 0, 1),
+					));
+					?>
+					<div class="wbw-settings-label"><?php echo esc_html($label); ?></div>
+				</div>
+			<?php } ?>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Import manifest', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<textarea id="waicModelRegistryImportJson" class="waic-model-registry-import-json" rows="4" placeholder="<?php echo esc_attr__('Paste AIWU model registry JSON', 'ai-copilot-content-generator'); ?>"></textarea>
+				<button type="button" class="wbw-button wbw-button-small waic-model-registry-import"><?php esc_html_e('Import JSON manifest', 'ai-copilot-content-generator'); ?></button>
+			</div>
+		</div>
+	</div>
+
+	<div class="wbw-group-title">
 		<?php esc_html_e('Text generation', 'ai-copilot-content-generator'); ?>
+	</div>
+
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Provider groups', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field waic-provider-group-tabs">
+				<?php foreach ($registryGroups as $group => $label) { ?>
+					<button type="button" class="wbw-button wbw-button-small waic-provider-group-tab<?php echo 'core' === $group ? ' current' : ''; ?>" data-group="<?php echo esc_attr($group); ?>"><?php echo esc_html($label); ?></button>
+				<?php } ?>
+			</div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Capability filter', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<?php
+				WaicHtml::selectbox('', array(
+					'options' => $capabilityFilters,
+					'value' => '',
+					'attrs' => 'id="waicModelCapabilityFilter"',
+				));
+				?>
+			</div>
+		</div>
 	</div>
 
 	<div class="wbw-settings-form row">
@@ -126,7 +273,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field">
 				<?php
 				WaicHtml::selectbox('api[engine]', array(
-					'options' => $variations['engines'],
+					'options' => WaicUtils::getArrayValue($variations, 'engine-options', $variations['engines'], 2),
 					'value' => $curEngine,
 					'attrs' => 'id="waicEngineSelect"',
 				));
@@ -142,7 +289,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'open-ai' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="open-ai">
 			<?php 
 				WaicHtml::selectbox('api[model]', array(
-					'options' => $variations['model']['open-ai'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'open-ai', $variations['model']['open-ai'], 2),
 					'value' => $curModels['open-ai'],
 					'attrs' => 'data-engine="open-ai" class="waic-api-models-select"',
 				));
@@ -151,7 +298,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'deep-seek' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="deep-seek">
 				<?php
 				WaicHtml::selectbox('api[deep_seek_model]', array(
-					'options' => $variations['model']['deep-seek'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'deep-seek', $variations['model']['deep-seek'], 2),
 					'value' => $curModels['deep-seek'],
 					'attrs' => 'data-engine="deep-seek" class="waic-api-models-select"',
 				));
@@ -160,7 +307,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'gemini' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="gemini">
 				<?php
 				WaicHtml::selectbox('api[gemini_model]', array(
-					'options' => $variations['model']['gemini'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'gemini', $variations['model']['gemini'], 2),
 					'value' => $curModels['gemini'],
 					'attrs' => 'data-engine="gemini" class="waic-api-models-select"',
 				));
@@ -169,7 +316,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'claude' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="claude">
 				<?php
 				WaicHtml::selectbox('api[claude_model]', array(
-					'options' => $variations['model']['claude'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'claude', $variations['model']['claude'], 2),
 					'value' => $curModels['claude'],
 					'attrs' => 'data-engine="claude" class="waic-api-models-select"',
 				));
@@ -178,7 +325,7 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'perplexity' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="perplexity">
 				<?php
 				WaicHtml::selectbox('api[perplexity_model]', array(
-					'options' => $variations['model']['perplexity'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'perplexity', $variations['model']['perplexity'], 2),
 					'value' => $curModels['perplexity'],
 					'attrs' => 'data-engine="perplexity" class="waic-api-models-select"',
 				));
@@ -187,12 +334,29 @@ $curImageEngine = WaicUtils::getArrayValue($options, 'image_engine', $defaults['
 			<div class="wbw-settings-field<?php echo ( 'openrouter' != $curEngine ? ' wbw-hidden' : '' ); ?>" data-parent-select="api[engine]" data-select-value="openrouter">
 				<?php
 				WaicHtml::selectbox('api[openrouter_model]', array(
-					'options' => $variations['model']['openrouter'],
+					'options' => WaicUtils::getArrayValue($modelOptions, 'openrouter', $variations['model']['openrouter'], 2),
 					'value' => $curModels['openrouter'],
 					'attrs' => 'data-engine="openrouter" class="waic-api-models-select"',
 				));
 				?>
-				<button class="wbw-button wbw-button-small m-0 waic-api-models-check"><?php esc_html_e('Check models', 'ai-copilot-content-generator'); ?></button>
+				<button type="button" class="wbw-button wbw-button-small m-0 waic-api-models-check"><?php esc_html_e('Check models', 'ai-copilot-content-generator'); ?></button>
+			</div>
+			<div class="wbw-settings-field waic-model-registry-actions">
+				<button type="button" class="wbw-button wbw-button-small waic-test-model"><?php esc_html_e('Test model', 'ai-copilot-content-generator'); ?></button>
+			</div>
+			<div class="wbw-settings-field wbw-hidden waic-model-warning"></div>
+		</div>
+	</div>
+	<div class="wbw-settings-form row">
+		<div class="wbw-settings-label col-2"><?php esc_html_e('Custom model ID', 'ai-copilot-content-generator'); ?></div>
+		<div class="wbw-settings-fields col-10">
+			<div class="wbw-settings-field">
+				<?php
+				WaicHtml::text('api[custom_model_id]', array(
+					'value' => WaicUtils::getArrayValue($options, 'custom_model_id', ''),
+					'attrs' => 'placeholder="' . esc_attr__('provider-model-id', 'ai-copilot-content-generator') . '"',
+				));
+				?>
 			</div>
 		</div>
 	</div>
@@ -380,7 +544,7 @@ if (empty($notShow['language'])) { ?>
 				<div class="wbw-settings-field">
 					<?php
 					WaicHtml::selectbox('api[img_model]', array(
-						'options' => $variations['img_model'],
+						'options' => WaicUtils::getArrayValue($imageModelOptions, 'img_model', $variations['img_model'], 2),
 						'value' => WaicUtils::getArrayValue($options, 'img_model', $defaults['img_model']),
 					));
 					?>
@@ -395,7 +559,7 @@ if (empty($notShow['language'])) { ?>
 				<div class="wbw-settings-field">
 					<?php
 					WaicHtml::selectbox('api[gemini_img_model]', array(
-						'options' => $variations['gemini_img_model'],
+						'options' => WaicUtils::getArrayValue($imageModelOptions, 'gemini_img_model', $variations['gemini_img_model'], 2),
 						'value' => WaicUtils::getArrayValue($options, 'gemini_img_model', $defaults['gemini_img_model']),
 					));
 					?>
@@ -409,7 +573,7 @@ if (empty($notShow['language'])) { ?>
 				<div class="wbw-settings-field">
 					<?php
 					WaicHtml::selectbox('api[openrouter_img_model]', array(
-						'options' => $variations['openrouter_img_model'],
+						'options' => WaicUtils::getArrayValue($imageModelOptions, 'openrouter_img_model', $variations['openrouter_img_model'], 2),
 						'value' => WaicUtils::getArrayValue($options, 'openrouter_img_model', $defaults['openrouter_img_model']),
 					));
 					?>

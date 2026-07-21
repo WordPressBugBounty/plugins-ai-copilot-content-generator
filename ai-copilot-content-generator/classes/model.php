@@ -44,7 +44,8 @@ abstract class WaicModel extends WaicBaseObject {
 	 * ASC, DESC
 	 */
 	public function setSortOrder( $sortOrder ) {
-		$this->_sortOrder = $sortOrder;
+		$sortOrder = is_string( $sortOrder ) ? strtoupper( $sortOrder ) : '';
+		$this->_sortOrder = in_array( $sortOrder, array('ASC', 'DESC'), true ) ? $sortOrder : 'ASC';
 		return $this;
 	}
 	public function setLimit( $limit ) {

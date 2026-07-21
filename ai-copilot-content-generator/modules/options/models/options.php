@@ -2,10 +2,15 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'provider_capabilities.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'provider_discovery.php';
+require_once dirname(__FILE__) . DIRECTORY_SEPARATOR . 'model_registry.php';
+
 class WaicOptionsModel extends WaicModel {
 	private $_values = array();
 	private $_valuesLoaded = false;
 	private $_htmlParams = null;
+	private $_modelRegistry = null;
 	
 	public function get( $gr, $key = '' ) {
 		$this->_loadOptValues($gr);
@@ -45,6 +50,7 @@ class WaicOptionsModel extends WaicModel {
 					$options[$gr][$opt] = 0;
 				}
 			}
+			$options[$gr] = $this->correctRegistryOptions($options[$gr]);
 		}
 		if ('plugin' == $gr && !empty($options[$gr]) && is_array($options[$gr])) {
 			$checkOptions = array('notifications', 'logging', 'user_statistics');
@@ -65,6 +71,123 @@ class WaicOptionsModel extends WaicModel {
 		return $options;
 	}
 
+	public function getModelRegistry() {
+		if (is_null($this->_modelRegistry)) {
+			$this->_modelRegistry = new WaicModelRegistry($this);
+		}
+		return $this->_modelRegistry;
+	}
+
+	public function getProviderProfiles() {
+		$store = new WaicProviderCredentialStore();
+		$profiles = $store->getProfiles();
+		foreach ($profiles as $id => $profile) {
+			$profiles[$id]['credentials'] = $store->mask(WaicUtils::getArrayValue($profile, 'secret_ref', ''));
+		}
+		return $profiles;
+	}
+
+	public function saveProviderProfile( $profile, $credentials = array() ) {
+		$profile = is_array($profile) ? $profile : array();
+		$providerId = sanitize_key((string) WaicUtils::getArrayValue($profile, 'provider_id', ''));
+		$registry = $this->getModelRegistry()->getRegistry();
+		$manifest = WaicUtils::getArrayValue(WaicUtils::getArrayValue($registry, 'providers', array(), 2), $providerId, array(), 2);
+		$adapter = WaicProviderAdapterFactory::getAdapter($providerId, '', $manifest);
+		if (!$adapter) {
+			$this->pushError(esc_html__('Provider adapter is unavailable.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$store = new WaicProviderCredentialStore();
+		$config = WaicUtils::getArrayValue($profile, 'configuration', array(), 2);
+		$existingSecrets = array();
+		if (!empty($profile['id'])) {
+			$existing = $store->getProfile($profile['id']);
+			if ($existing) {
+				$existingSecrets = $store->getCredentials(WaicUtils::getArrayValue($existing, 'secret_ref', ''));
+			}
+		}
+		$validation = $adapter->validateProfile(array('configuration' => array_merge($config, $existingSecrets, is_array($credentials) ? $credentials : array())));
+		if ($validation instanceof WaicProviderFailure) {
+			$this->pushError($validation->message);
+			return false;
+		}
+		$saved = $store->saveProfile($profile, is_array($credentials) ? $credentials : array());
+		if ($saved instanceof WaicProviderFailure) {
+			$this->pushError($saved->message);
+			return false;
+		}
+		$saved['credentials'] = $store->mask($saved['secret_ref']);
+		return $saved;
+	}
+
+	public function rotateProviderProfile( $profileId, $credentials ) {
+		$store = new WaicProviderCredentialStore();
+		$saved = $store->rotate(sanitize_text_field((string) $profileId), is_array($credentials) ? $credentials : array());
+		if ($saved instanceof WaicProviderFailure) { $this->pushError($saved->message); return false; }
+		$saved['credentials'] = $store->mask($saved['secret_ref']);
+		return $saved;
+	}
+
+	public function deleteProviderProfile( $profileId, $deleteCredentials = false ) {
+		$store = new WaicProviderCredentialStore();
+		return $store->delete(sanitize_text_field((string) $profileId), !empty($deleteCredentials));
+	}
+
+	private function correctRegistryOptions( $apiOptions ) {
+		if (!is_array($apiOptions)) {
+			return $apiOptions;
+		}
+		$registryKeys = array(
+			'model_registry_remote_url',
+			'model_registry_auto_sync',
+			'model_registry_live_discovery',
+			'model_registry_allow_preview',
+			'model_registry_allow_deprecated',
+			'model_registry_allow_limited',
+			'model_registry_allow_unverified_live',
+		);
+		$hasRegistrySettings = false;
+		foreach ($registryKeys as $key) {
+			if (array_key_exists($key, $apiOptions)) {
+				$hasRegistrySettings = true;
+				break;
+			}
+		}
+		if ($hasRegistrySettings) {
+			foreach (array('model_registry_auto_sync', 'model_registry_live_discovery', 'model_registry_allow_preview', 'model_registry_allow_deprecated', 'model_registry_allow_limited', 'model_registry_allow_unverified_live') as $checkboxKey) {
+				if (!array_key_exists($checkboxKey, $apiOptions)) {
+					$apiOptions[$checkboxKey] = 0;
+				}
+			}
+			$this->getModelRegistry()->saveSettings($apiOptions);
+			foreach ($registryKeys as $key) {
+				unset($apiOptions[$key]);
+			}
+		}
+		$customProviderId = sanitize_key((string) WaicUtils::getArrayValue($apiOptions, 'custom_provider_id', ''));
+		if ('' !== $customProviderId) {
+			$customProviderLabel = sanitize_text_field((string) WaicUtils::getArrayValue($apiOptions, 'custom_provider_label', $customProviderId));
+			$customBaseUrl = esc_url_raw((string) WaicUtils::getArrayValue($apiOptions, 'custom_provider_base_url', ''), array('https'));
+			$customKey = trim((string) WaicUtils::getArrayValue($apiOptions, 'custom_provider_api_key', ''));
+			$customProviderModel = trim((string) WaicUtils::getArrayValue($apiOptions, 'custom_model_id', ''));
+			if ('' !== $customProviderModel && $this->getModelRegistry()->addCustomProvider($customProviderId, $customProviderLabel, $customBaseUrl, $customProviderModel, $customKey)) {
+				$apiOptions[$customProviderId . '_api_key'] = $customKey;
+				$apiOptions[$customProviderId . '_base_url'] = $customBaseUrl;
+				$apiOptions[$customProviderId . '_model'] = $customProviderModel;
+			}
+		}
+		$customModelId = trim((string) WaicUtils::getArrayValue($apiOptions, 'custom_model_id', ''));
+		if ('' !== $customModelId) {
+			$provider = sanitize_key((string) WaicUtils::getArrayValue($apiOptions, 'engine', WaicUtils::getArrayValue($this->getDefaults('api'), 'engine', 'open-ai')));
+			if ($this->getModelRegistry()->addCustomModel($provider, $customModelId)) {
+				$modelFields = $this->getVariations('api', 'model-fields');
+				$modelField = WaicUtils::getArrayValue($modelFields, $provider, 'model');
+				$apiOptions[$modelField] = $customModelId;
+			}
+		}
+		return $apiOptions;
+	}
+
 	public function saveOptions( $data = array(), $tabs = false ) {
 		$leer = true;
 
@@ -75,6 +198,15 @@ class WaicOptionsModel extends WaicModel {
 			//$needRecalcPoints = false;
 			foreach ($data as $gr => $d) {
 				if (isset($tabs[$gr]) && is_array($d)) {
+					if ('api' === $gr) {
+						// Dynamic provider keys are retained only long enough to create a
+						// profile; they must never be persisted in waic_options_api.
+						foreach ($d as $field => $value) {
+							if (preg_match('/^custom-[a-z0-9_-]+_api_key$/', (string) $field)) {
+								unset($d[$field]);
+							}
+						}
+					}
 					$leer = false;
 					$needSave = false;
 					/*if ($tabs[$gr]['remove']) {
@@ -180,6 +312,7 @@ class WaicOptionsModel extends WaicModel {
 				'img_model' => 'dall-e-3',
 				'gemini_img_model' => 'gemini-2.5-flash-image',
 				'openrouter_img_model' => 'openai/gpt-5-image',
+				'custom_model_id' => '',
 				'common_language' => 0,
 				'human_style' => 0,
 			),
@@ -535,16 +668,34 @@ class WaicOptionsModel extends WaicModel {
 		);
 		$vars = WaicDispatcher::applyFilters('getOptionsVariations', $vars);
 		if (empty($gr) || 'api' == $gr) {
+			$currentApiOptions = $this->get('api');
+			$vars = $this->getModelRegistry()->applyToVariations($vars, $currentApiOptions);
+			$registrySettings = $this->getModelRegistry()->getSettings();
+			$allowLegacyLive = !empty($registrySettings['allow_unverified_live']);
 			$models = $this->get('models');
 			if (!empty($models) && is_array($models)) {
 				foreach ($models as $e => $data) {
-					$vars['api']['model'][$e] = $data;
+					if (!$allowLegacyLive) {
+						$field = WaicUtils::getArrayValue($vars['api']['model-fields'], $e, '');
+						$currentModel = empty($field) ? '' : WaicUtils::getArrayValue($currentApiOptions, $field);
+						$data = empty($currentModel) || empty($data[$currentModel]) ? array() : array($currentModel => $data[$currentModel]);
+					}
+					if (!empty($data)) {
+						$vars['api']['model'][$e] = isset($vars['api']['model'][$e]) && is_array($vars['api']['model'][$e]) ? array_merge($vars['api']['model'][$e], $data) : $data;
+					}
 				}
 			}
 			$imgModels = $this->get('img_models');
 			if (!empty($imgModels) && is_array($imgModels)) {
 				foreach ($imgModels as $e => $data) {
-					$vars['api'][$e . '_img_model'] = $data;
+					$field = $e . '_img_model';
+					if (!$allowLegacyLive) {
+						$currentModel = WaicUtils::getArrayValue($currentApiOptions, $field);
+						$data = empty($currentModel) || empty($data[$currentModel]) ? array() : array($currentModel => $data[$currentModel]);
+					}
+					if (!empty($data)) {
+						$vars['api'][$field] = isset($vars['api'][$field]) && is_array($vars['api'][$field]) ? array_merge($vars['api'][$field], $data) : $data;
+					}
 				}
 			}
 			$tokens = $this->get('tokens');
@@ -616,6 +767,65 @@ class WaicOptionsModel extends WaicModel {
 		$this->save('models', $engine, isset($results['models']) ? $results['models'] : array());
 		$this->save('img_models', $engine, isset($results['img_models']) ? $results['img_models'] : array());
 		$this->save('tokens', $engine, isset($results['tokens']) ? $results['tokens'] : array());
+		$this->getModelRegistry()->applyProviderLiveResults($engine, $results);
 		return $results;
+	}
+	public function refreshModelRegistry( $params = array() ) {
+		return $this->getModelRegistry()->refresh($params, true);
+	}
+	public function importModelRegistry( $json ) {
+		return $this->getModelRegistry()->importManifestJson($json);
+	}
+	public function rollbackModelRegistry() {
+		return $this->getModelRegistry()->rollback();
+	}
+	public function testApiModel( $provider, $model, $apiKey = '' ) {
+		$provider = sanitize_key((string) $provider);
+		$model = trim(sanitize_text_field((string) $model));
+		if ('' === $provider || '' === $model) {
+			$this->pushError(esc_html__('Select provider and model first.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$variations = $this->getVariations('api');
+		if (empty($variations['engines'][$provider])) {
+			$this->pushError(esc_html__('Selected provider is not available in this version.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$modelName = str_replace('-', '', $provider);
+		$workspace = WaicFrame::_()->getModule('workspace');
+		$aiProvider = $workspace->getModel($modelName);
+		if (!$aiProvider) {
+			$this->pushError(esc_html__('AI Provider not found.', 'ai-copilot-content-generator'));
+			return false;
+		}
+		$options = $this->get('api');
+		$options = is_array($options) ? $options : array();
+		$options['engine'] = $provider;
+		$modelField = WaicUtils::getArrayValue($variations['model-fields'], $provider, 'model');
+		$keyField = WaicUtils::getArrayValue($variations['key-fields'], $provider, $provider . '_api_key');
+		$options[$modelField] = $model;
+		$options['tokens'] = 8;
+		$options['temperature'] = 0;
+		if ('' !== trim((string) $apiKey)) {
+			$options[$keyField] = trim((string) $apiKey);
+		}
+		$aiProvider->init();
+		if (false === $aiProvider->setApiOptions($options)) {
+			return false;
+		}
+		$result = $aiProvider->getText(array(
+			'prompt' => 'Reply with OK.',
+			'model' => $model,
+			'max_tokens' => 8,
+			'temperature' => 0,
+		));
+		if (false === $result) {
+			return false;
+		}
+		return array(
+			'provider' => $provider,
+			'model' => $model,
+			'message' => esc_html__('Model test completed.', 'ai-copilot-content-generator'),
+		);
 	}
 }

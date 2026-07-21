@@ -25,8 +25,14 @@ abstract class WaicController {
 	public function getCode() {
 		return $this->_code;
 	}
+	public function isActionAllowed( $task ) {
+		if ( ! is_string( $task ) || '' === $task || '_' === substr( $task, 0, 1 ) ) {
+			return false;
+		}
+		return method_exists( $this, $task );
+	}
 	public function exec( $task = '' ) {
-		if (method_exists($this, $task)) {
+		if ( $this->isActionAllowed( $task ) && method_exists( $this, $task ) ) {
 			$this->_task = $task;   //For multicontrollers module version - who know, maybe that's will be?))
 			return $this->$task();
 		}
@@ -121,8 +127,11 @@ abstract class WaicController {
 	public function getNoncedMethods() {
 		return array();
 	}
+	public function getAjaxActions() {
+		return array();
+	}
 	public function allowNoprivAjax( $action ) {
-		return false;
+		return is_string( $action ) && in_array( $action, $this->getAjaxActions(), true );
 	}
 	protected function _getAdminAjaxCap() {
 		$cap = 'manage_options';

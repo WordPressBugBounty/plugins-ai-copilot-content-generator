@@ -3,26 +3,37 @@ Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
 Requires at least: 3.4.0
-Tested up to: 7
-Stable tag: 1.5.6
+Tested up to: 7.0
+Stable tag: 1.5.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 AI automations you’ll actually use: Workflow Builder, AI Chatbot, AI Forms, Content Generation, Autoblogging, WooCommerce AI and MCP.
 
-== Description ==
 
-AIWU turns WordPress into an AI automation hub: connect ChatGPT, Gemini, Claude and other models, build workflows like in n8n, run chatbots, generate content, control your site via MCP — all from one place.
+AIWU brings AI workflows, chatbots, content tools and MCP to WordPress. Connect the AI services you choose, automate routine work, and manage it from your dashboard.
 
-**So, here are 7 reasons people actually use AIWU:**
+=== What you can do with AIWU ===
 
-1. **Your AI hub inside WordPress.** Connect OpenAI, Claude, Gemini, Perplexity, DeepSeek, OpenRouter. Use your own datasets with fine-tuning and embeddings (RAG) to train and customize AI models.
-2. **Visual Workflow Automation (n8n-style, but native).** Build no-code automations with drag & drop. Connect WordPress, WooCommerce, Slack, Telegram, Gmail, Outlook, calendars, databases, webhooks and AI models. No external servers. No usage platforms. Everything runs on your site.
-3. **AI Chatbot that knows your business.** Set up in minutes, understands your business, recommends products and posts in real time — a fully customizable AI Chatbot in design, logic and tone.
-4. **Content Generation Tools for SEO at Scale.** Autoblogging from RSS, bulk article generation, field generation for posts and WooCommerce products, internal linking, and a magic AI editor inside WordPress.
-5. **AI Forms that think.** Build intelligent forms, quizzes and calculators that send user input to AI, trigger logic and power complex automation scenarios.
-6. **MCP for ChatGPT, Claude, and more.** Control your site by talking to AI. Create pages, edit posts, manage products, users and settings through MCP-enabled assistants.
-7. **Developer API.** REST, JS and PHP APIs to build your own agents, tools, integrations and custom workflows on top of AIWU.
+* **Connect AI providers.** Use your own API keys for text, images and supported embeddings. AIWU Pro adds RAG knowledge bases and provider-supported fine-tuning.
+* **Build visual workflows.** Automate WordPress, WooCommerce, email, Slack, Telegram, webhooks and database tasks.
+* **Create a site-aware chatbot.** Use selected content and instructions, show relevant post or product cards, and choose the design, tone and logic.
+* **Create and improve content.** Generate posts and fields in bulk, then rewrite, translate or expand text in the editor. AIWU Pro adds RSS automation, WooCommerce content tools and smart internal linking.
+* **Build AI-assisted forms.** Create forms, surveys, quizzes and calculators with conditional logic and personalized results.
+* **Use MCP with compatible clients.** Work with posts, pages, media, users, taxonomies and site settings within the permissions you grant.
+* **Track and extend.** Review usage, cost and chatbot analytics, or build custom solutions with REST, JavaScript and PHP APIs.
+
+=== Multi-provider AI support ===
+
+AIWU uses a shared provider layer for supported text, image and embedding tasks, connection checks, usage tracking and error handling. Where available, it can also discover models.
+
+Currently supported: OpenAI, Anthropic Claude, Google Gemini, DeepSeek, Perplexity and OpenRouter. Available models and capabilities depend on the provider, model, account, region and API plan.
+
+=== Faster chatbot search ===
+
+The optional Local Fast Path checks a local published-content index before contacting an AI provider. It updates in the background, parses eligible requests deterministically, ranks matches, and applies configured dietary and allergen filters.
+
+If a local match is not confident, AIWU continues with your selected AI provider. When the local result is sufficient, no external AI call is needed, saving latency and tokens.
 
 == One Powerful Plugin That Replaces Dozens: ==
 
@@ -199,6 +210,12 @@ Yes. AIWU combines AI chatbot, workflow automation, content generation, SEO auto
 No. Most features are no-code and work through visual builders and templates. Developers can extend everything using APIs if needed.
 
 == Changelog ==
+
+1.5.8 (18/07/2026)
+- Security: Fixed authenticated SQL injection in workspace history sorting by allowlisting the ORDER BY direction
+- Security: Restricted workspace history AJAX access to users with the plugin's administrative capability
+- Hardening: Enforced ASC/DESC allowlisting in the shared model query builder as defense in depth
+- Hardening: Restricted anonymous AJAX exposure to explicit controller allow-lists and return HTTP 403 for permission denials
 
 1.5.5 (01/07/2026)
 - Security issues XSS fixed

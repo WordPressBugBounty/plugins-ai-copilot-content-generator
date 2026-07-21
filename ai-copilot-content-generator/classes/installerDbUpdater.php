@@ -91,7 +91,7 @@ class WaicInstallerDbUpdater {
 			WaicDb::query( "ALTER TABLE `@__history` ADD COLUMN `feature` VARCHAR(24) NOT NULL AFTER `task_id`" );
 		}
 		if ( ! WaicDb::existsTableColumn( '@__history', 'engine' ) ) {
-			WaicDb::query( "ALTER TABLE `@__history` ADD COLUMN `engine` VARCHAR(20) DEFAULT '' AFTER `ip`" );
+			WaicDb::query( "ALTER TABLE `@__history` ADD COLUMN `engine` VARCHAR(64) DEFAULT '' AFTER `ip`" );
 		}
 		self::ensureColumnDefinition( '@__history', 'ip', "ALTER TABLE `@__history` MODIFY COLUMN `ip` VARCHAR(45) DEFAULT ''" );
 		if ( WaicDb::get( "SELECT 1 FROM `@__tasks` WHERE feature='magictext'", 'one' ) != 1 ) {
@@ -116,6 +116,14 @@ class WaicInstallerDbUpdater {
 
 		self::ensureInsightsPhase1Schema();
 		self::ensureInsights360Schema();
+		self::ensureProviderCoreSchema();
+		self::ensureWorkflowPhase0Schema();
+	}
+
+	private static function ensureWorkflowPhase0Schema() {
+		require_once WAIC_MODULES_DIR . 'workflow' . WAIC_DS . 'phase0' . WAIC_DS . 'bootstrap.php';
+		WaicWorkflowPhase0Bootstrap::load();
+		( new WaicWorkflowPhase0MigrationHandler() )->migrate();
 	}
 
 	private static function ensureInsightsPhase1Schema() {
@@ -135,6 +143,8 @@ class WaicInstallerDbUpdater {
 		self::ensureHistoryColumn( 'best_score_x1000', "`best_score_x1000` SMALLINT UNSIGNED NULL DEFAULT NULL AFTER `meta`" );
 		self::ensureHistoryColumn( 'tool_calls_count', "`tool_calls_count` TINYINT UNSIGNED NOT NULL DEFAULT 0 AFTER `best_score_x1000`" );
 		self::ensureColumnDefinition( '@__history', 'model', 'ALTER TABLE `@__history` MODIFY COLUMN `model` VARCHAR(160) DEFAULT \'\'' );
+		self::ensureColumnDefinition( '@__history', 'engine', 'ALTER TABLE `@__history` MODIFY COLUMN `engine` VARCHAR(64) DEFAULT \'\'' );
+		self::ensureHistoryColumn( 'profile_id', "`profile_id` VARCHAR(64) NULL DEFAULT NULL AFTER `engine`" );
 
 		self::ensureIndex( '@__history', 'idx_created_feature', 'ALTER TABLE `@__history` ADD INDEX `idx_created_feature` (`created`, `feature`)' );
 		self::ensureIndex( '@__history', 'idx_operation', 'ALTER TABLE `@__history` ADD INDEX `idx_operation` (`operation`)' );
@@ -148,7 +158,7 @@ class WaicInstallerDbUpdater {
 				`day` DATE NOT NULL,
 				`feature` VARCHAR(24) NOT NULL,
 				`operation` VARCHAR(24) NOT NULL,
-				`engine` VARCHAR(20) NOT NULL,
+				`engine` VARCHAR(64) NOT NULL,
 				`model` VARCHAR(160) NOT NULL,
 				`mode` TINYINT(1) NOT NULL DEFAULT 0,
 				`events_count` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -175,6 +185,7 @@ class WaicInstallerDbUpdater {
 			) DEFAULT CHARSET=utf8mb4;"));
 		} else {
 			self::ensureColumnDefinition( '@__history_daily', 'model', 'ALTER TABLE `@__history_daily` MODIFY COLUMN `model` VARCHAR(160) NOT NULL' );
+			self::ensureColumnDefinition( '@__history_daily', 'engine', 'ALTER TABLE `@__history_daily` MODIFY COLUMN `engine` VARCHAR(64) NOT NULL' );
 		}
 
 		if ( ! WaicDb::exist( '@__sessions_daily' ) ) {
@@ -248,7 +259,7 @@ class WaicInstallerDbUpdater {
 				`operation` VARCHAR(24) NOT NULL DEFAULT '',
 				`task_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
 				`session_id` VARCHAR(64) NOT NULL DEFAULT '',
-				`engine` VARCHAR(20) NOT NULL DEFAULT '',
+				`engine` VARCHAR(64) NOT NULL DEFAULT '',
 				`model` VARCHAR(160) NOT NULL DEFAULT '',
 				`mode` TINYINT(1) NOT NULL DEFAULT 0,
 				`status` TINYINT(1) NOT NULL DEFAULT 0,
@@ -272,6 +283,7 @@ class WaicInstallerDbUpdater {
 				KEY `idx_session` (`session_id`)
 			) DEFAULT CHARSET=utf8mb4;"));
 		}
+		self::ensureColumnDefinition( '@__insight_events', 'engine', 'ALTER TABLE `@__insight_events` MODIFY COLUMN `engine` VARCHAR(64) NOT NULL DEFAULT \'\'' );
 
 		if ( ! WaicDb::exist( '@__conversation_outcomes' ) ) {
 			dbDelta(WaicDb::prepareQuery("CREATE TABLE IF NOT EXISTS `@__conversation_outcomes` (
@@ -379,6 +391,39 @@ class WaicInstallerDbUpdater {
 		self::ensureOption( 'waic_insights_360_data_through', '' );
 		self::ensureOption( 'waic_insights_analytics_enabled', 1 );
 		self::ensureOption( 'waic_insights_mcp_audit_source', 'auto' );
+	}
+
+	private static function ensureProviderCoreSchema() {
+		if ( ! class_exists( 'WaicProviderCredentialStore' ) ) {
+			$path = WAIC_MODULES_DIR . 'workspace' . WAIC_DS . 'providers' . WAIC_DS . 'credentialStore.php';
+			if ( is_readable( $path ) ) {
+				require_once $path;
+			}
+		}
+		if ( ! class_exists( 'WaicProviderCredentialStore' ) ) {
+			return;
+		}
+		$lock = (int) get_option( 'waic_provider_migration_lock', 0 );
+		if ( $lock ) {
+			return;
+		}
+		update_option( 'waic_provider_migration_lock', 1, false );
+		try {
+			$store = new WaicProviderCredentialStore();
+			$legacy = get_option( WAIC_CODE . '_options_api', array() );
+			$store->migrateLegacyOptions( is_array( $legacy ) ? $legacy : array() );
+			if ( false === get_option( WaicProviderCredentialStore::PROFILES_OPTION, false ) ) {
+				add_option( WaicProviderCredentialStore::PROFILES_OPTION, array(), '', false );
+			}
+			if ( false === get_option( WaicProviderCredentialStore::CREDENTIALS_OPTION, false ) ) {
+				add_option( WaicProviderCredentialStore::CREDENTIALS_OPTION, array(), '', false );
+			}
+			update_option( WaicProviderCredentialStore::VERSION_OPTION, WaicProviderCredentialStore::STORE_VERSION, false );
+		} catch ( Exception $e ) {
+			// The migration remains resumable; do not expose exception details.
+		} finally {
+			delete_option( 'waic_provider_migration_lock' );
+		}
 	}
 
 	private static function ensureHistoryColumn( $column, $definition ) {

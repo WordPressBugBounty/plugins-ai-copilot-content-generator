@@ -167,6 +167,10 @@ class WaicChatbotsView extends WaicView {
 		$this->assign('is_pro', $frame->isPro() && $frame->moduleExists('chatbotspro'));
 		
 		$this->assign('task_title', WaicUtils::getArrayValue($task, 'title'));
+		$this->assign('fast_config', WaicFastPath::getConfig($settings));
+		$this->assign('fast_domain_packs', WaicFastPath::getDomainPackOptions());
+		$this->assign('fast_post_types', WaicFastIndexer::getAvailablePostTypes());
+		$this->assign('fast_status', empty($id) ? array('count' => 0) : WaicFastIndex::getStatus($id));
 
 		return parent::getContent('adminChatbot');
 	}
@@ -627,6 +631,10 @@ class WaicChatbotsView extends WaicView {
 		}
 		
 		$tools = WaicUtils::getArrayValue($params, 'tools', array(), 2);
+		$fastConfig = WaicFastPath::getConfig($params);
+		if (!empty($fastConfig['enabled'])) {
+			$tools = WaicFastPath::cardOptions($tools, $fastConfig);
+		}
 		$today = WaicUtils::getFormatedDateTime(WaicUtils::getTimestamp(), 'Y-m-d');
 		$dtFormat = WaicUtils::getCurrentDateTimeFormat();
 		foreach ($log as $l) {
@@ -971,6 +979,9 @@ class WaicChatbotsView extends WaicView {
 				break;
 			default:
 				$obj = get_post($id);
+				if (!$obj || !WaicFastIndex::isPublicPost($id)) {
+					$obj = false;
+				}
 				break;
 		}
 		return $obj;

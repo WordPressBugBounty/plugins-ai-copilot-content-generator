@@ -46,11 +46,21 @@ if (!function_exists('waicGetRandName')) {
 }
 if (!function_exists('waicImport')) {
 	function waicImport( $path ) {
-		if (file_exists($path)) {
-			require $path;
-			return true;
+		if ( ! is_string( $path ) || '' === $path || ! defined( 'WP_PLUGIN_DIR' ) ) {
+			return false;
 		}
-		return false;
+		$resolved = realpath( $path );
+		$root = realpath( WP_PLUGIN_DIR );
+		if ( false === $resolved || false === $root || ! is_file( $resolved ) || 'php' !== strtolower( pathinfo( $resolved, PATHINFO_EXTENSION ) ) ) {
+			return false;
+		}
+		$resolved_normalized = wp_normalize_path( $resolved );
+		$root_normalized = trailingslashit( wp_normalize_path( $root ) );
+		if ( 0 !== strpos( $resolved_normalized, $root_normalized ) ) {
+			return false;
+		}
+		require $resolved;
+		return true;
 	}
 }
 if (!function_exists('waicSetDefaultParams')) {
@@ -63,6 +73,9 @@ if (!function_exists('waicSetDefaultParams')) {
 }
 if (!function_exists('waicImportClass')) {
 	function waicImportClass( $class, $path = '' ) {
+		if ( ! is_string( $class ) || ! preg_match( '/^[A-Za-z_][A-Za-z0-9_\\\\]*$/', $class ) ) {
+			return false;
+		}
 		if (!class_exists($class)) {
 			if (!$path) {
 				$classFile = lcfirst($class);

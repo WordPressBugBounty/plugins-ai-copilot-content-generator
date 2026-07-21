@@ -545,7 +545,7 @@ class WaicPricingModel extends WaicModel {
 	}
 
 	private function normalizeModelPricing( $data, $strict ) {
-		if ($strict && !$this->containsOnlyKeys($data, array('prices', 'units', 'operation', 'input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'per_search'))) {
+		if ($strict && !$this->containsOnlyKeys($data, array('prices', 'units', 'provider', 'model', 'operation', 'input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'embedding_per_1m', 'per_search', 'source', 'valid_from'))) {
 			foreach ($data as $key => $value) {
 				if (!$this->allowedPriceKey($key)) {
 					return false;
@@ -554,12 +554,13 @@ class WaicPricingModel extends WaicModel {
 		}
 		$prices = isset($data['prices']) && is_array($data['prices']) ? $data['prices'] : $data;
 		$units = isset($data['units']) && is_array($data['units']) ? $data['units'] : array();
-		$allowed = array('input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'per_search');
+		$allowed = array('input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'embedding_per_1m', 'per_search');
+		$metadata = array('prices', 'units', 'provider', 'model', 'operation', 'source', 'valid_from');
 		$clean = array();
 		foreach ($prices as $key => $value) {
 			$key = sanitize_key((string) $key);
 			if (!in_array($key, $allowed, true) && 0 !== strpos($key, 'per_image_') && 0 !== strpos($key, 'image_per_unit')) {
-				if ($strict && !in_array($key, array('prices', 'units', 'operation'), true)) {
+				if ($strict && !in_array($key, $metadata, true)) {
 					return false;
 				}
 				continue;
@@ -575,6 +576,9 @@ class WaicPricingModel extends WaicModel {
 				return false;
 			}
 			$clean['operation'] = $operation;
+		}
+		if (isset($clean['embedding_per_1m']) && !isset($clean['input_per_1m'])) {
+			$clean['input_per_1m'] = $clean['embedding_per_1m'];
 		}
 		if ($strict && isset($data['units']) && !is_array($data['units'])) {
 			return false;
@@ -811,7 +815,7 @@ class WaicPricingModel extends WaicModel {
 
 	private function allowedPriceKey( $key ) {
 		$key = sanitize_key((string) $key);
-		return in_array($key, array('prices', 'units', 'operation', 'input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'per_search'), true)
+		return in_array($key, array('prices', 'units', 'provider', 'model', 'operation', 'input_per_1m', 'output_per_1m', 'cached_input_per_1m', 'cache_write_per_1m', 'reasoning_per_1m', 'image_per_unit', 'embedding_per_1m', 'per_search', 'source', 'valid_from'), true)
 			|| 0 === strpos($key, 'per_image_')
 			|| 0 === strpos($key, 'image_per_unit');
 	}

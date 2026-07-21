@@ -32,6 +32,34 @@
 			});
 			return false;
 		});
+		var $providerEditor = _this.content.find('#waicProviderProfileEditor');
+		if ($providerEditor.length) {
+			var renderProviderFields = function () {
+				var $option = $providerEditor.find('.waic-provider-profile-provider option:selected'),
+					credentials = waicParseJSON($option.attr('data-credentials')) || [],
+					config = waicParseJSON($option.attr('data-config')) || [],
+					modelField = $option.attr('data-model-field') || '',
+					$fields = $providerEditor.find('.waic-provider-profile-fields');
+				$fields.empty();
+				$.each(config, function (_, field) {
+					var key = field === 'model' && modelField ? modelField : field;
+					$fields.append($('<input type="text" class="waic-provider-profile-config" />').attr({'data-key': key, 'placeholder': key}));
+				});
+				$.each(credentials, function (_, field) {
+					$fields.append($('<input type="password" autocomplete="new-password" class="waic-provider-profile-secret" />').attr({'data-key': field, 'placeholder': field}));
+				});
+			};
+			$providerEditor.on('change', '.waic-provider-profile-provider', renderProviderFields);
+			$providerEditor.on('click', '.waic-provider-profile-save', function (e) {
+				e.preventDefault();
+				var providerId = $providerEditor.find('.waic-provider-profile-provider').val(), profile = {provider_id: providerId, label: $providerEditor.find('.waic-provider-profile-label').val(), enabled: $providerEditor.find('.waic-provider-profile-enabled').is(':checked') ? 1 : 0, configuration: {}}, credentials = {};
+				$providerEditor.find('.waic-provider-profile-config').each(function(){ profile.configuration[$(this).attr('data-key')] = $(this).val(); });
+				$providerEditor.find('.waic-provider-profile-secret').each(function(){ if ($(this).val()) { credentials[$(this).attr('data-key')] = $(this).val(); } });
+				if (!providerId || !profile.label) { return false; }
+				$.sendFormWaic({elem: $(this), data: {mod: 'options', action: 'saveProviderProfile', profile: profile, credentials: credentials}, onSuccess: function(res) { if (!res.error) { location.reload(); } }});
+				return false;
+			});
+		}
 		_this.content.find('#waicStartGeneration').click(function(e){
 			e.preventDefault();
 			var $btn = $(this),

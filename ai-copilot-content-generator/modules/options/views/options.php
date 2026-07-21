@@ -33,6 +33,7 @@ class WaicOptionsView extends WaicView {
 		$this->assign('options', $model->getAll());
 		$this->assign('variations', $model->getVariations());
 		$this->assign('defaults', $model->getDefaults());
+		$this->assign('provider_profiles', $model->getProviderProfiles());
 
 		return parent::getContent('adminOptions');
 	}

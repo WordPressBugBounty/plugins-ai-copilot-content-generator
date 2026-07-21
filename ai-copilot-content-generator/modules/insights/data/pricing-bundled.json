@@ -1,258 +1,479 @@
 {
-  "schema_version": 1,
-  "version": 3,
-  "generated_at": "2026-05-02T00:00:00Z",
-  "source": "bundled",
-  "currency": "USD",
-  "providers": {
-    "open-ai": {
-      "models": {
-        "gpt-5.2": {
-          "input_per_1m": 1.25,
-          "output_per_1m": 10,
-          "cached_input_per_1m": 0.125
-        },
-        "gpt-5": {
-          "input_per_1m": 1.25,
-          "output_per_1m": 10,
-          "cached_input_per_1m": 0.125
-        },
-        "gpt-5-mini": {
-          "input_per_1m": 0.25,
-          "output_per_1m": 2,
-          "cached_input_per_1m": 0.025
-        },
-        "gpt-5-nano": {
-          "input_per_1m": 0.05,
-          "output_per_1m": 0.4,
-          "cached_input_per_1m": 0.005
-        },
-        "gpt-4.1": {
-          "input_per_1m": 2,
-          "output_per_1m": 8,
-          "cached_input_per_1m": 0.5
-        },
-        "gpt-4.1-mini": {
-          "input_per_1m": 0.4,
-          "output_per_1m": 1.6,
-          "cached_input_per_1m": 0.1
-        },
-        "gpt-4.1-nano": {
-          "input_per_1m": 0.1,
-          "output_per_1m": 0.4,
-          "cached_input_per_1m": 0.025
-        },
-        "gpt-4o": {
-          "input_per_1m": 2.5,
-          "output_per_1m": 10,
-          "cached_input_per_1m": 1.25
-        },
-        "gpt-4o-mini": {
-          "input_per_1m": 0.15,
-          "output_per_1m": 0.6,
-          "cached_input_per_1m": 0.075
-        },
-        "o1-preview": {
-          "input_per_1m": 15,
-          "output_per_1m": 60,
-          "reasoning_per_1m": 60
-        },
-        "o1-mini": {
-          "input_per_1m": 3,
-          "output_per_1m": 12,
-          "reasoning_per_1m": 12
-        },
-        "gpt-4-turbo": {
-          "input_per_1m": 10,
-          "output_per_1m": 30
-        },
-        "gpt-4": {
-          "input_per_1m": 30,
-          "output_per_1m": 60
-        },
-        "text-embedding-3-small": {
-          "input_per_1m": 0.02,
-          "operation": "embedding"
-        },
-        "dall-e-3": {
-          "per_image_1024x1024": 0.04,
-          "per_image_1024x1792": 0.08,
-          "per_image_1792x1024": 0.08,
-          "per_image_1024x1024_hd": 0.08,
-          "per_image_1024x1792_hd": 0.12,
-          "per_image_1792x1024_hd": 0.12,
-          "operation": "image"
-        },
-        "dall-e-2": {
-          "per_image_1024x1024": 0.02,
-          "operation": "image"
-        },
-        "dall-e-3-hd": {
-          "per_image_1024x1024": 0.08,
-          "per_image_1024x1792_hd": 0.12,
-          "per_image_1792x1024_hd": 0.12,
-          "operation": "image"
-        }
-      }
-    },
-    "claude": {
-      "models": {
-        "claude-opus-4-6": {
-          "input_per_1m": 15,
-          "output_per_1m": 75,
-          "cached_input_per_1m": 1.5,
-          "cache_write_per_1m": 18.75
-        },
-        "claude-sonnet-4-6": {
-          "input_per_1m": 3,
-          "output_per_1m": 15,
-          "cached_input_per_1m": 0.3,
-          "cache_write_per_1m": 3.75
-        },
-        "claude-haiku-4-5": {
-          "input_per_1m": 0.8,
-          "output_per_1m": 4,
-          "cached_input_per_1m": 0.08,
-          "cache_write_per_1m": 1
-        },
-        "claude-sonnet-4-5": {
-          "input_per_1m": 3,
-          "output_per_1m": 15,
-          "cached_input_per_1m": 0.3,
-          "cache_write_per_1m": 3.75
-        },
-        "claude-opus-4-1": {
-          "input_per_1m": 15,
-          "output_per_1m": 75,
-          "cached_input_per_1m": 1.5,
-          "cache_write_per_1m": 18.75
-        },
-        "claude-sonnet-4-0": {
-          "input_per_1m": 3,
-          "output_per_1m": 15,
-          "cached_input_per_1m": 0.3,
-          "cache_write_per_1m": 3.75
-        },
-        "claude-opus-4-0": {
-          "input_per_1m": 15,
-          "output_per_1m": 75,
-          "cached_input_per_1m": 1.5,
-          "cache_write_per_1m": 18.75
-        },
-        "claude-3-5-haiku-latest": {
-          "input_per_1m": 0.8,
-          "output_per_1m": 4,
-          "cached_input_per_1m": 0.08,
-          "cache_write_per_1m": 1
-        }
-      }
-    },
-    "gemini": {
-      "models": {
-        "gemini-3-pro-preview": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-3-flash-preview": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-2.5-flash": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-2.5-flash-lite": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-2.5-pro": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-2.0-flash": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-2.0-flash-lite": {
-          "input_per_1m": 0,
-          "output_per_1m": 0
-        },
-        "gemini-embedding-exp": {
-          "input_per_1m": 0,
-          "operation": "embedding"
-        },
-        "gemini-3-pro-image-preview": {
-          "image_per_unit": 0,
-          "operation": "image"
-        },
-        "gemini-2.5-flash-image": {
-          "image_per_unit": 0,
-          "operation": "image"
-        },
-        "imagen-4.0-generate-001": {
-          "image_per_unit": 0,
-          "operation": "image"
-        },
-        "imagen-4.0-ultra-generate-001": {
-          "image_per_unit": 0,
-          "operation": "image"
-        },
-        "imagen-4.0-fast-generate-001": {
-          "image_per_unit": 0,
-          "operation": "image"
-        }
-      }
-    },
-    "deepseek": {
-      "models": {
-        "deepseek-chat": {
-          "input_per_1m": 0.27,
-          "output_per_1m": 1.1,
-          "cached_input_per_1m": 0.07
-        },
-        "deepseek-reasoner": {
-          "input_per_1m": 0.55,
-          "output_per_1m": 2.19,
-          "reasoning_per_1m": 2.19
-        }
-      }
-    },
-    "perplexity": {
-      "models": {
-        "sonar": {
-          "input_per_1m": 1,
-          "output_per_1m": 1,
-          "per_search": 0.005
-        },
-        "sonar-pro": {
-          "input_per_1m": 3,
-          "output_per_1m": 15,
-          "per_search": 0.005
-        },
-        "sonar-reasoning": {
-          "input_per_1m": 1,
-          "output_per_1m": 5,
-          "reasoning_per_1m": 5,
-          "per_search": 0.005
-        },
-        "sonar-reasoning-pro": {
-          "input_per_1m": 2,
-          "output_per_1m": 8,
-          "reasoning_per_1m": 8,
-          "per_search": 0.005
-        },
-        "sonar-deep-research": {
-          "input_per_1m": 2,
-          "output_per_1m": 8,
-          "reasoning_per_1m": 8,
-          "per_search": 0.005
-        }
-      }
-    },
-    "openrouter": {
-      "_note": "OpenRouter can return usage.cost directly; bundled model table is intentionally empty for overrides.",
-      "models": {}
-    }
-  },
-  "overrides": {}
+    "schema_version":  1,
+    "version":  4,
+    "generated_at":  "2026-05-02T00:00:00Z",
+    "source":  "bundled",
+    "currency":  "USD",
+    "providers":  {
+                      "open-ai":  {
+                                      "models":  {
+                                                     "gpt-5.2":  {
+                                                                     "input_per_1m":  1.25,
+                                                                     "output_per_1m":  10,
+                                                                     "cached_input_per_1m":  0.125,
+                                                                     "provider":  "open-ai",
+                                                                     "model":  "gpt-5.2",
+                                                                     "operation":  "chat",
+                                                                     "source":  "bundled",
+                                                                     "valid_from":  "2026-05-02"
+                                                                 },
+                                                     "gpt-5":  {
+                                                                   "input_per_1m":  1.25,
+                                                                   "output_per_1m":  10,
+                                                                   "cached_input_per_1m":  0.125,
+                                                                   "provider":  "open-ai",
+                                                                   "model":  "gpt-5",
+                                                                   "operation":  "chat",
+                                                                   "source":  "bundled",
+                                                                   "valid_from":  "2026-05-02"
+                                                               },
+                                                     "gpt-5-mini":  {
+                                                                        "input_per_1m":  0.25,
+                                                                        "output_per_1m":  2,
+                                                                        "cached_input_per_1m":  0.025,
+                                                                        "provider":  "open-ai",
+                                                                        "model":  "gpt-5-mini",
+                                                                        "operation":  "chat",
+                                                                        "source":  "bundled",
+                                                                        "valid_from":  "2026-05-02"
+                                                                    },
+                                                     "gpt-5-nano":  {
+                                                                        "input_per_1m":  0.05,
+                                                                        "output_per_1m":  0.4,
+                                                                        "cached_input_per_1m":  0.005,
+                                                                        "provider":  "open-ai",
+                                                                        "model":  "gpt-5-nano",
+                                                                        "operation":  "chat",
+                                                                        "source":  "bundled",
+                                                                        "valid_from":  "2026-05-02"
+                                                                    },
+                                                     "gpt-4.1":  {
+                                                                     "input_per_1m":  2,
+                                                                     "output_per_1m":  8,
+                                                                     "cached_input_per_1m":  0.5,
+                                                                     "provider":  "open-ai",
+                                                                     "model":  "gpt-4.1",
+                                                                     "operation":  "chat",
+                                                                     "source":  "bundled",
+                                                                     "valid_from":  "2026-05-02"
+                                                                 },
+                                                     "gpt-4.1-mini":  {
+                                                                          "input_per_1m":  0.4,
+                                                                          "output_per_1m":  1.6,
+                                                                          "cached_input_per_1m":  0.1,
+                                                                          "provider":  "open-ai",
+                                                                          "model":  "gpt-4.1-mini",
+                                                                          "operation":  "chat",
+                                                                          "source":  "bundled",
+                                                                          "valid_from":  "2026-05-02"
+                                                                      },
+                                                     "gpt-4.1-nano":  {
+                                                                          "input_per_1m":  0.1,
+                                                                          "output_per_1m":  0.4,
+                                                                          "cached_input_per_1m":  0.025,
+                                                                          "provider":  "open-ai",
+                                                                          "model":  "gpt-4.1-nano",
+                                                                          "operation":  "chat",
+                                                                          "source":  "bundled",
+                                                                          "valid_from":  "2026-05-02"
+                                                                      },
+                                                     "gpt-4o":  {
+                                                                    "input_per_1m":  2.5,
+                                                                    "output_per_1m":  10,
+                                                                    "cached_input_per_1m":  1.25,
+                                                                    "provider":  "open-ai",
+                                                                    "model":  "gpt-4o",
+                                                                    "operation":  "chat",
+                                                                    "source":  "bundled",
+                                                                    "valid_from":  "2026-05-02"
+                                                                },
+                                                     "gpt-4o-mini":  {
+                                                                         "input_per_1m":  0.15,
+                                                                         "output_per_1m":  0.6,
+                                                                         "cached_input_per_1m":  0.075,
+                                                                         "provider":  "open-ai",
+                                                                         "model":  "gpt-4o-mini",
+                                                                         "operation":  "chat",
+                                                                         "source":  "bundled",
+                                                                         "valid_from":  "2026-05-02"
+                                                                     },
+                                                     "o1-preview":  {
+                                                                        "input_per_1m":  15,
+                                                                        "output_per_1m":  60,
+                                                                        "reasoning_per_1m":  60,
+                                                                        "provider":  "open-ai",
+                                                                        "model":  "o1-preview",
+                                                                        "operation":  "chat",
+                                                                        "source":  "bundled",
+                                                                        "valid_from":  "2026-05-02"
+                                                                    },
+                                                     "o1-mini":  {
+                                                                     "input_per_1m":  3,
+                                                                     "output_per_1m":  12,
+                                                                     "reasoning_per_1m":  12,
+                                                                     "provider":  "open-ai",
+                                                                     "model":  "o1-mini",
+                                                                     "operation":  "chat",
+                                                                     "source":  "bundled",
+                                                                     "valid_from":  "2026-05-02"
+                                                                 },
+                                                     "gpt-4-turbo":  {
+                                                                         "input_per_1m":  10,
+                                                                         "output_per_1m":  30,
+                                                                         "provider":  "open-ai",
+                                                                         "model":  "gpt-4-turbo",
+                                                                         "operation":  "chat",
+                                                                         "source":  "bundled",
+                                                                         "valid_from":  "2026-05-02"
+                                                                     },
+                                                     "gpt-4":  {
+                                                                   "input_per_1m":  30,
+                                                                   "output_per_1m":  60,
+                                                                   "provider":  "open-ai",
+                                                                   "model":  "gpt-4",
+                                                                   "operation":  "chat",
+                                                                   "source":  "bundled",
+                                                                   "valid_from":  "2026-05-02"
+                                                               },
+                                                     "text-embedding-3-small":  {
+                                                                                    "input_per_1m":  0.02,
+                                                                                    "provider":  "open-ai",
+                                                                                    "model":  "text-embedding-3-small",
+                                                                                    "operation":  "embedding",
+                                                                                    "source":  "bundled",
+                                                                                    "valid_from":  "2026-05-02",
+                                                                                    "embedding_per_1m":  0.02
+                                                                                },
+                                                     "dall-e-3":  {
+                                                                      "per_image_1024x1024":  0.04,
+                                                                      "per_image_1024x1792":  0.08,
+                                                                      "per_image_1792x1024":  0.08,
+                                                                      "per_image_1024x1024_hd":  0.08,
+                                                                      "per_image_1024x1792_hd":  0.12,
+                                                                      "per_image_1792x1024_hd":  0.12,
+                                                                      "provider":  "open-ai",
+                                                                      "model":  "dall-e-3",
+                                                                      "operation":  "image",
+                                                                      "source":  "bundled",
+                                                                      "valid_from":  "2026-05-02"
+                                                                  },
+                                                     "dall-e-2":  {
+                                                                      "per_image_1024x1024":  0.02,
+                                                                      "provider":  "open-ai",
+                                                                      "model":  "dall-e-2",
+                                                                      "operation":  "image",
+                                                                      "source":  "bundled",
+                                                                      "valid_from":  "2026-05-02"
+                                                                  },
+                                                     "dall-e-3-hd":  {
+                                                                         "per_image_1024x1024":  0.08,
+                                                                         "per_image_1024x1792_hd":  0.12,
+                                                                         "per_image_1792x1024_hd":  0.12,
+                                                                         "provider":  "open-ai",
+                                                                         "model":  "dall-e-3-hd",
+                                                                         "operation":  "image",
+                                                                         "source":  "bundled",
+                                                                         "valid_from":  "2026-05-02"
+                                                                     }
+                                                 }
+                                  },
+                      "claude":  {
+                                     "models":  {
+                                                    "claude-opus-4-6":  {
+                                                                            "input_per_1m":  15,
+                                                                            "output_per_1m":  75,
+                                                                            "cached_input_per_1m":  1.5,
+                                                                            "cache_write_per_1m":  18.75,
+                                                                            "provider":  "claude",
+                                                                            "model":  "claude-opus-4-6",
+                                                                            "operation":  "chat",
+                                                                            "source":  "bundled",
+                                                                            "valid_from":  "2026-05-02"
+                                                                        },
+                                                    "claude-sonnet-4-6":  {
+                                                                              "input_per_1m":  3,
+                                                                              "output_per_1m":  15,
+                                                                              "cached_input_per_1m":  0.3,
+                                                                              "cache_write_per_1m":  3.75,
+                                                                              "provider":  "claude",
+                                                                              "model":  "claude-sonnet-4-6",
+                                                                              "operation":  "chat",
+                                                                              "source":  "bundled",
+                                                                              "valid_from":  "2026-05-02"
+                                                                          },
+                                                    "claude-haiku-4-5":  {
+                                                                             "input_per_1m":  0.8,
+                                                                             "output_per_1m":  4,
+                                                                             "cached_input_per_1m":  0.08,
+                                                                             "cache_write_per_1m":  1,
+                                                                             "provider":  "claude",
+                                                                             "model":  "claude-haiku-4-5",
+                                                                             "operation":  "chat",
+                                                                             "source":  "bundled",
+                                                                             "valid_from":  "2026-05-02"
+                                                                         },
+                                                    "claude-sonnet-4-5":  {
+                                                                              "input_per_1m":  3,
+                                                                              "output_per_1m":  15,
+                                                                              "cached_input_per_1m":  0.3,
+                                                                              "cache_write_per_1m":  3.75,
+                                                                              "provider":  "claude",
+                                                                              "model":  "claude-sonnet-4-5",
+                                                                              "operation":  "chat",
+                                                                              "source":  "bundled",
+                                                                              "valid_from":  "2026-05-02"
+                                                                          },
+                                                    "claude-opus-4-1":  {
+                                                                            "input_per_1m":  15,
+                                                                            "output_per_1m":  75,
+                                                                            "cached_input_per_1m":  1.5,
+                                                                            "cache_write_per_1m":  18.75,
+                                                                            "provider":  "claude",
+                                                                            "model":  "claude-opus-4-1",
+                                                                            "operation":  "chat",
+                                                                            "source":  "bundled",
+                                                                            "valid_from":  "2026-05-02"
+                                                                        },
+                                                    "claude-sonnet-4-0":  {
+                                                                              "input_per_1m":  3,
+                                                                              "output_per_1m":  15,
+                                                                              "cached_input_per_1m":  0.3,
+                                                                              "cache_write_per_1m":  3.75,
+                                                                              "provider":  "claude",
+                                                                              "model":  "claude-sonnet-4-0",
+                                                                              "operation":  "chat",
+                                                                              "source":  "bundled",
+                                                                              "valid_from":  "2026-05-02"
+                                                                          },
+                                                    "claude-opus-4-0":  {
+                                                                            "input_per_1m":  15,
+                                                                            "output_per_1m":  75,
+                                                                            "cached_input_per_1m":  1.5,
+                                                                            "cache_write_per_1m":  18.75,
+                                                                            "provider":  "claude",
+                                                                            "model":  "claude-opus-4-0",
+                                                                            "operation":  "chat",
+                                                                            "source":  "bundled",
+                                                                            "valid_from":  "2026-05-02"
+                                                                        },
+                                                    "claude-3-5-haiku-latest":  {
+                                                                                    "input_per_1m":  0.8,
+                                                                                    "output_per_1m":  4,
+                                                                                    "cached_input_per_1m":  0.08,
+                                                                                    "cache_write_per_1m":  1,
+                                                                                    "provider":  "claude",
+                                                                                    "model":  "claude-3-5-haiku-latest",
+                                                                                    "operation":  "chat",
+                                                                                    "source":  "bundled",
+                                                                                    "valid_from":  "2026-05-02"
+                                                                                }
+                                                }
+                                 },
+                      "gemini":  {
+                                     "models":  {
+                                                    "gemini-3-pro-preview":  {
+                                                                                 "input_per_1m":  0,
+                                                                                 "output_per_1m":  0,
+                                                                                 "provider":  "gemini",
+                                                                                 "model":  "gemini-3-pro-preview",
+                                                                                 "operation":  "chat",
+                                                                                 "source":  "bundled",
+                                                                                 "valid_from":  "2026-05-02"
+                                                                             },
+                                                    "gemini-3-flash-preview":  {
+                                                                                   "input_per_1m":  0,
+                                                                                   "output_per_1m":  0,
+                                                                                   "provider":  "gemini",
+                                                                                   "model":  "gemini-3-flash-preview",
+                                                                                   "operation":  "chat",
+                                                                                   "source":  "bundled",
+                                                                                   "valid_from":  "2026-05-02"
+                                                                               },
+                                                    "gemini-2.5-flash":  {
+                                                                             "input_per_1m":  0,
+                                                                             "output_per_1m":  0,
+                                                                             "provider":  "gemini",
+                                                                             "model":  "gemini-2.5-flash",
+                                                                             "operation":  "chat",
+                                                                             "source":  "bundled",
+                                                                             "valid_from":  "2026-05-02"
+                                                                         },
+                                                    "gemini-2.5-flash-lite":  {
+                                                                                  "input_per_1m":  0,
+                                                                                  "output_per_1m":  0,
+                                                                                  "provider":  "gemini",
+                                                                                  "model":  "gemini-2.5-flash-lite",
+                                                                                  "operation":  "chat",
+                                                                                  "source":  "bundled",
+                                                                                  "valid_from":  "2026-05-02"
+                                                                              },
+                                                    "gemini-2.5-pro":  {
+                                                                           "input_per_1m":  0,
+                                                                           "output_per_1m":  0,
+                                                                           "provider":  "gemini",
+                                                                           "model":  "gemini-2.5-pro",
+                                                                           "operation":  "chat",
+                                                                           "source":  "bundled",
+                                                                           "valid_from":  "2026-05-02"
+                                                                       },
+                                                    "gemini-2.0-flash":  {
+                                                                             "input_per_1m":  0,
+                                                                             "output_per_1m":  0,
+                                                                             "provider":  "gemini",
+                                                                             "model":  "gemini-2.0-flash",
+                                                                             "operation":  "chat",
+                                                                             "source":  "bundled",
+                                                                             "valid_from":  "2026-05-02"
+                                                                         },
+                                                    "gemini-2.0-flash-lite":  {
+                                                                                  "input_per_1m":  0,
+                                                                                  "output_per_1m":  0,
+                                                                                  "provider":  "gemini",
+                                                                                  "model":  "gemini-2.0-flash-lite",
+                                                                                  "operation":  "chat",
+                                                                                  "source":  "bundled",
+                                                                                  "valid_from":  "2026-05-02"
+                                                                              },
+                                                    "gemini-embedding-exp":  {
+                                                                                 "input_per_1m":  0,
+                                                                                 "provider":  "gemini",
+                                                                                 "model":  "gemini-embedding-exp",
+                                                                                 "operation":  "embedding",
+                                                                                 "source":  "bundled",
+                                                                                 "valid_from":  "2026-05-02",
+                                                                                 "embedding_per_1m":  0
+                                                                             },
+                                                    "gemini-3-pro-image-preview":  {
+                                                                                       "image_per_unit":  0,
+                                                                                       "provider":  "gemini",
+                                                                                       "model":  "gemini-3-pro-image-preview",
+                                                                                       "operation":  "image",
+                                                                                       "source":  "bundled",
+                                                                                       "valid_from":  "2026-05-02"
+                                                                                   },
+                                                    "gemini-2.5-flash-image":  {
+                                                                                   "image_per_unit":  0,
+                                                                                   "provider":  "gemini",
+                                                                                   "model":  "gemini-2.5-flash-image",
+                                                                                   "operation":  "image",
+                                                                                   "source":  "bundled",
+                                                                                   "valid_from":  "2026-05-02"
+                                                                               },
+                                                    "imagen-4.0-generate-001":  {
+                                                                                    "image_per_unit":  0,
+                                                                                    "provider":  "gemini",
+                                                                                    "model":  "imagen-4.0-generate-001",
+                                                                                    "operation":  "image",
+                                                                                    "source":  "bundled",
+                                                                                    "valid_from":  "2026-05-02"
+                                                                                },
+                                                    "imagen-4.0-ultra-generate-001":  {
+                                                                                          "image_per_unit":  0,
+                                                                                          "provider":  "gemini",
+                                                                                          "model":  "imagen-4.0-ultra-generate-001",
+                                                                                          "operation":  "image",
+                                                                                          "source":  "bundled",
+                                                                                          "valid_from":  "2026-05-02"
+                                                                                      },
+                                                    "imagen-4.0-fast-generate-001":  {
+                                                                                         "image_per_unit":  0,
+                                                                                         "provider":  "gemini",
+                                                                                         "model":  "imagen-4.0-fast-generate-001",
+                                                                                         "operation":  "image",
+                                                                                         "source":  "bundled",
+                                                                                         "valid_from":  "2026-05-02"
+                                                                                     }
+                                                }
+                                 },
+                      "deepseek":  {
+                                       "models":  {
+                                                      "deepseek-chat":  {
+                                                                            "input_per_1m":  0.27,
+                                                                            "output_per_1m":  1.1,
+                                                                            "cached_input_per_1m":  0.07,
+                                                                            "provider":  "deepseek",
+                                                                            "model":  "deepseek-chat",
+                                                                            "operation":  "chat",
+                                                                            "source":  "bundled",
+                                                                            "valid_from":  "2026-05-02"
+                                                                        },
+                                                      "deepseek-reasoner":  {
+                                                                                "input_per_1m":  0.55,
+                                                                                "output_per_1m":  2.19,
+                                                                                "reasoning_per_1m":  2.19,
+                                                                                "provider":  "deepseek",
+                                                                                "model":  "deepseek-reasoner",
+                                                                                "operation":  "chat",
+                                                                                "source":  "bundled",
+                                                                                "valid_from":  "2026-05-02"
+                                                                            }
+                                                  }
+                                   },
+                      "perplexity":  {
+                                         "models":  {
+                                                        "sonar":  {
+                                                                      "input_per_1m":  1,
+                                                                      "output_per_1m":  1,
+                                                                      "per_search":  0.005,
+                                                                      "provider":  "perplexity",
+                                                                      "model":  "sonar",
+                                                                      "operation":  "chat",
+                                                                      "source":  "bundled",
+                                                                      "valid_from":  "2026-05-02"
+                                                                  },
+                                                        "sonar-pro":  {
+                                                                          "input_per_1m":  3,
+                                                                          "output_per_1m":  15,
+                                                                          "per_search":  0.005,
+                                                                          "provider":  "perplexity",
+                                                                          "model":  "sonar-pro",
+                                                                          "operation":  "chat",
+                                                                          "source":  "bundled",
+                                                                          "valid_from":  "2026-05-02"
+                                                                      },
+                                                        "sonar-reasoning":  {
+                                                                                "input_per_1m":  1,
+                                                                                "output_per_1m":  5,
+                                                                                "reasoning_per_1m":  5,
+                                                                                "per_search":  0.005,
+                                                                                "provider":  "perplexity",
+                                                                                "model":  "sonar-reasoning",
+                                                                                "operation":  "chat",
+                                                                                "source":  "bundled",
+                                                                                "valid_from":  "2026-05-02"
+                                                                            },
+                                                        "sonar-reasoning-pro":  {
+                                                                                    "input_per_1m":  2,
+                                                                                    "output_per_1m":  8,
+                                                                                    "reasoning_per_1m":  8,
+                                                                                    "per_search":  0.005,
+                                                                                    "provider":  "perplexity",
+                                                                                    "model":  "sonar-reasoning-pro",
+                                                                                    "operation":  "chat",
+                                                                                    "source":  "bundled",
+                                                                                    "valid_from":  "2026-05-02"
+                                                                                },
+                                                        "sonar-deep-research":  {
+                                                                                    "input_per_1m":  2,
+                                                                                    "output_per_1m":  8,
+                                                                                    "reasoning_per_1m":  8,
+                                                                                    "per_search":  0.005,
+                                                                                    "provider":  "perplexity",
+                                                                                    "model":  "sonar-deep-research",
+                                                                                    "operation":  "chat",
+                                                                                    "source":  "bundled",
+                                                                                    "valid_from":  "2026-05-02"
+                                                                                }
+                                                    }
+                                     },
+                      "openrouter":  {
+                                         "_note":  "OpenRouter can return usage.cost directly; bundled model table is intentionally empty for overrides.",
+                                         "models":  {
+
+                                                    }
+                                     }
+                  },
+    "overrides":  {
+
+                  }
 }

@@ -52,7 +52,8 @@ class WaicWorkflowView extends WaicView {
 		//$this->assign('img_path', WAIC_IMG_DIR);
 		$this->assign('is_pro', $frame->isPro());
 
-		return parent::getContent('adminWorkflow');
+		$phase1 = class_exists( 'WaicWorkflowPhase1Admin' ) ? WaicWorkflowPhase1Admin::renderPanel() : '';
+		return $phase1 . parent::getContent('adminWorkflow');
 	}
 
 	public function showWorkflowBuilder( $taskId = 0 ) {

@@ -26,11 +26,103 @@ jQuery(document).ready(function(){
 			$slider.attr('data-max', tokens[model]);
 			$slider.data('ionRangeSlider').update({max: tokens[model]});
 		}
+		waicUpdateModelRegistryWarning();
 	});
 	jQuery('#waicEngineSelect').on('change', function() {
 		var engine = jQuery(this).val(),
 			$model = jQuery('.waic-api-models-select[data-engine="'+engine+'"]');
 		if ($model.length == 1) $model.trigger('change');
+		waicApplyProviderGroupFilter();
+		waicUpdateModelRegistryWarning();
+	});
+	jQuery('#waicModelCapabilityFilter').on('change', function() {
+		waicApplyModelCapabilityFilter();
+	});
+	jQuery('.waic-provider-group-tab').on('click', function(e) {
+		e.preventDefault();
+		var $this = jQuery(this);
+		$this.closest('.waic-provider-group-tabs').find('.waic-provider-group-tab').removeClass('current');
+		$this.addClass('current');
+		waicApplyProviderGroupFilter();
+		return false;
+	});
+	jQuery('.waic-model-registry-refresh').on('click', function(e) {
+		e.preventDefault();
+		var $btn = jQuery(this),
+			$form = $btn.closest('form'),
+			params = jsonInputsWaic($form, true);
+		params = params && params.api ? params.api : params;
+		jQuery.sendFormWaic({
+			elem: $btn,
+			data: {
+				mod: 'options',
+				action: 'refreshModelRegistry',
+				params: params
+			},
+			onSuccess: function(res) {
+				if (!res.error) {
+					location.reload();
+				}
+			}
+		});
+		return false;
+	});
+	jQuery('.waic-model-registry-import').on('click', function(e) {
+		e.preventDefault();
+		var $btn = jQuery(this),
+			$json = jQuery('#waicModelRegistryImportJson');
+		jQuery.sendFormWaic({
+			elem: $btn,
+			data: {
+				mod: 'options',
+				action: 'importModelRegistry',
+				manifest_json: $json.val()
+			},
+			onSuccess: function(res) {
+				if (!res.error) {
+					location.reload();
+				}
+			}
+		});
+		return false;
+	});
+	jQuery('.waic-model-registry-rollback').on('click', function(e) {
+		e.preventDefault();
+		var $btn = jQuery(this);
+		if ($btn.hasClass('disabled')) {
+			return false;
+		}
+		jQuery.sendFormWaic({
+			elem: $btn,
+			data: {
+				mod: 'options',
+				action: 'rollbackModelRegistry'
+			},
+			onSuccess: function(res) {
+				if (!res.error) {
+					location.reload();
+				}
+			}
+		});
+		return false;
+	});
+	jQuery('.waic-test-model').on('click', function(e) {
+		e.preventDefault();
+		var $btn = jQuery(this),
+			provider = jQuery('#waicEngineSelect').val(),
+			$model = jQuery('.waic-api-models-select[data-engine="'+provider+'"]'),
+			model = $model.length ? $model.val() : '';
+		jQuery.sendFormWaic({
+			elem: $btn,
+			data: {
+				mod: 'options',
+				action: 'testApiModel',
+				provider: provider,
+				model: model,
+				api_key: waicGetApiKeyForProvider(provider)
+			}
+		});
+		return false;
 	});
 	jQuery('.wbw-head-btn').on('click', function() {
 		var $nav = jQuery(this).closest('.wbw-header').find('.wbw-navigation');
@@ -53,7 +145,7 @@ jQuery(document).ready(function(){
 				mod: 'options',
 				action: 'checkApiModels',
 				provider: provider,
-				api_key: jQuery('input.waic-fake-password[name="api[' + provider + '_api_key]"]').val(),
+				api_key: waicGetApiKeyForProvider(provider),
 			},
 			onSuccess: function(res) {
 				if (!res.error && res.data && res.data.results) {
@@ -92,7 +184,78 @@ jQuery(document).ready(function(){
 		});
 
 	});
+	waicApplyProviderGroupFilter();
+	waicApplyModelCapabilityFilter();
+	waicUpdateModelRegistryWarning();
 });
+function waicGetApiKeyForProvider(provider) {
+	var $engine = jQuery('#waicEngineSelect option[value="' + provider + '"]'),
+		keyField = $engine.attr('data-key-field') || (provider + '_api_key');
+	if (provider == 'open-ai') {
+		keyField = 'api_key';
+	}
+	return jQuery('input.waic-fake-password[name="api[' + keyField + ']"], input[name="api[' + keyField + ']"]').val() || '';
+}
+function waicApplyProviderGroupFilter() {
+	var $tabs = jQuery('.waic-provider-group-tabs'),
+		$active = $tabs.find('.waic-provider-group-tab.current'),
+		group = $active.length ? $active.attr('data-group') : '',
+		$engine = jQuery('#waicEngineSelect');
+	if (!$engine.length || !group) {
+		return;
+	}
+	var current = $engine.val(),
+		hasVisible = false;
+	$engine.find('option').each(function() {
+		var $option = jQuery(this),
+			optionGroup = $option.attr('data-provider-group') || 'core',
+			allow = optionGroup == group || $option.val() == current;
+		$option.prop('disabled', !allow).toggle(allow);
+		if (allow && $option.val() != current) {
+			hasVisible = true;
+		}
+	});
+	if ($engine.find('option:selected').prop('disabled') && hasVisible) {
+		$engine.find('option:not(:disabled)').first().prop('selected', true);
+		$engine.trigger('change');
+	}
+}
+function waicApplyModelCapabilityFilter() {
+	var capability = jQuery('#waicModelCapabilityFilter').val();
+	jQuery('.waic-api-models-select').each(function() {
+		var $select = jQuery(this),
+			current = $select.val();
+		$select.find('option').each(function() {
+			var $option = jQuery(this),
+				caps = ($option.attr('data-capabilities') || '').split(','),
+				allow = !capability || caps.indexOf(capability) >= 0 || $option.val() == current;
+			$option.prop('disabled', !allow).toggle(allow);
+		});
+	});
+	waicUpdateModelRegistryWarning();
+}
+function waicUpdateModelRegistryWarning() {
+	var provider = jQuery('#waicEngineSelect').val(),
+		$select = jQuery('.waic-api-models-select[data-engine="'+provider+'"]'),
+		$warning = jQuery('.waic-model-warning');
+	if (!$select.length || !$warning.length) {
+		return;
+	}
+	var $option = $select.find('option:selected'),
+		status = $option.attr('data-status') || '',
+		source = $option.attr('data-source') || '',
+		message = '';
+	if (status == 'deprecated') {
+		message = 'Selected model is deprecated. Existing tasks remain supported, but a replacement is recommended.';
+	} else if (status == 'preview') {
+		message = 'Selected model is a preview model and may change without notice.';
+	} else if (status == 'limited') {
+		message = 'Selected model has limited availability.';
+	} else if (status == 'unverified' || source == 'provider_live') {
+		message = 'Selected model was discovered live and is not verified by the AIWU manifest yet.';
+	}
+	$warning.text(message).toggleClass('wbw-hidden', !message);
+}
 function waicInitOptions( selector ) {
 	var container = selector ? selector : jQuery('.wbw-container');
 	

@@ -5,49 +5,36 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WaicWorkflow extends WaicModule {
 	
 	public function init() {
+		require_once __DIR__ . WAIC_DS . 'phase0' . WAIC_DS . 'bootstrap.php';
+		WaicWorkflowPhase0Bootstrap::load();
+		require_once __DIR__ . WAIC_DS . 'phase1' . WAIC_DS . 'bootstrap.php';
+		WaicWorkflowPhase1Bootstrap::register();
+
 		WaicDispatcher::addFilter('mainAdminTabs', array($this, 'addAdminTab'));
-		add_action('rest_api_init', array($this, 'webhookRestApiInit'));
-		add_action('init', array($this, 'controlUrlTrigger'));
-		add_action('waic_create_scheduled_flow', array($this, 'doScheduledFlows'), 10, 1);
-		add_action('waic_run_workflow', array($this, 'doWorkflowRuns'), 10, 1);
-		$this->runCronEvents();
-		$this->getModel()->doHookedFlows();
+		if ( $this->isPhase0RunnerEnabled() ) {
+			add_action('waic_phase0_create_scheduled_flow', array($this, 'doScheduledFlows'), 10, 1);
+			add_action('waic_phase0_run_workflow', array($this, 'doWorkflowRuns'), 10, 1);
+			$this->runCronEvents();
+		}
+		wp_clear_scheduled_hook('waic_create_scheduled_flow');
+		wp_clear_scheduled_hook('waic_run_workflow');
 		add_action('admin_enqueue_scripts', array($this, 'disableConflictingScripts'), 100);
 	}
+	public function isPhase0RunnerEnabled() {
+		return defined( 'AIWU_WORKFLOW_PHASE0_RUNTIME_ENABLED' )
+			&& true === constant( 'AIWU_WORKFLOW_PHASE0_RUNTIME_ENABLED' )
+			&& WaicWorkflowPhase0RuntimePolicy::isEnabled( 'runner', get_current_blog_id() );
+	}
+
 	public function webhookRestApiInit() {
-		register_rest_route('aiwu/v1', '/oauth2callback', [
-			'methods' => 'GET',
-			'callback' => array($this, 'oauthRedirect'),
-			'permission_callback' => '__return_true',
-		]);
-		$this->getModel('workflow')->registerWebhookRoutes();
+		return false;
 	}
 	public function oauthRedirect() {
-		$code = WaicReq::getVar('code');
-		$integ = WaicReq::getVar('cur');
-
-		header('Content-Type: text/html; charset=utf-8');
-    		echo '<script>
-			window.opener.postMessage({type: "oauth_code", code: "' . esc_js($code) . '"}, "*");
-			window.close();
-		</script>';
+		return false;
 	}
 
 	public function controlUrlTrigger() {
-		$url = isset($_SERVER['REQUEST_URI']) ? sanitize_text_field(wp_unslash($_SERVER['REQUEST_URI'])) : '';
-		//$url = $_SERVER['REQUEST_URI'];
-		if (
-			is_admin() ||
-			wp_doing_ajax() ||
-			str_starts_with($url, '/wp-json/') ||
-			str_starts_with($url, '/wp-cron.php') ||
-			str_starts_with($url, '/favicon.ico') ||
-			preg_match('#\.(css|js|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|map)(\?.*)?$#', $url)
-		) {
-			return;
-		}
-	
-		$this->getModel('workflow')->runUrlTriggers($url);
+		return false;
 	}
 	public function disableConflictingScripts() {
 		$screen = get_current_screen();
@@ -80,13 +67,6 @@ class WaicWorkflow extends WaicModule {
 			'bread'      => false,
 			'last_Id' => 'waicTaskNameWrapper'
 		);
-		$tabs['oauth'] = array(
-			'label' => '', 
-			'hidden'     => 1,
-			'sort_order' => 0,
-			'callback' => array($this, 'oauthRedirect'), 
-			'bread'      => false,
-		);
 		return $tabs;
 	}
 	public function showWorkflow() {
@@ -101,14 +81,15 @@ class WaicWorkflow extends WaicModule {
 		$taskId = WaicReq::getVar('task_id');
 		$feature = WaicFrame::_()->getModule('workspace')->getModel('tasks')->getTaskFeature($taskId);
 		if ('template' == $feature) {
-			$taskId = $this->getModel()->createWorkflowByTemplate($taskId);
+			WaicFrame::_()->pushError( esc_html__( 'Template cloning is unavailable until the guarded Phase 0 command handler is enabled.', 'ai-copilot-content-generator' ) );
+			return $this->getView()->showWorkflow();
 		}
 		return $this->getView()->showWorkflowBuilder($taskId);
 	}
 	
 	public function createWorkflowByTemplate() {
-		$taskId = WaicReq::getVar('task_id');
-		$taskId = $this->getModel()->createWorkflowByTemplate($taskId);
+		WaicFrame::_()->pushError( esc_html__( 'Template cloning is unavailable until the guarded Phase 0 command handler is enabled.', 'ai-copilot-content-generator' ) );
+		$taskId = 0;
 		$url = WaicFrame::_()->getModule('workspace')->getTaskUrl($taskId, 'builder');
 		if (headers_sent()) {
 			echo '<script type="text/javascript"> document.location.href="' . esc_url($url) . '"; </script>';
@@ -152,27 +133,29 @@ class WaicWorkflow extends WaicModule {
 	public function runCronEvents( $force = false ) {
 		$existScheduled = $this->getModel('workflow')->existScheduledFlows();
 		if (empty($existScheduled)) {
-			wp_clear_scheduled_hook('waic_create_scheduled_flow');
-		} else if (!wp_next_scheduled('waic_create_scheduled_flow')) {
-			wp_schedule_event( time(), 'waic_interval5', 'waic_create_scheduled_flow' );
+			wp_clear_scheduled_hook('waic_phase0_create_scheduled_flow');
+		} else if (!wp_next_scheduled('waic_phase0_create_scheduled_flow')) {
+			wp_schedule_event( time(), 'waic_interval5', 'waic_phase0_create_scheduled_flow' );
 		} else if ($force) {
-			wp_reschedule_event( time(), 'waic_interval5', 'waic_create_scheduled_flow' );
+			wp_reschedule_event( time(), 'waic_interval5', 'waic_phase0_create_scheduled_flow' );
 		}
-		if (!wp_next_scheduled('waic_run_workflow')) {
-			wp_schedule_event( time(), 'waic_interval1', 'waic_run_workflow' );
+		if (!wp_next_scheduled('waic_phase0_run_workflow')) {
+			wp_schedule_event( time(), 'waic_interval1', 'waic_phase0_run_workflow' );
 		}
 	}
 	
 	public function doScheduledFlows() {
-		$result = $this->getModel()->doScheduledFlows();
-		if (!$result) {
-			WaicFrame::_()->saveDebugLogging();
+		if ( ! $this->isPhase0RunnerEnabled() ) {
+			return false;
 		}
+		// Legacy scheduled model execution is intentionally quarantined. Canonical
+		// run intents are consumed only by the Phase 0 journal/outbox runner.
+		return false;
 	}
 	public function doWorkflowRuns() {
-		$result = $this->getModel()->doFlowRuns();
-		if (!$result) {
-			WaicFrame::_()->saveDebugLogging();
+		if ( ! $this->isPhase0RunnerEnabled() ) {
+			return false;
 		}
+		return false;
 	}
 }

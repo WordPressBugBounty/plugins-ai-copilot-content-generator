@@ -69,7 +69,7 @@ class WaicHistoryModel extends WaicModel {
 		if (!array_key_exists('best_score_x1000', $data) || '' === $data['best_score_x1000']) {
 			$data['best_score_x1000'] = null;
 		}
-		foreach (array('feature' => 24, 'operation' => 24, 'engine' => 32, 'model' => 160) as $key => $limit) {
+		foreach (array('feature' => 24, 'operation' => 24, 'engine' => 64, 'model' => 160, 'profile_id' => 64) as $key => $limit) {
 			if (isset($data[$key])) {
 				$data[$key] = substr(sanitize_text_field((string) $data[$key]), 0, $limit);
 			}

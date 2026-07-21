@@ -63,6 +63,7 @@ class WaicChatbotsModel extends WaicModel {
 		return $pages;
 	}
 	public function clearEtaps( $taskId, $ids = false, $withContent = true ) {
+		WaicFastIndexer::deleteTask($taskId);
 		if ($withContent) {
 			WaicFrame::_()->getModule('workspace')->getModel('history')->deleteHistory($taskId);
 			$query = 'DELETE t FROM @__chatlogs t WHERE NOT EXISTS(SELECT 1 FROM @__history h WHERE h.id=t.his_id)';
@@ -114,6 +115,13 @@ class WaicChatbotsModel extends WaicModel {
 			$rules[$taskId] = $rule;
 		}
 		$this->setChatbotShowRules($rules);
+		$oldParams = WaicUtils::getArrayValue($oldTask, 'params', array());
+		if (is_string($oldParams)) {
+			$oldParams = WaicUtils::jsonDecode($oldParams);
+		}
+		$oldFast = is_array($oldParams) ? WaicUtils::getArrayValue($oldParams, 'fast_path', array(), 2) : array();
+		$newFast = WaicUtils::getArrayValue($params, 'fast_path', array(), 2);
+		WaicFastIndexer::syncTask($taskId, $newFast, $oldFast);
 		
 		return WaicDispatcher::applyFilters('setChatbotParams', false, $oldTask, $task);
 	}
@@ -450,6 +458,9 @@ class WaicChatbotsModel extends WaicModel {
 		$tools = WaicUtils::getArrayValue($params, 'tools', array(), 2);
 		
 		$callTools = array();
+		$fastResult = false;
+		$maxCntMessages = WaicUtils::getArrayValue($general, 'max_messages', 10, 1);
+		$log = array();
 		
 		$isError = false;
 		$allLimit = WaicUtils::getArrayValue($general, 'alltime_limit', 0, 1);
@@ -526,7 +537,44 @@ class WaicChatbotsModel extends WaicModel {
 					$message = WaicUtils::mbsubstr($message, 0, $maxInput);
 				}
 			}
-			
+			$isActive = true;
+			if (empty($mode)) {
+				$lifetime = WaicUtils::getArrayValue($general, 'lifetime', 0, 1);
+				$isActive = $this->isActiveChat($taskId, $userId, $ip, $mode, $lifetime);
+			}
+			if (isset($options['use_log'])) {
+				$isActive = ( true == $options['use_log'] );
+			}
+			$log = $isActive ? $this->getUserChatLog($taskId, $userId, $ip, $mode, $maxCntMessages) : array();
+			if (empty($file)) {
+				$fastRequest = array(
+					'message' => $message,
+					'task' => $task,
+					'task_id' => $taskId,
+					'params' => $params,
+					'general' => $general,
+					'context' => $context,
+					'tools' => $tools,
+					'mode' => $mode,
+					'user_id' => $userId,
+					'ip' => $ip,
+					'session_id' => $sessionId,
+					'chat_id' => $chatId,
+					'history' => $log,
+					'aware' => $cAware,
+					'has_file' => false,
+					'identity' => WaicFastPath::requestIdentity($userId),
+				);
+				$fastResult = WaicFastPath::maybeHandle($message, $taskId, $params, $fastRequest);
+				$fastResult = WaicDispatcher::applyFilters('chatbotFastPath', $fastResult, $fastRequest);
+				$fastResult = is_array($fastResult) && !empty($fastResult['handled']) ? $fastResult : false;
+			}
+			$log[] = array(
+				'question' => $message,
+				'answer' => '',
+				'file' => $file,
+			);
+			if (!$fastResult) {
 			$maxContext = WaicUtils::getArrayValue($general, 'max_context', 0, 1);
 			$needContolLen = !empty($maxContext);
 			$prompt = array();
@@ -639,22 +687,6 @@ class WaicChatbotsModel extends WaicModel {
 			}
 
 			$prompt[] = array('role' => 'system', 'content' => $instructions);
-			$maxCntMessages = WaicUtils::getArrayValue($general, 'max_messages', 10, 1);
-			$isActive = true;
-			if (empty($mode)) {
-				$lifetime = WaicUtils::getArrayValue($general, 'lifetime', 0, 1);
-				$isActive = $this->isActiveChat($taskId, $userId, $ip, $mode, $lifetime);
-			}
-			if (isset($options['use_log'])) {
-				$isActive = ( true == $options['use_log'] );
-			}
-			
-			$log = $isActive ? $this->getUserChatLog($taskId, $userId, $ip, $mode, $maxCntMessages) : array();
-			$log[] = array(
-				'question' => $message,
-				'answer' => '',
-				'file' => $file,
-			);
 			$n = 1;
 			foreach ($log as $l) {
 				$question = $l['question'];
@@ -725,6 +757,7 @@ class WaicChatbotsModel extends WaicModel {
 					$prompt[0]['content'] = str_replace('{CONTENT}', $aware, $prompt[0]['content']);
 				}
 			}
+			}
 		}
 		$history = array(
 			'task_id' => $taskId,
@@ -741,6 +774,24 @@ class WaicChatbotsModel extends WaicModel {
 				'his_id' => $hisModel->saveHistory($history),
 				'msg' => $errMsg,
 				'error' => 1,
+			);
+		} else if ($fastResult) {
+			$history['status'] = 0;
+			$history['operation'] = 'chat';
+			$history['engine'] = 'local';
+			$history['model'] = WaicFastPath::MODEL;
+			$history['tokens'] = 0;
+			$history['best_score_x1000'] = (int) round(1000 * (float) WaicUtils::getArrayValue($fastResult, 'confidence', 0));
+			$history['meta'] = array(
+				'source' => 'aiwu-main-fast-path',
+				'route' => sanitize_key((string) WaicUtils::getArrayValue($fastResult, 'route')),
+				'post_ids' => array_values(array_map('absint', (array) WaicUtils::getArrayValue($fastResult, 'post_ids', array(), 2))),
+			);
+			$result = array(
+				'his_id' => $hisModel->saveHistory($history),
+				'msg' => '',
+				'data' => WaicUtils::getArrayValue($fastResult, 'answer'),
+				'error' => 0,
 			);
 		} else {
 			$aiProvider->init( $taskId, $userId, $ip, $mode, false );
@@ -768,6 +819,9 @@ class WaicChatbotsModel extends WaicModel {
 			'error' => $result['error'],
 			'tt' => WaicUtils::getFormatedDateTime(WaicUtils::getTimestamp(), 'H:i'),
 		);
+		if ($fastResult) {
+			$newLog['source'] = 'aiwu-main-fast-path';
+		}
 
 		if (!empty($result['his_id'])) {
 			$this->insert($newLog);
@@ -806,7 +860,11 @@ class WaicChatbotsModel extends WaicModel {
 					}
 				}
 			}
-			if (!empty($callTools)) {
+			if ($fastResult) {
+				$fastConfig = WaicFastPath::getConfig($params);
+				$newLog = $this->getModule()->getView()->renderCards($newLog, 'answer', WaicFastPath::cardOptions($tools, $fastConfig));
+				$newLog['answer_text'] = wp_strip_all_tags($newLog['answer']);
+			} else if (!empty($callTools)) {
 				$newLog = $this->getModule()->getView()->renderCards($newLog, 'answer', $tools);
 			}
 		} else {
