@@ -85,7 +85,10 @@ abstract class WaicAbstractProviderAdapter implements WaicProviderAdapterInterfa
 		if ( $response instanceof WaicProviderFailure ) { return $this->legacyFailure( $response ); }
 		return array('results' => array('error' => 0, 'data' => WaicUtils::getArrayValue( $response['body'], 'data', array() ), 'raw_response' => $response['body'], 'usage' => WaicProviderUsageNormalizer::normalize( $response['body'] )), 'params' => $params);
 	}
-	public function getToolsAnswer( $answer, $tool ) { return array('role' => 'tool', 'tool_call_id' => is_object( $tool ) && isset( $tool->id ) ? (string) $tool->id : '', 'content' => wp_json_encode( $answer )); }
+	public function getToolsAnswer( $answer, $tool ) {
+		$toolId = is_object($tool) && isset($tool->id) ? $tool->id : WaicUtils::getArrayValue($tool, 'id', '');
+		return array('role' => 'tool', 'tool_call_id' => (string) $toolId, 'content' => wp_json_encode($answer));
+	}
 	public function sendFile( $params ) { return $this->unsupported(); }
 	public function getFineTunes( $params, $method = 'POST', $job = false ) { return $this->unsupported(); }
 	public function normalizeUsage( $raw ) { return WaicProviderUsageNormalizer::normalize( $raw ); }

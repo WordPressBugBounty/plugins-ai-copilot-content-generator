@@ -98,20 +98,6 @@ final class WaicWorkflowPhase1Config {
 		WaicWorkflowPhase1Storage::ensureCapabilities();
 	}
 
-	public static function declareHposCompatibility() {
-		if ( ! class_exists( '\\Automattic\\WooCommerce\\Utilities\\FeaturesUtil' ) ) {
-			return;
-		}
-		$main_file = dirname( __DIR__, 3 ) . '/ai-copilot-content-generator.php';
-		$compatible = defined( 'AIWU_WORKFLOW_PHASE1_HPOS_EVIDENCE_ACCEPTED' )
-			&& true === constant( 'AIWU_WORKFLOW_PHASE1_HPOS_EVIDENCE_ACCEPTED' );
-		\Automattic\WooCommerce\Utilities\FeaturesUtil::declare_compatibility(
-			'custom_order_tables',
-			$main_file,
-			$compatible
-		);
-	}
-
 	public static function hardLimits() {
 		return array(
 			'archive_compressed'   => 10 * MB_IN_BYTES,

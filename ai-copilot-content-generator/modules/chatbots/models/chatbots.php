@@ -392,7 +392,7 @@ class WaicChatbotsModel extends WaicModel {
 		
 		return $log;
 	}*/
-	public function getFileString( $files, $maxSize ) { 
+	public function getFileString( $files, $maxSize ) {
 		$result = array(
 			'file' => '',
 			'error' => '',
@@ -403,24 +403,33 @@ class WaicChatbotsModel extends WaicModel {
 			return $result;
 		}
 		$file = $files['img'];
-		
-		$extensions = array('png', 'gif', 'jpeg', 'jpg');
-		$error = WaicUtils::controlUploatedFile($file, $extensions);
-		
-		if (!empty($error)) {
-			$result['error'] = $error;
+		$tempPath = WaicUtils::getArrayValue($file, 'tmp_name');
+		try {
+			$extensions = array('png', 'gif', 'jpeg', 'jpg');
+			$error = WaicUtils::controlUploatedFile($file, $extensions);
+			if (!empty($error)) {
+				$result['error'] = $error;
+				return $result;
+			}
+			$size = (int) WaicUtils::getArrayValue($file, 'size', 0, 1);
+			if ($size > $maxSize) {
+				$result['error'] = __('File is too big!', 'ai-copilot-content-generator');
+				return $result;
+			}
+
+			$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+			$content = file_get_contents($tempPath);
+			if (false === $content) {
+				$result['error'] = __('Unable to read file.', 'ai-copilot-content-generator');
+				return $result;
+			}
+			$result['file'] = 'data:image/' . $extension . ';base64,' . base64_encode($content);
 			return $result;
+		} finally {
+			if (is_string($tempPath) && is_file($tempPath)) {
+				wp_delete_file($tempPath);
+			}
 		}
-		$size = (int) $file['name'];
-		if ($size > $maxSize) {
-			$result['error'] = __('File is too big!', 'ai-copilot-content-generator');
-			return $result;
-		}
-			
-		$extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-		$f = base64_encode(file_get_contents($file['tmp_name']));
-		$result['file'] = 'data:image/' . $extension . ";base64,{$f}";
-		return $result;
 	}
 		
 	public function sendMessage( $message, $taskId, $mode, $cAware = '', $files = false, $options = array() ) {

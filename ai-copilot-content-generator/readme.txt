@@ -2,9 +2,10 @@
 Contributors: wupsales
 Donate link: https://aiwuplugin.com/
 Tags: AI, ChatBot, Automation, SEO, MCP
-Requires at least: 3.4.0
+Requires at least: 6.0
+Requires PHP: 7.4
 Tested up to: 7.0
-Stable tag: 1.5.8
+Stable tag: 1.5.9
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -211,11 +212,13 @@ No. Most features are no-code and work through visual builders and templates. De
 
 == Changelog ==
 
-1.5.8 (18/07/2026)
-- Security: Fixed authenticated SQL injection in workspace history sorting by allowlisting the ORDER BY direction
-- Security: Restricted workspace history AJAX access to users with the plugin's administrative capability
-- Hardening: Enforced ASC/DESC allowlisting in the shared model query builder as defense in depth
-- Hardening: Restricted anonymous AJAX exposure to explicit controller allow-lists and return HTTP 403 for permission denials
+1.5.9 (26/07/2026)
+- Compatibility: Fixed an HPOS declaration conflict that could stop wp-admin rendering when WooCommerce loaded after AI Copilot.
+
+1.5.8 (19/07/2026)
+- Security: Restricted protected AJAX actions to exact capability and nonce checks, limited anonymous actions to explicit allowlists, and allowlisted SQL sort direction.
+- Workflow: Added the owner-approved Phase 1 foundation with core, UI, and AI features default-off and closed import, validation, storage, privacy, and test-provider boundaries.
+- Compatibility: Declared the accepted minimums of WordPress 6.0 and PHP 7.4; the G0 matrix verifies exact patch-level support separately.
 
 1.5.5 (01/07/2026)
 - Security issues XSS fixed

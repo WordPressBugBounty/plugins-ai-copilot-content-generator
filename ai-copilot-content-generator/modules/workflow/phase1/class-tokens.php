@@ -2,7 +2,6 @@
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
-
 final class WaicWorkflowPhase1Tokens {
 	public static function issue( $kind, array $binding, $ttl ) {
 		$kind = sanitize_key( (string) $kind );
@@ -104,4 +103,3 @@ final class WaicWorkflowPhase1Tokens {
 		return base64_decode( strtr( $value, '-_', '+/' ), true );
 	}
 }
-

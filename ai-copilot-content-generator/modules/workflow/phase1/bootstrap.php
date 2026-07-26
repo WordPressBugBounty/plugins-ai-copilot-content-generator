@@ -52,7 +52,6 @@ final class WaicWorkflowPhase1Bootstrap {
 		add_action( 'admin_init', array( 'WaicWorkflowPhase1Privacy', 'addPolicyText' ) );
 		add_action( 'wp_initialize_site', array( 'WaicWorkflowPhase1Privacy', 'initializeSite' ), 20, 2 );
 		add_action( 'wp_uninitialize_site', array( 'WaicWorkflowPhase1Privacy', 'uninitializeSite' ), 5, 1 );
-		add_action( 'before_woocommerce_init', array( 'WaicWorkflowPhase1Config', 'declareHposCompatibility' ) );
 	}
 
 	public static function version() {

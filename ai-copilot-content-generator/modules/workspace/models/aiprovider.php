@@ -146,16 +146,21 @@ class WaicAiproviderModel extends WaicModel implements WaicAIProviderInterface {
 			$stepUsages[] = $usage;
 			if ($isTools && $step < $maxSteps && $results['data'] == 'tool_calls' && !empty($results['tools']) && !empty($results['tools'][0])) {
 				$tool = $results['tools'][0];
-				$name = empty($tool->function->name) ? '' : $tool->function->name;
+				$function = is_object($tool)
+					? WaicUtils::getArrayValue(get_object_vars($tool), 'function', array(), 2)
+					: WaicUtils::getArrayValue($tool, 'function', array(), 2);
+				$function = is_object($function) ? get_object_vars($function) : $function;
+				$name = WaicUtils::getArrayValue($function, 'name');
 				if (!empty($name)) {
 					$toolNames[] = sanitize_key($name);
 				}
-				if (empty($tool->function->arguments)) {
+				$arguments = WaicUtils::getArrayValue($function, 'arguments', '');
+				if (empty($arguments)) {
 					$args = array();
-				} else if (is_string($tool->function->arguments)) {
-					$args = json_decode($tool->function->arguments, true);
+				} else if (is_string($arguments)) {
+					$args = json_decode($arguments, true);
 				} else {
-					$args = $tool->function->arguments;
+					$args = $arguments;
 				}
 				$answer = $this->doTool($name, $args, $toolsOptions);
 				if (!empty($params['messages']) && is_array($params['messages'])) {
